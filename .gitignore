@@ -1,0 +1,15 @@
+.env
+
+node_modules/
+
+vendor/
+
+storage/logs/
+
+__pycache__/
+
+*.log
+
+.idea/
+
+.vscode/
