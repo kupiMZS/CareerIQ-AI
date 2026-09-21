@@ -6,248 +6,371 @@
 
 # Document Information
 
+
 | Field | Description |
-|---|---|
+|-|-|
 | Project Name | CareerIQ AI |
-| Document Name | Software Requirements Specification (SRS) |
+| Document Type | Software Requirements Specification |
 | Version | 1.0 |
-| Status | Draft |
-| Prepared By | CareerIQ AI Development Team |
-| Date | 2026 |
+| Status | Development Planning |
+| Architecture | Full-stack AI SaaS Platform |
+| Backend | Laravel |
+| Database | MySQL 8.x |
+
+
+---
+
+# Table of Contents
+
+
+1. Introduction  
+2. Product Overview  
+3. System Scope  
+4. User Roles and Personas  
+5. Functional Requirements  
+6. Non-Functional Requirements  
+7. System Interfaces  
+8. Database Requirements  
+9. Security Requirements  
+10. Testing Requirements  
+11. DevOps Requirements  
+12. Acceptance Criteria  
+13. Requirement Traceability Matrix  
+
 
 ---
 
 # 1. Introduction
 
+
 ## 1.1 Purpose
 
-This Software Requirements Specification (SRS) document defines the functional and non-functional requirements of CareerIQ AI.
 
-The purpose of this document is to establish a clear understanding of the system requirements before software development begins.
+This Software Requirements Specification document defines the requirements of CareerIQ AI.
 
-This document will serve as a reference for:
+
+The document provides a complete reference for:
+
 
 - Software development
-- System architecture design
+- System design
 - Database design
-- Software testing
-- Quality assurance activities
+- Testing activities
+- Quality assurance
 - Deployment planning
-- Future system improvements
+
 
 ---
 
-# 1.2 Project Overview
+# 1.2 Product Overview
 
-CareerIQ AI is an AI-powered career intelligence platform designed to help individuals understand their professional identity, evaluate their skills, identify career gaps, and receive personalized recommendations for career growth.
 
-The platform combines:
+CareerIQ AI is an AI-powered career intelligence platform designed to help users understand their professional capabilities, identify skill gaps, and receive personalized career development recommendations.
+
+
+The system combines:
+
 
 - Artificial Intelligence
 - Natural Language Processing
 - Recommendation Systems
-- Knowledge Graph concepts
 - Data Analytics
 
-to provide users with an intelligent and personalized career development experience.
+
+to create an intelligent career guidance experience.
+
 
 ---
 
-# 1.3 Vision
+# 1.3 Document Relationship
 
-The vision of CareerIQ AI is:
 
-> To create an intelligent career companion that continuously understands a user's professional journey and helps them make better career decisions through artificial intelligence and data-driven insights.
+This SRS document works together with:
 
----
 
-# 1.4 Problem Statement
+| Document | Purpose |
+|-|-|
+| Product Overview | Defines product vision |
+| System Architecture | Defines technical implementation |
+| Database Design | Defines data structure |
+| Test Plan | Defines quality strategy |
 
-Modern career development is fragmented across multiple platforms.
-
-Users currently depend on separate tools for:
-
-- Resume creation
-- Skill assessment
-- Online learning
-- Job searching
-- Interview preparation
-- Portfolio management
-
-These platforms generally work independently and do not provide a complete understanding of:
-
-- Current professional capability
-- Existing skill level
-- Missing skills
-- Career opportunities
-- Personalized growth strategies
-
-CareerIQ AI aims to solve this problem by providing an integrated career intelligence platform.
 
 ---
 
-# 2. Objectives
+# 2. Product Perspective
 
-The main objectives of CareerIQ AI are:
 
-- Create a personalized digital career profile for users.
-- Analyze resumes using artificial intelligence.
-- Extract and evaluate professional skills.
-- Identify skill gaps between current capabilities and career goals.
-- Generate personalized learning roadmaps.
-- Recommend suitable career paths.
-- Assist users with interview preparation.
-- Track career development progress.
-- Provide data-driven career insights.
+## 2.1 System Architecture Overview
+
+
+CareerIQ AI consists of:
+
+
+```text
+Angular Frontend
+
+        |
+
+Laravel REST API
+
+        |
+
+MySQL Database
+
+        |
+
+Python AI Service
+
+        |
+
+Cloud Infrastructure
+
+```
+
+
+The frontend provides user interaction.
+
+The backend manages business logic.
+
+The AI service performs intelligent analysis.
+
+The database stores application information.
+
 
 ---
 
-# 3. Scope
+# 3. System Scope
+
 
 # 3.1 In Scope
 
-The first version of CareerIQ AI will include:
 
-- User registration and authentication
-- User profile management
-- Career goal management
+Version 1.0 includes:
+
+
+## User Management
+
+- Registration
+- Login
+- Profile management
+
+
+## Career Profile
+
+- Education
+- Experience
+- Projects
+- Certifications
+- Skills
+
+
+## Resume Intelligence
+
 - Resume upload
-- Resume information extraction
-- AI-based resume analysis
-- Skill management
+- Resume parsing
+- Skill extraction
+- Resume analysis
+
+
+## Skill Intelligence
+
+- Skill tracking
+- Skill evaluation
 - Skill gap analysis
-- Personalized learning roadmap generation
-- Career progress dashboard
-- User activity tracking
+
+
+## Career Recommendation
+
+- Career goal selection
+- Required skill analysis
+- Personalized roadmap
+
+
+## Dashboard
+
+- Career readiness score
+- Progress tracking
+- Recommendations
 
 
 ---
 
 # 3.2 Future Scope
 
-Future versions may include:
+
+Future releases may include:
+
 
 - AI interview simulator
 - GitHub project analysis
 - Job market intelligence
 - Recruiter platform
-- Candidate ranking system
-- Career prediction model
-- Mentor networking platform
-- AI career assistant chatbot
+- Candidate ranking
+- AI career assistant
 
 
 ---
 
-# 4. User Roles
-
-# 4.1 Candidate/User
-
-The candidate is the primary user of the system.
-
-The user can:
-
-- Create an account
-- Manage personal information
-- Add educational background
-- Add professional experience
-- Add technical skills
-- Add projects
-- Upload resume
-- Analyze career profile
-- Select career goals
-- Receive recommendations
-- Track progress
+# 4. User Roles and Personas
 
 
----
+# 4.1 Student User
 
-# 4.2 Recruiter (Future Module)
 
-Recruiters will be able to:
+## Goal
 
-- Search candidates
-- Analyze candidate skills
-- View candidate profiles
-- Match candidates with opportunities
+Understand career direction.
+
+
+## Needs
+
+- Career guidance
+- Skill roadmap
+- Learning recommendations
+
+
+## System Features
+
+- Career profile
+- Skill analysis
+- Learning roadmap
 
 
 ---
 
-# 4.3 Administrator
+# 4.2 Fresh Graduate
 
-Administrators will manage:
 
-- Users
-- Platform configuration
+## Goal
+
+Become employment-ready.
+
+
+## Needs
+
+- Resume improvement
+- Interview preparation
+- Skill evaluation
+
+
+## System Features
+
+- Resume intelligence
+- Career readiness analysis
+
+
+---
+
+# 4.3 Professional User
+
+
+## Goal
+
+Career growth or transition.
+
+
+## Needs
+
+- Skill improvement
+- Career planning
+
+
+## System Features
+
+- Skill tracking
+- Career recommendations
+
+
+---
+
+# 4.4 Administrator
+
+
+Responsible for:
+
+
+- User management
 - System monitoring
-- Content management
-- Security settings
+- Platform configuration
 
 
 ---
 
 # 5. Functional Requirements
 
----
 
-# Module 1: User Authentication
+# Module 1: Authentication
 
-## FR-001: User Registration
+
+## FR-001 User Registration
+
 
 ### Description
 
-The system shall allow new users to create an account.
+The system shall allow users to create an account.
+
 
 ### Input
 
 - Name
-- Email address
+- Email
 - Password
 
-### Expected Result
 
-A user account shall be created successfully.
+### Output
 
-### Priority
+A new user account is created.
+
+
+Priority:
 
 High
 
 
 ---
 
-## FR-002: User Login
+## FR-002 User Login
+
 
 ### Description
 
 The system shall authenticate registered users.
 
-### Input
+
+Input:
+
 
 - Email
 - Password
 
-### Expected Result
 
-The user shall receive authenticated access to the system.
+Output:
 
-### Priority
+
+- Authentication token
+- User session
+
+
+Priority:
 
 High
 
 
 ---
 
-## FR-003: Password Management
-
-The system shall allow users to:
-
-- Reset forgotten passwords
-- Change existing passwords
-- Recover accounts
+## FR-003 Password Management
 
 
-### Priority
+The system shall support:
+
+
+- Password reset
+- Password update
+- Account recovery
+
+
+Priority:
 
 High
 
@@ -256,31 +379,34 @@ High
 
 # Module 2: Career Profile Management
 
-## FR-004: Create Career Profile
 
-The system shall allow users to create professional profiles containing:
+## FR-004 Create Profile
 
-- Education history
-- Work experience
-- Technical skills
-- Soft skills
+
+The system shall allow users to add:
+
+
+- Education
+- Experience
 - Projects
 - Certifications
-- Career interests
+- Skills
 
 
-### Priority
+Priority:
 
 High
 
 
 ---
 
-## FR-005: Update Career Profile
+## FR-005 Update Profile
 
-Users shall be able to update their career information.
 
-### Priority
+Users shall be able to modify profile information.
+
+
+Priority:
 
 Medium
 
@@ -289,61 +415,65 @@ Medium
 
 # Module 3: Resume Intelligence
 
-## FR-006: Resume Upload
 
-The system shall allow users to upload resumes.
+## FR-006 Resume Upload
 
-Supported formats:
+
+The system shall support:
+
+
+File types:
+
 
 - PDF
 - DOCX
 
-Maximum file size:
+
+Maximum size:
 
 10 MB
 
 
-### Priority
+Priority:
 
 High
 
 
 ---
 
-## FR-007: Resume Information Extraction
+## FR-007 Resume Processing
 
-The AI system shall extract information from uploaded resumes.
 
-Extracted information includes:
+The system shall extract:
+
 
 - Name
 - Education
-- Work experience
+- Experience
 - Skills
 - Projects
-- Certifications
 
 
-### Priority
+Priority:
 
 High
 
 
 ---
 
-## FR-008: Resume Analysis
+## FR-008 Resume Analysis
 
-The system shall analyze uploaded resumes and provide:
 
-- Identified skills
-- Strength analysis
-- Weakness identification
-- Improvement suggestions
+The AI engine shall provide:
+
+
+- Skill identification
 - Resume score
-- ATS compatibility analysis
+- Improvement suggestions
+- ATS analysis
 
 
-### Priority
+Priority:
 
 High
 
@@ -352,254 +482,174 @@ High
 
 # Module 4: Skill Intelligence
 
-## FR-009: Skill Database Management
 
-The system shall maintain a database containing:
+## FR-009 Skill Management
 
+
+The system shall maintain:
+
+
+- Technical skills
 - Programming languages
 - Frameworks
-- Technologies
-- Development tools
+- Tools
 - Soft skills
-- Industry skills
 
 
-### Priority
+Priority:
 
 High
 
 
 ---
 
-## FR-010: Skill Assessment
+## FR-010 Skill Gap Analysis
 
-The system shall estimate user skill levels.
 
-Example:
+The system shall compare:
+
 
 ```
-Laravel:
-Intermediate
+Current Skills
 
-Docker:
-Beginner
+against
 
-AWS:
-Basic
+Target Career Requirements
+
 ```
 
 
-### Priority
+Output:
 
-Medium
+
+- Missing skills
+- Skill priority
+- Recommendations
+
+
+Priority:
+
+High
 
 
 ---
 
-# Module 5: Career Goal Management
+# Module 5: Career Recommendation
 
-## FR-011: Career Goal Selection
 
-The user shall be able to select desired career paths.
+## FR-011 Career Goal Selection
+
+
+Users shall select target careers:
+
 
 Examples:
 
-- Backend Developer
+
+- Backend Engineer
 - Cloud Engineer
 - Data Scientist
 - AI Engineer
 
 
-### Priority
+Priority:
 
 High
 
 
 ---
 
-## FR-012: Career Requirement Analysis
+## FR-012 Career Roadmap Generation
 
-The system shall analyze required skills for selected career goals.
-
-
-Example:
-
-Target Career:
-
-Backend Engineer
-
-
-Required Skills:
-
-- PHP
-- Laravel
-- Database Design
-- Docker
-- Cloud Infrastructure
-
-
-### Priority
-
-High
-
-
----
-
-# Module 6: Skill Gap Analysis
-
-## FR-013: Identify Skill Gaps
-
-The system shall compare:
-
-Current user skills
-
-against
-
-Required career skills
-
-
-Output:
-
-- Missing skills
-- Skill priority
-- Recommended actions
-
-
-### Priority
-
-High
-
-
----
-
-# Module 7: Personalized Learning Roadmap
-
-## FR-014: Generate Learning Roadmap
-
-The system shall generate personalized learning paths.
-
-Example:
-
-```
-Month 1:
-Docker Fundamentals
-
-Month 2:
-AWS Cloud Basics
-
-Month 3:
-System Design
-```
-
-
-### Priority
-
-High
-
-
----
-
-## FR-015: Track Learning Progress
-
-Users shall be able to update and monitor learning progress.
-
-### Priority
-
-Medium
-
-
----
-
-# Module 8: Career Dashboard
-
-## FR-016: Career Analytics Dashboard
-
-The system shall display:
-
-- Career readiness score
-- Skill development status
-- Learning progress
-- Career recommendations
-- Recent activities
-
-
-### Priority
-
-Medium
-
-
----
-
-# Module 9: AI Interview Simulator
-
-## FR-017: Generate Interview Questions
 
 The system shall generate:
 
-- Technical questions
-- Role-specific questions
-- HR questions
+
+- Learning sequence
+- Recommended skills
+- Development timeline
 
 
-### Priority
+Priority:
 
-Future
+High
 
 
 ---
 
-## FR-018: Evaluate Interview Responses
-
-The AI system shall analyze:
-
-- Answer quality
-- Technical accuracy
-- Communication ability
+# Module 6: Dashboard
 
 
-### Priority
+## FR-013 Career Dashboard
 
-Future
+
+The system shall display:
+
+
+- Career readiness score
+- Skill progress
+- Learning progress
+- Recommendations
+
+
+Priority:
+
+Medium
 
 
 ---
 
 # 6. Non-Functional Requirements
 
----
 
 # 6.1 Performance Requirements
 
+
 ## NFR-001
 
-The system should provide normal user interactions within 3 seconds under normal load conditions.
+
+Normal user requests should complete within:
+
+
+```
+< 3 seconds
+
+```
+
+
+under normal operating conditions.
 
 
 ---
 
 ## NFR-002
 
-Heavy AI processing tasks should run asynchronously using background jobs and queue systems.
+
+Heavy AI operations shall execute asynchronously using queue processing.
 
 
 ---
 
 # 6.2 Security Requirements
 
+
 ## NFR-003
 
-User passwords must be securely hashed.
+
+Passwords shall be securely hashed.
 
 
 ---
 
 ## NFR-004
 
-The system must protect against:
+
+The system shall protect against:
+
 
 - SQL Injection
-- Cross-Site Scripting (XSS)
-- Cross-Site Request Forgery (CSRF)
+- XSS
+- CSRF
 - Unauthorized access
 
 
@@ -607,44 +657,48 @@ The system must protect against:
 
 ## NFR-005
 
-Sensitive user data must be encrypted.
+
+Sensitive user data shall be encrypted.
 
 
 ---
 
 # 6.3 Scalability Requirements
 
+
 ## NFR-006
 
-The architecture should support horizontal scaling.
 
-Example:
+The system shall support:
 
-Adding additional application servers when user demand increases.
+
+- Horizontal scaling
+- Load balancing
+- Container deployment
 
 
 ---
 
 ## NFR-007
 
-The database architecture should support future growth through:
 
-- Proper normalization
+The database shall support future growth through:
+
+
 - Index optimization
 - Query optimization
-- Backup strategy
-- Efficient database design
+- Backup strategies
 
 
 ---
 
 # 6.4 Availability Requirements
 
-## NFR-008
 
-The production system should maintain high availability through:
+The system shall provide:
 
-- Automated backups
+
+- Automated backup
 - Monitoring
 - Error handling
 - Recovery mechanisms
@@ -654,184 +708,293 @@ The production system should maintain high availability through:
 
 # 6.5 Maintainability Requirements
 
-## NFR-009
 
-The software should follow:
+The system shall follow:
+
 
 - Clean code principles
 - Modular architecture
-- Coding standards
-- Documentation practices
+- Documentation standards
 
 
 ---
 
-# 6.6 Testing Requirements
+# 7. System Interfaces
 
-## NFR-010
+
+# 7.1 Frontend Interface
+
+
+Technology:
+
+
+```
+Angular
+
+REST API Communication
+
+```
+
+
+---
+
+# 7.2 Backend Interface
+
+
+Technology:
+
+
+```
+Laravel REST API
+
+JSON Communication
+
+```
+
+
+Example endpoints:
+
+
+| Method | Endpoint | Purpose |
+|-|-|-|
+| POST | /api/login | User login |
+| POST | /api/register | Registration |
+| POST | /api/resume/upload | Upload resume |
+| GET | /api/profile | Get profile |
+| GET | /api/roadmap | Get roadmap |
+
+
+---
+
+# 7.3 AI Service Interface
+
+
+Communication:
+
+
+```
+Laravel Backend
+
+        |
+
+REST API
+
+        |
+
+Python FastAPI
+
+```
+
+
+---
+
+# 8. Database Requirements
+
+
+## DR-001
+
+
+The system shall use:
+
+
+```
+MySQL 8.x
+
+```
+
+
+---
+
+## DR-002
+
+
+The database shall maintain:
+
+
+- Referential integrity
+- Foreign keys
+- Transaction consistency
+
+
+---
+
+## DR-003
+
+
+The database shall store:
+
+
+- Users
+- Profiles
+- Skills
+- Resumes
+- Career goals
+- AI results
+
+
+---
+
+# 9. Testing Requirements
+
+
+## TR-001 Unit Testing
+
 
 The system shall include:
 
-- Unit testing
-- Integration testing
-- API testing
-- End-to-end testing
-- Performance testing
-- Security testing
+
+- Backend unit tests
+- Service tests
 
 
 ---
 
-# 6.7 Deployment Requirements
+## TR-002 API Testing
 
-## NFR-011
+
+API endpoints shall be tested using:
+
+
+- Postman
+- Automated API tests
+
+
+---
+
+## TR-003 End-to-End Testing
+
+
+Frontend workflows shall be tested using:
+
+
+- Cypress
+
+
+---
+
+## TR-004 Performance Testing
+
 
 The system shall support:
 
-- Containerized deployment
-- Continuous Integration
-- Continuous Deployment
-- Cloud deployment
+
+- Load testing
+- Stress testing
 
 
-Technology examples:
-
-- Docker
-- GitHub Actions
-- AWS
+Tools:
 
 
----
-
-# 7. User Stories
-
----
-
-# US-001: Resume Analysis
-
-## User Story
-
-As a user,
-
-I want to upload my resume,
-
-so that CareerIQ AI can analyze my professional skills.
-
-
-## Acceptance Criteria
-
-- User can upload a valid resume file.
-- System extracts information.
-- Analysis result is displayed.
+- JMeter
 
 
 ---
 
-# US-002: Skill Gap Detection
-
-## User Story
-
-As a user,
-
-I want to compare my skills with a target career,
-
-so that I know what I need to improve.
+# 10. DevOps Requirements
 
 
-## Acceptance Criteria
+## DEP-001 Containerization
 
-- User selects career goal.
-- System analyzes required skills.
-- Missing skills are displayed.
-- Recommendations are generated.
+
+The system shall support:
+
+
+```
+Docker containers
+
+```
 
 
 ---
 
-# US-003: Learning Roadmap
-
-## User Story
-
-As a user,
-
-I want a personalized learning roadmap,
-
-so that I can improve my career readiness.
+## DEP-002 Continuous Integration
 
 
-## Acceptance Criteria
-
-- Roadmap is generated.
-- Learning tasks are displayed.
-- Progress can be tracked.
+The project shall use:
 
 
----
+```
+GitHub Actions
 
-# 8. System Constraints
-
-The system shall follow these technical constraints:
-
-## Frontend
-
-- Angular
-- TypeScript
-- Tailwind CSS
+```
 
 
-## Backend
-
-- Laravel
-- PHP
-- REST API
+for:
 
 
-## Database
-
-- MySQL 8.x
-- InnoDB Storage Engine
-- Relational Database Architecture
-
-
-## AI Service
-
-- Python
-- FastAPI
-- Large Language Models
-
-
-## Infrastructure
-
-- Docker
-- AWS Cloud
+- Build
+- Testing
+- Validation
 
 
 ---
 
-# 9. Assumptions
+## DEP-003 Cloud Deployment
 
-The system assumes:
 
-- Users provide accurate information.
-- AI recommendations are advisory.
-- External AI services may be integrated.
-- Internet connectivity is available.
+The system shall support:
+
+
+```
+AWS Deployment
+
+```
 
 
 ---
 
-# 10. Acceptance Criteria for Version 1.0
+# 11. Acceptance Criteria
 
-The first release of CareerIQ AI will be considered successful when:
 
-- Users can register and authenticate.
-- Users can create career profiles.
-- Users can upload resumes.
-- The system can analyze resumes.
-- Skills can be identified.
-- Skill gaps can be detected.
-- Career roadmaps can be generated.
-- The application can be deployed successfully in a cloud environment.
+Version 1.0 will be successful when:
+
+
+## User Management
+
+✓ Users can register and login
+
+
+## Career Profile
+
+✓ Users can create profiles
+
+
+## Resume Intelligence
+
+✓ Users can upload resumes
+
+✓ System extracts information
+
+
+## Skill Intelligence
+
+✓ Skills can be analyzed
+
+✓ Skill gaps can be identified
+
+
+## Career Roadmap
+
+✓ Personalized roadmap can be generated
+
+
+## Deployment
+
+✓ Application runs successfully in cloud environment
+
+
+---
+
+# 12. Requirement Traceability Matrix
+
+
+| Requirement | System Module | Testing Method |
+|-|-|-|
+| User Login | Authentication Module | API Testing |
+| Resume Upload | Resume Module | Integration Testing |
+| Skill Analysis | AI Service | AI Validation Testing |
+| Career Roadmap | Recommendation Engine | Functional Testing |
+| Dashboard | Angular Application | End-to-End Testing |
 
 
 ---
