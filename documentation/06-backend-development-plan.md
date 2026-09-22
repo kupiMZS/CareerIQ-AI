@@ -2,72 +2,56 @@
 
 # CareerIQ AI
 
+
 ---
 
 # Document Information
 
 
 | Field | Description |
-|-|-|
+|---|---|
 | Project Name | CareerIQ AI |
 | Document Type | Backend Development Plan |
-| Version | 1.0 |
-| Backend Framework | Laravel |
-| Programming Language | PHP |
+| Version | 2.0 |
+| Backend Framework | Laravel 11+ |
+| Programming Language | PHP 8.x |
 | Database | MySQL 8.x |
-| ORM | Laravel Eloquent |
-| API Style | REST API |
+| API Architecture | REST API |
 | Authentication | Laravel Sanctum |
+| AI Communication | FastAPI |
+| Queue System | Laravel Queue |
+| Containerization | Docker |
+| Cloud Platform | AWS |
 
 
 ---
 
-# Table of Contents
+# Document Purpose
 
 
-1. Backend Overview
+This document defines the backend architecture and development strategy for CareerIQ AI.
 
-2. Laravel Backend Architecture
 
-3. Backend Folder Structure
+The purpose is to establish:
 
-4. Application Layer Design
 
-5. MVC Architecture
+- Scalable backend architecture
+- Clean code organization
+- API development standards
+- Database communication strategy
+- AI service integration
+- Security practices
+- Testing approach
+- Deployment strategy
 
-6. Service Layer Pattern
 
-7. Repository Pattern
+This document guides:
 
-8. Model Design
 
-9. Controller Design
-
-10. Authentication Implementation
-
-11. Database Migration Workflow
-
-12. API Development Workflow
-
-13. Background Jobs and Queues
-
-14. Event Driven Architecture
-
-15. AI Service Integration
-
-16. File Processing System
-
-17. Notification System
-
-18. Exception Handling
-
-19. Logging Strategy
-
-20. Security Practices
-
-21. Coding Standards
-
-22. Backend Development Roadmap
+- Backend implementation
+- Code reviews
+- API development
+- System maintenance
 
 
 ---
@@ -75,53 +59,26 @@
 # 1. Backend Overview
 
 
-## 1.1 Purpose
+## 1.1 Introduction
 
 
-The backend of CareerIQ AI provides the core application logic responsible for:
+CareerIQ AI backend is a Laravel-based application responsible for managing:
 
 
 - User authentication
-- Career profile management
+- Career profiles
 - Resume processing
-- Skill intelligence
-- Career recommendation
-- Learning roadmap generation
-- AI communication
-- Database operations
+- Skill analysis
+- Career recommendations
+- Learning roadmap management
+- AI service communication
 
 
----
-
-# 1.2 Backend Technology Stack
-
-
-| Component | Technology |
-|-|-|
-| Framework | Laravel |
-| Language | PHP 8.x |
-| API | Laravel REST API |
-| ORM | Eloquent ORM |
-| Authentication | Laravel Sanctum |
-| Database | MySQL 8.x |
-| Queue System | Laravel Queue + Redis |
-| Testing | PHPUnit |
-| Documentation | Swagger/OpenAPI |
-
-
----
-
-# 1.3 Backend Responsibilities
-
-
-The Laravel backend acts as the central application layer.
-
-
-It manages:
+The backend acts as the central communication layer between:
 
 
 ```
-Angular Frontend
+Frontend Application
 
         |
 
@@ -129,31 +86,108 @@ Laravel Backend
 
         |
 
------------------------
-
-|                     |
-
-MySQL              FastAPI AI
-
-Database           Service
+Database + AI Services
 
 ```
 
+
 ---
 
-# 2. Laravel Backend Architecture
+# 1.2 Backend Responsibilities
 
 
-CareerIQ AI follows a modular layered architecture.
+The backend handles:
+
+
+## Business Logic
+
+
+Responsible for:
+
+
+- Career recommendation rules
+- Skill gap calculation
+- Resume analysis workflow
+- User progress tracking
+
+
+---
+
+## Data Management
+
+
+Responsible for:
+
+
+- Database operations
+- Data relationships
+- Data validation
+- Data persistence
+
+
+---
+
+## API Management
+
+
+Responsible for:
+
+
+- REST API endpoints
+- Authentication
+- Authorization
+- Response formatting
+
+
+---
+
+## AI Integration
+
+
+Responsible for:
+
+
+- Sending data to AI services
+- Receiving AI results
+- Processing background tasks
+
+
+---
+
+# 1.3 Backend Technology Stack
+
+
+| Layer | Technology |
+|---|---|
+| Framework | Laravel 11+ |
+| Language | PHP 8.x |
+| Database | MySQL 8.x |
+| ORM | Eloquent ORM |
+| Authentication | Laravel Sanctum |
+| API Format | REST + JSON |
+| Queue | Laravel Queue |
+| Cache | Redis |
+| AI Service | FastAPI |
+| Testing | PHPUnit |
+| Container | Docker |
+| Deployment | AWS |
+
+
+---
+
+# 2. Backend Architecture
+
+
+CareerIQ AI follows a layered backend architecture.
 
 
 The architecture separates:
 
 
-- HTTP handling
+- Request handling
 - Business logic
-- Database operations
-- External services
+- Data access
+- External integrations
 
 
 ---
@@ -163,10 +197,12 @@ The architecture separates:
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"primaryBorderColor":"#93C5FD",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -174,32 +210,155 @@ The architecture separates:
 flowchart LR
 
 
-CLIENT("Angular Frontend")
+CLIENT["Angular Frontend"]
 
 
-ROUTE("API Routes")
+API["Laravel REST API"]
 
 
-CONTROLLER("Controllers")
+SERVICE["Business Service Layer"]
 
 
-SERVICE("Service Layer")
+MODEL["Eloquent ORM"]
 
 
-REPOSITORY("Repository Layer")
+DATABASE["MySQL Database"]
 
 
-MODEL("Eloquent Models")
-
-
-DATABASE("MySQL Database")
-
-
-EXTERNAL("External Services<br/><br/>FastAPI AI")
+AI["FastAPI AI Service"]
 
 
 
-CLIENT --> ROUTE
+CLIENT --> API
+
+API --> SERVICE
+
+SERVICE --> MODEL
+
+MODEL --> DATABASE
+
+SERVICE --> AI
+
+
+
+classDef frontend fill:#2563EB,color:white;
+
+classDef backend fill:#7C3AED,color:white;
+
+classDef database fill:#059669,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+
+class CLIENT frontend;
+
+class API,SERVICE,MODEL backend;
+
+class DATABASE database;
+
+class AI ai;
+
+```
+
+---
+
+# 2.2 Backend Layer Responsibilities
+
+
+| Layer | Responsibility |
+|---|---|
+|Route Layer|Define API endpoints|
+|Controller Layer|Handle HTTP requests|
+|Service Layer|Implement business logic|
+|Repository Layer|Manage data access|
+|Model Layer|Database interaction|
+|Database Layer|Store persistent data|
+
+
+---
+
+# 2.3 Request Lifecycle
+
+
+Every API request follows:
+
+
+```
+Client Request
+
+        ↓
+
+Laravel Route
+
+        ↓
+
+Controller
+
+        ↓
+
+Service Layer
+
+        ↓
+
+Repository
+
+        ↓
+
+Eloquent Model
+
+        ↓
+
+MySQL Database
+
+        ↓
+
+API Response
+
+```
+
+
+---
+
+# 2.4 Backend Request Flow Diagram
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+REQUEST["HTTP Request"]
+
+
+ROUTE["Laravel Route"]
+
+
+CONTROLLER["Controller"]
+
+
+SERVICE["Service Layer"]
+
+
+REPOSITORY["Repository"]
+
+
+MODEL["Eloquent Model"]
+
+
+DATABASE["MySQL"]
+
+
+
+REQUEST --> ROUTE
 
 ROUTE --> CONTROLLER
 
@@ -211,219 +370,80 @@ REPOSITORY --> MODEL
 
 MODEL --> DATABASE
 
-SERVICE --> EXTERNAL
 
 
+classDef backend fill:#2563EB,color:white;
 
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-classDef external fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
-
-
-
-class CLIENT frontend;
 
 class ROUTE,CONTROLLER,SERVICE,REPOSITORY,MODEL backend;
 
 class DATABASE database;
 
-class EXTERNAL external;
-
 ```
 
 ---
 
-# 2.2 Architecture Principles
+# 3. Modern Laravel Architecture
 
 
-The backend follows:
+CareerIQ AI follows a modular and maintainable Laravel structure.
 
 
-## Separation of Concerns
-
-
-Each layer has a specific responsibility.
-
-
-Example:
-
-
-Controller:
+Instead of organizing only by technical files:
 
 
 ```
-Receive Request
+Controllers
 
-Validate Input
+Models
 
-Return Response
-
-```
-
-
-Service:
-
-
-```
-Business Logic
-
-Decision Making
-
-External Communication
+Services
 
 ```
 
-
-Repository:
-
-
-```
-Database Operations
-
-Query Management
-
-```
+the project follows feature-based organization.
 
 
-Model:
+---
+
+# 3.1 Feature-Based Backend Architecture
+
+
+The application is divided into business modules:
 
 
 ```
-Database Representation
+Authentication
 
-Relationships
+User Profile
+
+Resume Intelligence
+
+Skill Intelligence
+
+Career Recommendation
+
+Learning Roadmap
+
+Interview System
 
 ```
 
 
 ---
 
-# 3. Backend Folder Structure
-
-
-CareerIQ AI follows a scalable Laravel structure.
-
-
-```
-backend/
-
-│
-
-├── app/
-
-│
-
-├── Http/
-
-│   ├── Controllers/
-
-│   ├── Requests/
-
-│   ├── Resources/
-
-│   └── Middleware/
-
-│
-
-├── Models/
-
-│
-
-├── Services/
-
-│
-
-├── Repositories/
-
-│
-
-├── Jobs/
-
-│
-
-├── Events/
-
-│
-
-├── Listeners/
-
-│
-
-├── Notifications/
-
-│
-
-├── Exceptions/
-
-│
-
-├── Policies/
-
-
-├── database/
-
-│
-
-├── migrations/
-
-├── seeders/
-
-
-├── routes/
-
-│
-
-└── api.php
-
-
-├── tests/
-
-│
-
-├── Feature/
-
-└── Unit/
-
-```
-
----
-
-# 3.1 Folder Responsibilities
-
-
-| Folder | Responsibility |
-|-|-|
-|Controllers|Handle HTTP requests|
-|Requests|Validate incoming data|
-|Resources|Format API responses|
-|Models|Database entities|
-|Services|Business logic|
-|Repositories|Database abstraction|
-|Jobs|Background processing|
-|Events|Application events|
-|Listeners|Event handlers|
-|Policies|Authorization rules|
-|Tests|Automated testing|
-
-
----
-
-# 4. Application Layer Design
-
-
-CareerIQ AI backend follows a layered approach.
+# 3.2 Feature Architecture Diagram
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -431,93 +451,181 @@ CareerIQ AI backend follows a layered approach.
 flowchart TB
 
 
-PRESENTATION("Presentation Layer<br/><br/>Controllers + API Resources")
+APP["CareerIQ AI Backend"]
 
 
-BUSINESS("Business Layer<br/><br/>Services")
+AUTH["Authentication"]
 
+PROFILE["User Profile"]
 
-DATA("Data Layer<br/><br/>Repositories")
+RESUME["Resume Intelligence"]
 
+SKILL["Skill Intelligence"]
 
-ENTITY("Entity Layer<br/><br/>Eloquent Models")
+CAREER["Career Engine"]
 
+ROADMAP["Learning Roadmap"]
 
-DATABASE("Database<br/><br/>MySQL")
-
-
-
-PRESENTATION --> BUSINESS
-
-BUSINESS --> DATA
-
-DATA --> ENTITY
-
-ENTITY --> DATABASE
+INTERVIEW["AI Interview"]
 
 
 
-classDef layer fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+APP --> AUTH
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+APP --> PROFILE
+
+APP --> RESUME
+
+APP --> SKILL
+
+APP --> CAREER
+
+APP --> ROADMAP
+
+APP --> INTERVIEW
 
 
 
-class PRESENTATION,BUSINESS,DATA,ENTITY layer;
+classDef app fill:#7C3AED,color:white;
 
-class DATABASE database;
+classDef feature fill:#2563EB,color:white;
+
+
+class APP app;
+
+class AUTH,PROFILE,RESUME,SKILL,CAREER,ROADMAP,INTERVIEW feature;
 
 ```
 
 ---
 
-# 5. MVC Architecture
+# 4. Backend Folder Structure
 
 
-Laravel follows the MVC pattern.
-
-
-MVC means:
+CareerIQ AI uses a scalable Laravel structure.
 
 
 ```
-Model
+backend/
 
-View
 
-Controller
+app/
+
+
+├── Modules/
+
+
+│
+├── Authentication/
+
+│   ├── Controllers/
+
+│   ├── Services/
+
+│   ├── Models/
+
+│   └── Routes/
+
+
+│
+├── Resume/
+
+│   ├── Controllers/
+
+│   ├── Services/
+
+│   ├── Jobs/
+
+│   ├── Models/
+
+│   └── Resources/
+
+
+│
+├── Career/
+
+│
+
+├── Skills/
+
+│
+
+├── Roadmap/
+
+
+├── Interview/
+
+
+├── Core/
+
+
+│   ├── Exceptions/
+
+│   ├── Middleware/
+
+│   └── Helpers/
+
+
+├── Database/
+
+
+├── Tests/
+
+
+└── Config/
+
 
 ```
 
+---
 
-For API applications:
+# 4.1 Folder Responsibilities
 
 
-```
-Model
-
-+
-
-Controller
-
-+
-
-JSON Response
-
-```
+| Folder | Purpose |
+|---|---|
+|Modules|Business features|
+|Controllers|HTTP request handling|
+|Services|Business logic|
+|Models|Database entities|
+|Jobs|Background processing|
+|Resources|API response formatting|
+|Core|Shared backend functionality|
+|Tests|Automated testing|
 
 
 ---
 
-# 5.1 MVC Flow
+---
+
+# 5. Laravel MVC Architecture
+
+
+CareerIQ AI follows the Model-View-Controller (MVC) architecture pattern.
+
+
+Laravel MVC separates:
+
+
+- Request handling
+- Business logic
+- Data management
+- Response generation
+
+
+---
+
+# 5.1 MVC Architecture Overview
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"primaryBorderColor":"#93C5FD",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -525,139 +633,281 @@ JSON Response
 flowchart LR
 
 
-USER("Client Request")
+USER["Client Request"]
 
 
-CONTROLLER("Controller")
+ROUTE["Laravel Route"]
 
 
-MODEL("Eloquent Model")
+CONTROLLER["Controller"]
 
 
-DATABASE("MySQL")
+SERVICE["Service Layer"]
 
 
-RESPONSE("JSON Response")
+MODEL["Eloquent Model"]
+
+
+DATABASE["MySQL"]
+
+
+RESPONSE["JSON Response"]
 
 
 
-USER --> CONTROLLER
+USER --> ROUTE
 
-CONTROLLER --> MODEL
+ROUTE --> CONTROLLER
+
+CONTROLLER --> SERVICE
+
+SERVICE --> MODEL
 
 MODEL --> DATABASE
-
-DATABASE --> MODEL
-
-MODEL --> CONTROLLER
 
 CONTROLLER --> RESPONSE
 
 
 
-classDef client fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef backend fill:#2563EB,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef output fill:#7C3AED,color:white;
 
 
-
-class USER client;
-
-class CONTROLLER,MODEL backend;
+class ROUTE,CONTROLLER,SERVICE,MODEL backend;
 
 class DATABASE database;
 
-class RESPONSE client;
+class RESPONSE output;
 
 ```
 
 ---
 
-# 6. Service Layer Pattern
+# 5.2 Model Layer
 
 
-CareerIQ AI avoids putting business logic directly inside controllers.
+The Model layer represents database entities.
 
 
-Bad approach:
+Responsibilities:
+
+
+- Database communication
+- Relationships
+- Data casting
+- Query operations
+
+
+Examples:
+
+
+```
+User Model
+
+Resume Model
+
+Skill Model
+
+Career Model
+
+Roadmap Model
+
+```
+
+
+Example:
 
 
 ```php
-public function uploadResume()
+class Resume extends Model
+
 {
 
-// 500 lines of logic
+
+protected $fillable = [
+
+'user_id',
+
+'file_path',
+
+'score'
+
+];
+
 
 }
 
 ```
 
+---
 
-Better approach:
+# 5.3 Controller Layer
 
 
-```
-Controller
+Controllers handle HTTP requests and responses.
 
-      |
 
-ResumeService
+Responsibilities:
 
-      |
 
-ResumeRepository
+- Receive API requests
+- Validate input
+- Call services
+- Return responses
 
-      |
 
-Database
-
-```
+Controllers should not contain complex business logic.
 
 
 ---
 
-# 6.1 Example Service Structure
+# Controller Example
 
+
+```php
+class ResumeController extends Controller
+
+{
+
+
+public function upload(
+
+Request $request
+
+){
+
+
+$result =
+
+$this->resumeService
+
+->upload($request);
+
+
+
+return response()->json(
+
+$result
+
+);
+
+
+}
+
+
+}
 
 ```
-app/
 
-Services/
+---
 
-    ResumeService.php
+# 6. Service Layer Architecture
 
-    SkillService.php
 
-    CareerService.php
+CareerIQ AI uses a Service Layer pattern.
 
-    AIService.php
 
-```
+The service layer contains business logic.
+
+
+Benefits:
+
+
+- Cleaner controllers
+- Better testing
+- Reusable business rules
+- Easier maintenance
 
 
 ---
 
-# 6.2 Resume Service Example
+# 6.1 Service Layer Flow
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+CONTROLLER["Controller"]
+
+
+SERVICE["Service Layer"]
+
+
+REPOSITORY["Repository"]
+
+
+MODEL["Model"]
+
+
+DATABASE["MySQL"]
+
+
+
+CONTROLLER --> SERVICE
+
+SERVICE --> REPOSITORY
+
+REPOSITORY --> MODEL
+
+MODEL --> DATABASE
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class CONTROLLER,SERVICE,REPOSITORY,MODEL backend;
+
+class DATABASE database;
+
+```
+
+---
+
+# 6.2 Service Example
+
+
+Example:
 
 
 ```php
 class ResumeService
-{
-
-
-public function analyzeResume($resume)
 
 {
 
-    // Store file
 
-    // Extract text
+public function analyzeResume(
 
-    // Send to AI service
+Resume $resume
 
-    // Save analysis
+){
+
+
+$data =
+
+$this->aiService
+
+->analyze($resume);
+
+
+
+return $data;
 
 
 }
@@ -666,68 +916,43 @@ public function analyzeResume($resume)
 }
 
 ```
-
-
----
-
-# Benefits
-
-
-Service layer provides:
-
-
-- Cleaner controllers
-- Reusable business logic
-- Easier testing
-- Better scalability
-
-
----
 
 ---
 
 # 7. Repository Pattern
 
 
-CareerIQ AI uses the Repository Pattern to separate database operations from business logic.
+CareerIQ AI uses Repository Pattern to separate database logic from business logic.
 
 
-Without Repository Pattern:
-
-
-```
-Controller
-
-     |
-
-Eloquent Query
-
-     |
-
-Database
-
-```
-
-
-With Repository Pattern:
+Without Repository:
 
 
 ```
 Controller
 
-     |
+    |
 
-Service Layer
+Database Query
 
-     |
+```
 
-Repository Layer
 
-     |
+With Repository:
 
-Eloquent Model
 
-     |
+```
+Controller
+
+    |
+
+Service
+
+    |
+
+Repository
+
+    |
 
 Database
 
@@ -741,10 +966,11 @@ Database
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -752,44 +978,33 @@ Database
 flowchart LR
 
 
-CONTROLLER("Controller")
+SERVICE["Service Layer"]
 
 
-SERVICE("Service Layer")
+REPOSITORY["Repository Layer"]
 
 
-INTERFACE("Repository Interface")
+ORM["Eloquent ORM"]
 
 
-REPOSITORY("Repository Implementation")
-
-
-MODEL("Eloquent Model")
-
-
-DATABASE("MySQL Database")
+DATABASE["MySQL"]
 
 
 
-CONTROLLER --> SERVICE
+SERVICE --> REPOSITORY
 
-SERVICE --> INTERFACE
+REPOSITORY --> ORM
 
-INTERFACE --> REPOSITORY
-
-REPOSITORY --> MODEL
-
-MODEL --> DATABASE
+ORM --> DATABASE
 
 
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#2563EB,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
 
-
-class CONTROLLER,SERVICE,INTERFACE,REPOSITORY,MODEL backend;
+class SERVICE,REPOSITORY,ORM backend;
 
 class DATABASE database;
 
@@ -797,56 +1012,23 @@ class DATABASE database;
 
 ---
 
-# 7.2 Repository Folder Structure
+# 7.2 Repository Example
 
 
-```
-app/
-
-Repositories/
-
-
-├── Interfaces/
-
-│
-
-├── UserRepositoryInterface.php
-
-├── ResumeRepositoryInterface.php
-
-├── SkillRepositoryInterface.php
-
-
-
-├── UserRepository.php
-
-├── ResumeRepository.php
-
-└── SkillRepository.php
-
-```
-
-
----
-
-# 7.3 Repository Example
-
-
-## Interface
+Interface:
 
 
 ```php
 interface ResumeRepositoryInterface
+
 {
 
 
-public function create(array $data);
+public function findByUser(
 
+int $userId
 
-public function findById($id);
-
-
-public function delete($id);
+);
 
 
 }
@@ -854,257 +1036,32 @@ public function delete($id);
 ```
 
 
----
-
-## Implementation
+Implementation:
 
 
 ```php
-class ResumeRepository implements ResumeRepositoryInterface
-{
+class ResumeRepository
 
-
-public function create(array $data)
+implements ResumeRepositoryInterface
 
 {
 
-    return Resume::create($data);
 
-}
+public function findByUser(
 
+int $userId
 
+){
 
-public function findById($id)
 
-{
-
-    return Resume::findOrFail($id);
-
-}
-
-
-
-public function delete($id)
-
-{
-
-    return Resume::destroy($id);
-
-}
-
-
-}
-
-```
-
----
-
-# Repository Benefits
-
-
-The Repository Pattern provides:
-
-
-- Database abstraction
-- Cleaner services
-- Easier testing
-- Better maintainability
-- Future database flexibility
-
-
----
-
-# 8. Eloquent Model Design
-
-
-Laravel Eloquent models represent database entities.
-
-
-CareerIQ AI models:
-
-
-```
-User
-
-Profile
-
-Education
-
-Experience
-
-Project
-
-Skill
-
-Resume
-
-ResumeAnalysis
-
-CareerGoal
-
-LearningRoadmap
-
-InterviewSession
-
-```
-
-
----
-
-# 8.1 Model Relationship Design
-
-
-```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
-flowchart TB
-
-
-USER("User")
-
-
-PROFILE("Profile")
-
-
-PROJECT("Projects")
-
-
-SKILL("Skills")
-
-
-RESUME("Resumes")
-
-
-ANALYSIS("Resume Analysis")
-
-
-
-USER --> PROFILE
-
-USER --> PROJECT
-
-USER --> SKILL
-
-USER --> RESUME
-
-RESUME --> ANALYSIS
-
-
-
-classDef entity fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
-
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-
-
-class USER,PROFILE,PROJECT,SKILL,RESUME entity;
-
-class ANALYSIS database;
-
-```
-
----
-
-# 8.2 User Model Example
-
-
-```php
-class User extends Authenticatable
-{
-
-
-protected $fillable = [
-
-'name',
-
-'email',
-
-'password'
-
-];
-
-
-
-public function profile()
-
-{
-
-return $this->hasOne(Profile::class);
-
-}
-
-
-
-public function skills()
-
-{
-
-return $this->belongsToMany(Skill::class);
-
-}
-
-
-
-public function resumes()
-
-{
-
-return $this->hasMany(Resume::class);
-
-}
-
-
-
-}
-
-```
-
----
-
-# 8.3 Resume Model Example
-
-
-```php
-class Resume extends Model
-{
-
-
-protected $fillable = [
+return Resume::where(
 
 'user_id',
 
-'file_name',
+$userId
 
-'file_path'
+)->get();
 
-];
-
-
-
-public function user()
-
-{
-
-return $this->belongsTo(User::class);
-
-}
-
-
-
-public function analysis()
-
-{
-
-return $this->hasOne(
-ResumeAnalysis::class
-);
 
 }
 
@@ -1115,64 +1072,41 @@ ResumeAnalysis::class
 
 ---
 
-# 9. Controller Design
+# 8. Database Integration
 
 
-Controllers are responsible for:
+CareerIQ AI uses MySQL 8.x as the primary database.
 
 
-- Receiving requests
-- Calling services
-- Returning responses
-
-
-Controllers should NOT contain:
-
-
-- Complex business logic
-- Database queries
-- AI processing
-
-
----
-
-# 9.1 Controller Structure
+Laravel communicates with MySQL using:
 
 
 ```
-app/
+Laravel
 
-Http/
+    |
 
-Controllers/
+Eloquent ORM
 
+    |
 
-AuthController.php
-
-ProfileController.php
-
-ResumeController.php
-
-SkillController.php
-
-CareerController.php
-
-RoadmapController.php
+MySQL
 
 ```
 
 
 ---
 
-# 9.2 Controller Flow
+# 8.1 Database Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -1180,146 +1114,106 @@ RoadmapController.php
 flowchart LR
 
 
-REQUEST("API Request")
+APPLICATION["Laravel Application"]
 
 
-CONTROLLER("Controller")
+ORM["Eloquent ORM"]
 
 
-SERVICE("Service")
+QUERY["Query Builder"]
 
 
-RESPONSE("JSON Response")
-
-
-
-REQUEST --> CONTROLLER
-
-CONTROLLER --> SERVICE
-
-SERVICE --> CONTROLLER
-
-CONTROLLER --> RESPONSE
+DATABASE["MySQL Database"]
 
 
 
-classDef request fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+APPLICATION --> ORM
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+ORM --> QUERY
+
+QUERY --> DATABASE
 
 
 
-class REQUEST request;
+classDef backend fill:#2563EB,color:white;
 
-class CONTROLLER,SERVICE backend;
+classDef database fill:#059669,color:white;
 
-class RESPONSE request;
+
+class APPLICATION,ORM,QUERY backend;
+
+class DATABASE database;
 
 ```
 
 ---
 
-# 9.3 Resume Controller Example
+# 8.2 Eloquent Relationships
 
 
-```php
-class ResumeController extends Controller
-
-{
-
-
-public function __construct(
-
-private ResumeService $resumeService
-
-)
-
-{}
-
-
-
-public function upload(
-Request $request
-)
-
-{
-
-
-$result =
-
-$this->resumeService
-->upload($request);
-
-
-
-return response()->json([
-
-'status'=>'success',
-
-'data'=>$result
-
-]);
-
-
-}
-
-
-}
-
-```
-
----
-
-# 10. API Resource Layer
-
-
-Laravel API Resources transform models into JSON responses.
+CareerIQ AI uses relationships between entities.
 
 
 Example:
 
 
 ```
-Database Model
+User
 
-        |
+ |
 
-API Resource
+hasMany
 
-        |
+ |
 
-JSON Response
+Resume
+
+
+User
+
+ |
+
+hasMany
+
+ |
+
+Skills
+
+
+Career
+
+ |
+
+hasMany
+
+ |
+
+Roadmap Tasks
 
 ```
 
 
 ---
 
-# 10.1 Resource Example
+# Relationship Example
 
 
 ```php
-class ResumeResource extends JsonResource
-{
-
-
-public function toArray($request)
+class User extends Model
 
 {
 
-return [
+
+public function resumes()
+
+{
 
 
-'id'=>$this->id,
+return $this->hasMany(
 
+Resume::class
 
-'file_name'=>$this->file_name,
-
-
-'uploaded_at'=>$this->created_at
-
-
-];
+);
 
 
 }
@@ -1331,42 +1225,35 @@ return [
 
 ---
 
-# 11. Authentication Implementation
+# 9. Authentication Architecture
 
 
-CareerIQ AI uses:
+CareerIQ AI uses Laravel Sanctum for authentication.
 
 
-```
-Laravel Sanctum
+Authentication provides:
 
-+
 
-Bearer Token Authentication
-
-```
+- Secure API access
+- Token management
+- User sessions
+- Protected endpoints
 
 
 ---
 
-# 11.1 Authentication Flow
+# 9.1 Authentication Flow
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter'
-}
-}}%%
-
-
 sequenceDiagram
 
 
 participant User
 
-participant API
+participant Frontend
+
+participant Laravel
 
 participant Sanctum
 
@@ -1374,166 +1261,82 @@ participant Database
 
 
 
-User->>API:
-Login Request
+User->>Frontend: Enter credentials
 
+Frontend->>Laravel: POST /login
 
-API->>Database:
-Verify Credentials
+Laravel->>Database: Verify user
 
+Database-->>Laravel: User data
 
-Database-->>API:
-User Found
+Laravel->>Sanctum: Generate token
 
+Sanctum-->>Laravel: Authentication token
 
-API->>Sanctum:
-Generate Token
+Laravel-->>Frontend: Return token
 
-
-Sanctum-->>API:
-Access Token
-
-
-API-->>User:
-Return Token
-
+Frontend-->>User: Access dashboard
 
 ```
 
 ---
 
-# 11.2 Protected Route Example
+# 9.2 Authentication Structure
 
 
-```php
-Route::middleware(
-'auth:sanctum'
-)
-
-->group(function(){
+```
+app/
 
 
-Route::get(
-'/profile',
-[ProfileController::class,'show']
-);
+Modules/
 
 
-});
+Authentication/
+
+
+├── Controllers/
+
+├── Services/
+
+├── Models/
+
+├── Middleware/
+
+└── Requests/
 
 ```
 
 ---
 
-# Authentication Benefits
+# 10. Authorization System
 
 
-Provides:
+Authentication verifies identity.
 
 
-- Secure API access
-- Token management
-- Stateless authentication
-- Mobile application support
+Authorization verifies permissions.
 
 
----
-
----
-
-# 12. Background Jobs and Queue System
+CareerIQ AI supports:
 
 
-CareerIQ AI contains several operations that require significant processing time.
-
-
-Examples:
-
-
-- Resume parsing
-- AI analysis
-- Skill extraction
-- Career recommendation generation
-- Report generation
-
-
-These operations should not block normal API requests.
+- User roles
+- Feature permissions
+- Protected resources
 
 
 ---
 
-# 12.1 Queue Architecture
-
-
-Instead of:
-
-
-```
-User Upload Resume
-
-        |
-
-API waits
-
-        |
-
-AI Processing
-
-        |
-
-Response
-
-```
-
-
-CareerIQ AI uses asynchronous processing:
-
-
-```
-User Upload Resume
-
-        |
-
-Laravel API
-
-        |
-
-Create Queue Job
-
-        |
-
-Redis Queue
-
-        |
-
-Background Worker
-
-        |
-
-AI Processing
-
-        |
-
-Database Update
-
-        |
-
-Notification
-
-```
-
-
----
-
-# 12.2 Queue Processing Diagram
+# 10.1 Authorization Flow
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -1541,118 +1344,745 @@ Notification
 flowchart LR
 
 
-USER("User")
+REQUEST["API Request"]
 
 
-API("Laravel API")
+MIDDLEWARE["Authorization Middleware"]
 
 
-QUEUE("Redis Queue")
+ROLE{"Permission Check"}
 
 
-WORKER("Queue Worker")
+ALLOW["Allow Access"]
 
 
-FASTAPI("FastAPI AI Service")
-
-
-DATABASE("MySQL Database")
-
-
-NOTIFICATION("Notification System")
+DENY["Reject Request"]
 
 
 
-USER --> API
+REQUEST --> MIDDLEWARE
 
-API --> QUEUE
+MIDDLEWARE --> ROLE
 
-QUEUE --> WORKER
+ROLE --> ALLOW
 
-WORKER --> FASTAPI
-
-FASTAPI --> DATABASE
-
-DATABASE --> NOTIFICATION
+ROLE --> DENY
 
 
 
-classDef user fill:#334155,stroke:#CBD5E1,color:#FFFFFF;
+classDef backend fill:#2563EB,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef decision fill:#D97706,color:white;
 
-classDef queue fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
-
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-classDef output fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
+classDef success fill:#059669,color:white;
 
 
+class REQUEST,MIDDLEWARE backend;
 
-class USER user;
+class ROLE decision;
 
-class API,WORKER backend;
-
-class QUEUE queue;
-
-class DATABASE database;
-
-class FASTAPI,NOTIFICATION output;
+class ALLOW,DENY success;
 
 ```
 
 ---
 
-# 12.3 Laravel Queue Configuration
+# 10.2 Middleware Example
+
+
+```php
+public function handle(
+
+$request,
+
+Closure $next
+
+)
+
+{
+
+
+if(
+
+!auth()->check()
+
+){
+
+
+return response()->json(
+
+['message'=>'Unauthorized'],
+
+401
+
+);
+
+
+}
+
+
+
+return $next($request);
+
+
+}
+
+```
+
+---
+
+---
+
+# 11. REST API Architecture
+
+
+CareerIQ AI exposes backend functionality through REST APIs.
+
+
+The API layer provides communication between:
+
+
+```
+Angular Frontend
+
+        ↓
+
+Laravel REST API
+
+        ↓
+
+Database / AI Services
+
+```
+
+
+---
+
+# 11.1 API Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+CLIENT["Frontend Client"]
+
+
+ROUTE["API Routes"]
+
+
+CONTROLLER["Controllers"]
+
+
+RESOURCE["API Resources"]
+
+
+RESPONSE["JSON Response"]
+
+
+
+CLIENT --> ROUTE
+
+ROUTE --> CONTROLLER
+
+CONTROLLER --> RESOURCE
+
+RESOURCE --> RESPONSE
+
+
+
+classDef frontend fill:#2563EB,color:white;
+
+classDef backend fill:#7C3AED,color:white;
+
+
+class CLIENT frontend;
+
+class ROUTE,CONTROLLER,RESOURCE,RESPONSE backend;
+
+```
+
+---
+
+# 11.2 API Route Organization
+
+
+CareerIQ AI separates APIs by feature.
+
+
+Example:
+
+
+```
+routes/
+
+
+api.php
+
+
+/api/auth
+
+/api/users
+
+/api/resumes
+
+/api/skills
+
+/api/careers
+
+/api/roadmaps
+
+/api/interviews
+
+```
+
+
+---
+
+# 11.3 REST Endpoint Examples
+
+
+## Authentication
+
+
+```
+POST /api/register
+
+POST /api/login
+
+POST /api/logout
+
+```
+
+
+---
+
+## Resume Management
+
+
+```
+POST /api/resumes/upload
+
+GET /api/resumes/{id}
+
+GET /api/resumes/{id}/analysis
+
+```
+
+
+---
+
+## Career Intelligence
+
+
+```
+GET /api/careers
+
+POST /api/career-analysis
+
+GET /api/roadmap
+
+```
+
+
+---
+
+# 11.4 API Response Standard
+
+
+All API responses follow a consistent structure.
+
+
+Example:
+
+
+```json
+{
+
+"success": true,
+
+"message": "Resume analyzed successfully",
+
+"data": {
+
+"score": 85,
+
+"skills": [
+
+"Laravel",
+
+"PHP"
+
+]
+
+}
+
+}
+
+```
+
+---
+
+# 12. API Resource Layer
+
+
+Laravel API Resources transform database models into clean responses.
+
+
+Benefits:
+
+
+- Consistent API output
+- Hide unnecessary fields
+- Better frontend integration
+
+
+---
+
+# 12.1 Resource Flow
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+MODEL["Eloquent Model"]
+
+
+RESOURCE["API Resource"]
+
+
+JSON["JSON Response"]
+
+
+FRONTEND["Frontend Application"]
+
+
+
+MODEL --> RESOURCE
+
+RESOURCE --> JSON
+
+JSON --> FRONTEND
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef frontend fill:#7C3AED,color:white;
+
+
+class MODEL,RESOURCE,JSON backend;
+
+class FRONTEND frontend;
+
+```
+
+---
+
+# 12.2 Resource Example
+
+
+```php
+class ResumeResource extends JsonResource
+
+{
+
+
+public function toArray(
+
+$request
+
+){
+
+
+return [
+
+'id'=>$this->id,
+
+'score'=>$this->score,
+
+'skills'=>$this->skills
+
+];
+
+
+}
+
+
+}
+
+```
+
+---
+
+# 13. Validation Strategy
+
+
+Input validation protects application data integrity.
 
 
 CareerIQ AI uses:
 
 
-```
-Laravel Queue
-
-+
-
-Redis
-
-```
-
-
-Environment:
-
-
-```env
-QUEUE_CONNECTION=redis
-```
+- Laravel Form Requests
+- Custom validation rules
+- API validation responses
 
 
 ---
 
-# 12.4 Job Structure
+# 13.1 Validation Flow
 
 
-Jobs are stored:
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
 
+
+flowchart LR
+
+
+REQUEST["API Request"]
+
+
+VALIDATE["Form Request Validation"]
+
+
+SERVICE["Business Logic"]
+
+
+DATABASE["Database"]
+
+
+
+REQUEST --> VALIDATE
+
+VALIDATE --> SERVICE
+
+SERVICE --> DATABASE
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class REQUEST,VALIDATE,SERVICE backend;
+
+class DATABASE database;
 
 ```
-app/
 
-Jobs/
+---
+
+# 13.2 Validation Example
 
 
-AnalyzeResumeJob.php
+```php
+class ResumeUploadRequest extends FormRequest
 
-GenerateRoadmapJob.php
+{
 
-CalculateSkillGapJob.php
+
+public function rules()
+
+{
+
+
+return [
+
+'resume'=>'required|file|mimes:pdf,docx|max:10240'
+
+];
+
+
+}
+
+
+}
 
 ```
+
+---
+
+# 14. Exception Handling
+
+
+CareerIQ AI implements centralized exception handling.
+
+
+Goals:
+
+
+- Consistent error responses
+- Easier debugging
+- Better monitoring
 
 
 ---
 
-# 12.5 Resume Analysis Job Example
+# 14.1 Exception Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#DC2626",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+REQUEST["API Request"]
+
+
+APPLICATION["Laravel Application"]
+
+
+HANDLER["Exception Handler"]
+
+
+RESPONSE["Error Response"]
+
+
+LOG["System Logs"]
+
+
+
+REQUEST --> APPLICATION
+
+APPLICATION --> HANDLER
+
+HANDLER --> RESPONSE
+
+HANDLER --> LOG
+
+
+
+classDef error fill:#DC2626,color:white;
+
+classDef backend fill:#2563EB,color:white;
+
+
+class HANDLER,RESPONSE error;
+
+class REQUEST,APPLICATION,LOG backend;
+
+```
+
+---
+
+# 14.2 Error Response Example
+
+
+```json
+{
+
+"success": false,
+
+"message": "Validation failed",
+
+"errors": {
+
+"email":[
+
+"Email is required"
+
+]
+
+}
+
+}
+
+```
+
+---
+
+# 15. Logging and Monitoring
+
+
+Backend monitoring helps identify:
+
+
+- Application failures
+- Performance issues
+- Security events
+
+
+---
+
+# 15.1 Logging Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+APPLICATION["Laravel Application"]
+
+
+LOGGER["Laravel Logger"]
+
+
+STORAGE["Log Storage"]
+
+
+MONITOR["Monitoring Platform"]
+
+
+
+APPLICATION --> LOGGER
+
+LOGGER --> STORAGE
+
+STORAGE --> MONITOR
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef monitor fill:#0891B2,color:white;
+
+
+class APPLICATION,LOGGER,STORAGE backend;
+
+class MONITOR monitor;
+
+```
+
+---
+
+# 15.2 Monitoring Tools
+
+
+Possible integrations:
+
+
+- AWS CloudWatch
+- Laravel Telescope
+- Sentry
+- Application logs
+
+
+---
+
+# 16. Queue and Background Processing
+
+
+AI processing tasks can require significant time.
+
+
+CareerIQ AI uses Laravel Queues for:
+
+
+- Resume analysis
+- AI processing
+- Report generation
+- Email notifications
+
+
+---
+
+# 16.1 Queue Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+USER["User Upload"]
+
+
+API["Laravel API"]
+
+
+JOB["Queue Job"]
+
+
+WORKER["Queue Worker"]
+
+
+RESULT["Processing Result"]
+
+
+
+USER --> API
+
+API --> JOB
+
+JOB --> WORKER
+
+WORKER --> RESULT
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef output fill:#059669,color:white;
+
+
+class USER,API,JOB,WORKER backend;
+
+class RESULT output;
+
+```
+
+---
+
+# 16.2 Queue Example
 
 
 ```php
@@ -1661,28 +2091,14 @@ class AnalyzeResumeJob implements ShouldQueue
 {
 
 
-public function __construct(
-
-public Resume $resume
-
-)
-
-{}
-
-
-
 public function handle()
 
 {
 
 
-// Extract resume text
+$this->resumeService
 
-
-// Send data to AI service
-
-
-// Store AI response
+->analyze();
 
 
 }
@@ -1694,174 +2110,10 @@ public function handle()
 
 ---
 
-# 12.6 Dispatching Jobs
+# 17. AI Service Integration
 
 
-Example:
-
-
-```php
-AnalyzeResumeJob::dispatch($resume);
-
-```
-
-
-The API immediately returns:
-
-
-```json
-{
-
-"message":
-
-"Resume analysis started"
-
-}
-
-```
-
-
-The heavy processing happens in the background.
-
----
-
-# 13. Event Driven Architecture
-
-
-CareerIQ AI uses events for loosely coupled communication.
-
-
-Example:
-
-
-When a resume is analyzed:
-
-
-```
-ResumeAnalyzed Event
-
-          |
-
----------------------
-
-|                   |
-
-Save Result     Notify User
-
-```
-
-
----
-
-# 13.1 Event Architecture
-
-
-```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
-flowchart LR
-
-
-ACTION("User Action")
-
-
-EVENT("Application Event")
-
-
-LISTENER1("Database Listener")
-
-
-LISTENER2("Notification Listener")
-
-
-RESULT("Stored Result")
-
-
-MESSAGE("User Notification")
-
-
-
-ACTION --> EVENT
-
-EVENT --> LISTENER1
-
-EVENT --> LISTENER2
-
-LISTENER1 --> RESULT
-
-LISTENER2 --> MESSAGE
-
-
-
-classDef action fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
-
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef output fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-
-
-class ACTION action;
-
-class EVENT,LISTENER1,LISTENER2 backend;
-
-class RESULT,MESSAGE output;
-
-```
-
----
-
-# 13.2 Event Examples
-
-
-CareerIQ AI events:
-
-
-| Event | Purpose |
-|-|-|
-|ResumeUploaded|Start resume processing|
-|ResumeAnalyzed|Store AI result|
-|SkillUpdated|Recalculate career score|
-|RoadmapCompleted|Update progress analytics|
-
-
----
-
-# 13.3 Event Example
-
-
-```php
-class ResumeAnalyzed
-
-{
-
-
-public function __construct(
-
-public Resume $resume
-
-)
-
-{}
-
-
-}
-
-```
-
----
-
-# 14. AI Service Integration
-
-
-CareerIQ AI separates AI logic from Laravel.
+CareerIQ AI separates AI processing from the Laravel backend.
 
 
 Architecture:
@@ -1872,34 +2124,25 @@ Laravel Backend
 
         |
 
-REST Communication
-
-        |
-
 FastAPI AI Service
 
         |
 
 Machine Learning Models
 
+        |
+
+AI Results
+
 ```
 
 
 ---
 
-# 14.1 AI Integration Flow
+# 17.1 Laravel and FastAPI Communication
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 sequenceDiagram
 
 
@@ -1911,137 +2154,78 @@ participant Queue
 
 participant FastAPI
 
-participant AI
-
-participant MySQL
+participant Database
 
 
 
-User->>Laravel:
+User->>Laravel: Upload Resume
+
+Laravel->>Queue: Create AI Job
+
+Queue->>FastAPI: Send Resume Data
+
+FastAPI-->>Queue: Return Analysis
+
+Queue->>Database: Store Results
+
+Database-->>Laravel: Update Status
+
+Laravel-->>User: Show Result
+
+```
+
+---
+
+# 18. Resume Processing Backend Flow
+
+
+Resume intelligence is one of the core backend modules.
+
+
+Processing steps:
+
+
+```
 Upload Resume
 
+        ↓
 
-Laravel->>Queue:
-Create Analysis Job
+Store File
 
+        ↓
 
-Queue->>FastAPI:
-Send Resume Data
+Create Processing Job
 
+        ↓
 
-FastAPI->>AI:
-Analyze Content
+Extract Information
 
+        ↓
 
-AI-->>FastAPI:
-Return Insights
+AI Analysis
 
+        ↓
 
-FastAPI-->>Laravel:
-Analysis Result
+Save Results
 
+        ↓
 
-Laravel->>MySQL:
-Store Result
-
-
-Laravel-->>User:
-Notify Completion
-
+Display Report
 
 ```
 
 ---
 
-# 14.2 AI Service Client
-
-
-Laravel communicates using an API client.
-
-
-Example:
-
-
-```
-app/
-
-Services/
-
-
-AIService.php
-
-```
-
-
----
-
-Example:
-
-
-```php
-class AIService
-
-{
-
-
-public function analyzeResume($text)
-
-{
-
-
-$response = Http::post(
-
-config('services.ai.url'),
-
-[
-
-'text'=>$text
-
-]
-
-);
-
-
-return $response->json();
-
-
-}
-
-
-}
-
-```
-
----
-
-# 15. File Processing System
-
-
-CareerIQ AI handles user uploaded files securely.
-
-
-Supported files:
-
-
-```
-PDF
-
-DOCX
-
-```
-
-
----
-
-# 15.1 File Processing Flow
+# 18.1 Resume Processing Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -2049,56 +2233,334 @@ DOCX
 flowchart LR
 
 
-UPLOAD("Resume Upload")
+UPLOAD["Resume Upload"]
 
 
-VALIDATE("File Validation")
+STORAGE["File Storage"]
 
 
-STORAGE("File Storage")
+QUEUE["Background Job"]
 
 
-EXTRACT("Text Extraction")
+AI["FastAPI AI Engine"]
 
 
-ANALYSIS("AI Analysis")
+RESULT["Analysis Result"]
 
 
-RESULT("Database Result")
-
-
-
-UPLOAD --> VALIDATE
-
-VALIDATE --> STORAGE
-
-STORAGE --> EXTRACT
-
-EXTRACT --> ANALYSIS
-
-ANALYSIS --> RESULT
+DATABASE["MySQL"]
 
 
 
-classDef process fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+UPLOAD --> STORAGE
 
-classDef storage fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+STORAGE --> QUEUE
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+QUEUE --> AI
+
+AI --> RESULT
+
+RESULT --> DATABASE
 
 
 
-class UPLOAD,VALIDATE,EXTRACT process;
+classDef backend fill:#2563EB,color:white;
 
-class STORAGE,RESULT storage;
+classDef ai fill:#D97706,color:white;
 
-class ANALYSIS ai;
+classDef database fill:#059669,color:white;
+
+
+class UPLOAD,STORAGE,QUEUE backend;
+
+class AI ai;
+
+class DATABASE database;
 
 ```
 
 ---
 
-# 15.2 File Storage Strategy
+---
+
+# 19. Skill Intelligence Backend
+
+
+The Skill Intelligence module analyzes and manages user professional skills.
+
+
+Responsibilities:
+
+
+- Skill extraction
+- Skill categorization
+- Skill level estimation
+- Skill gap identification
+
+
+---
+
+# 19.1 Skill Intelligence Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+PROFILE["User Profile"]
+
+
+RESUME["Resume Data"]
+
+
+ENGINE["Skill Analysis Engine"]
+
+
+DATABASE["Skill Database"]
+
+
+RESULT["Skill Assessment"]
+
+
+
+PROFILE --> ENGINE
+
+RESUME --> ENGINE
+
+ENGINE --> DATABASE
+
+DATABASE --> RESULT
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+classDef output fill:#7C3AED,color:white;
+
+
+class PROFILE,RESUME,ENGINE backend;
+
+class DATABASE database;
+
+class RESULT output;
+
+```
+
+---
+
+# 19.2 Skill Processing Flow
+
+
+```
+User Data
+
+    ↓
+
+Extract Skills
+
+    ↓
+
+Normalize Skills
+
+    ↓
+
+Compare With Skill Database
+
+    ↓
+
+Calculate Skill Level
+
+    ↓
+
+Generate Assessment
+
+```
+
+---
+
+# 20. Career Recommendation Engine
+
+
+The Career Recommendation Engine helps users identify suitable career paths.
+
+
+The system analyzes:
+
+
+- Current skills
+- Experience
+- Education
+- Career goals
+- Market requirements
+
+
+---
+
+# 20.1 Career Recommendation Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+USER["User Profile"]
+
+
+SKILLS["Skill Data"]
+
+
+CAREERDB["Career Knowledge Base"]
+
+
+ENGINE["Recommendation Engine"]
+
+
+ROADMAP["Learning Roadmap"]
+
+
+
+USER --> ENGINE
+
+SKILLS --> ENGINE
+
+CAREERDB --> ENGINE
+
+ENGINE --> ROADMAP
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+
+class USER,SKILLS,CAREERDB backend;
+
+class ENGINE,ROADMAP ai;
+
+```
+
+---
+
+# 20.2 Recommendation Process
+
+
+```
+Collect User Data
+
+        ↓
+
+Analyze Current Skills
+
+        ↓
+
+Compare Target Career
+
+        ↓
+
+Identify Missing Skills
+
+        ↓
+
+Generate Learning Roadmap
+
+```
+
+---
+
+# 21. File Storage Management
+
+
+CareerIQ AI manages:
+
+
+- Resume files
+- Certificates
+- Profile documents
+- AI generated reports
+
+
+---
+
+# 21.1 Storage Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+USER["User Upload"]
+
+
+API["Laravel API"]
+
+
+STORAGE["File Storage"]
+
+
+DATABASE["File Metadata"]
+
+
+PROCESS["Processing Service"]
+
+
+
+USER --> API
+
+API --> STORAGE
+
+API --> DATABASE
+
+STORAGE --> PROCESS
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class USER,API,STORAGE,PROCESS backend;
+
+class DATABASE database;
+
+```
+
+---
+
+# 21.2 Storage Strategy
 
 
 Development:
@@ -2118,108 +2580,44 @@ AWS S3
 
 ```
 
+Benefits:
 
-Architecture:
 
-
-```
-Laravel
-
-    |
-
-Storage Service
-
-    |
-
-AWS S3 Bucket
-
-```
+- Scalability
+- Secure access
+- Backup support
+- CDN integration
 
 
 ---
 
-# 16. Notification System
+# 22. Caching Strategy
 
 
-Users receive notifications for:
+Caching improves backend performance.
 
 
-- Resume analysis completion
-- Skill gap report generation
-- Learning milestone completion
+CareerIQ AI uses caching for:
 
 
----
-
-# 16.1 Notification Channels
-
-
-| Channel | Usage |
-|-|-|
-|Database|Application notifications|
-|Email|Important updates|
-|Push Notification|Future mobile application|
+- Frequently accessed data
+- Career recommendations
+- Skill information
+- User dashboard data
 
 
 ---
 
-# Notification Example
-
-
-```php
-class ResumeAnalysisCompleted extends Notification
-
-{
-
-
-public function via($notifiable)
-
-{
-
-
-return [
-
-'database',
-
-'mail'
-
-];
-
-
-}
-
-
-}
-
-```
-
----
-
----
-
-# 17. Exception Handling
-
-
-CareerIQ AI uses centralized exception handling to provide:
-
-
-- Consistent API responses
-- Better debugging
-- Improved user experience
-- Easier maintenance
-
-
----
-
-# 17.1 Exception Handling Architecture
+# 22.1 Cache Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -2227,389 +2625,325 @@ CareerIQ AI uses centralized exception handling to provide:
 flowchart LR
 
 
-REQUEST("Incoming Request")
+REQUEST["API Request"]
 
 
-VALIDATION("Validation")
+LARAVEL["Laravel Application"]
 
 
-EXCEPTION("Exception Handler")
+CACHE["Redis Cache"]
 
 
-LOG("Application Logs")
+DATABASE["MySQL"]
 
 
-RESPONSE("JSON Response")
-
-
-
-REQUEST --> VALIDATION
-
-VALIDATION --> EXCEPTION
-
-EXCEPTION --> LOG
-
-EXCEPTION --> RESPONSE
+RESPONSE["API Response"]
 
 
 
-classDef request fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+REQUEST --> LARAVEL
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+LARAVEL --> CACHE
 
-classDef output fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+CACHE --> DATABASE
+
+DATABASE --> RESPONSE
 
 
 
-class REQUEST request;
+classDef backend fill:#2563EB,color:white;
 
-class VALIDATION,EXCEPTION backend;
+classDef database fill:#059669,color:white;
 
-class LOG,RESPONSE output;
+
+class REQUEST,LARAVEL,CACHE backend;
+
+class DATABASE database;
+
+class RESPONSE backend;
 
 ```
 
 ---
 
-# 17.2 Custom Exception Example
+# 22.2 Caching Examples
 
 
-Example:
+Cached data:
 
 
-```php
-class ResumeProcessingException extends Exception
+```
+Career Recommendations
 
-{
+Skill Database
 
+Dashboard Statistics
 
-public function report()
-
-{
-
-
-Log::error(
-
-$this->message
-
-);
-
-
-}
-
-
-
-}
+User Preferences
 
 ```
 
 ---
 
-# 17.3 API Exception Response
+# 23. Backend Security Architecture
 
 
-Example:
+Security is a critical part of CareerIQ AI.
 
 
-```json
-{
+Implemented security:
 
-"status":
 
-"error",
-
-
-"message":
-
-"Resume processing failed",
-
-
-"code":
-
-"RESUME_ERROR"
-
-}
-
-```
-
----
-
-# 18. Logging Strategy
-
-
-Production applications require proper monitoring and debugging.
-
-
-CareerIQ AI uses:
-
-
-```
-Laravel Logging
-
-+
-
-AWS CloudWatch
-
-+
-
-Application Monitoring
-
-```
-
-
----
-
-# 18.1 Logging Architecture
-
-
-```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
-flowchart LR
-
-
-APPLICATION("Laravel Application")
-
-
-LOG("Laravel Logs")
-
-
-CLOUDWATCH("AWS CloudWatch")
-
-
-DASHBOARD("Monitoring Dashboard")
-
-
-ALERT("Alert System")
-
-
-
-APPLICATION --> LOG
-
-LOG --> CLOUDWATCH
-
-CLOUDWATCH --> DASHBOARD
-
-DASHBOARD --> ALERT
-
-
-
-classDef app fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef cloud fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
-
-classDef output fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-
-
-class APPLICATION,LOG app;
-
-class CLOUDWATCH,DASHBOARD cloud;
-
-class ALERT output;
-
-```
-
----
-
-# 18.2 Logging Levels
-
-
-Laravel logging levels:
-
-
-| Level | Usage |
-|-|-|
-|Emergency|System unavailable|
-|Critical|Major failures|
-|Error|Application errors|
-|Warning|Potential problems|
-|Info|Important events|
-|Debug|Development information|
-
-
----
-
-# 18.3 Important Events to Log
-
-
-CareerIQ AI logs:
-
-
-- User authentication failures
-- Resume processing failures
-- AI service errors
-- Database exceptions
-- API performance issues
-
-
----
-
-# 19. Security Practices
-
-
-Security is implemented throughout the backend.
-
-
----
-
-# 19.1 Authentication Security
-
-
-Implemented using:
-
-
-```
-Laravel Sanctum
-
-+
-
-Secure Token Authentication
-
-```
-
-
-Features:
-
-
-- Token expiration
-- Protected routes
-- Secure logout
-
-
----
-
-# 19.2 Authorization
-
-
-CareerIQ AI uses:
-
-
-- Middleware
-- Policies
-- Gates
-
-
-Example:
-
-
-```
-User
-
-↓
-
-Can access own profile
-
-
-Admin
-
-↓
-
-Can manage platform
-
-```
-
-
----
-
-# 19.3 Database Security
-
-
-Protection:
-
-
-- Prepared statements
-- Eloquent ORM
+- Authentication
+- Authorization
 - Input validation
-- Least privilege database users
+- Data encryption
+- Secure API communication
 
 
 ---
 
-# 19.4 Password Security
-
-
-Passwords are stored using:
-
-
-```
-bcrypt
-
-or
-
-Argon2 hashing
-
-```
-
-
-Example:
-
-
-```php
-Hash::make($password);
-
-```
-
----
-
-# 19.5 File Security
-
-
-Resume files are protected through:
-
-
-- File type validation
-- File size restriction
-- Secure storage
-- Access control
-
-
----
-
-# 20. Testing Integration
-
-
-Backend development follows a test-driven approach.
-
-
----
-
-# 20.1 Testing Architecture
+# 23.1 Security Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
 
-flowchart TB
+flowchart LR
 
 
-CODE("Backend Code")
+CLIENT["Frontend"]
 
 
-UNIT("Unit Tests")
+API["Laravel API"]
 
 
-FEATURE("Feature Tests")
+AUTH["Authentication"]
 
 
-API("API Tests")
+MIDDLEWARE["Security Middleware"]
 
 
-CI("CI Pipeline")
+DATABASE["Protected Database"]
+
+
+
+CLIENT --> API
+
+API --> AUTH
+
+AUTH --> MIDDLEWARE
+
+MIDDLEWARE --> DATABASE
+
+
+
+classDef frontend fill:#2563EB,color:white;
+
+classDef backend fill:#7C3AED,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class CLIENT frontend;
+
+class API,AUTH,MIDDLEWARE backend;
+
+class DATABASE database;
+
+```
+
+---
+
+# 23.2 Security Practices
+
+
+## SQL Injection Prevention
+
+
+Using:
+
+
+- Eloquent ORM
+- Prepared statements
+
+
+---
+
+## XSS Prevention
+
+
+Using:
+
+
+- Input sanitization
+- Output escaping
+
+
+---
+
+## CSRF Protection
+
+
+Using:
+
+
+- Laravel CSRF middleware
+
+
+---
+
+## Password Security
+
+
+Using:
+
+
+- Secure hashing
+- Laravel authentication tools
+
+
+---
+
+# 24. Performance Optimization
+
+
+Backend performance is improved through:
+
+
+- Database indexing
+- Query optimization
+- Caching
+- Queue processing
+- API optimization
+
+
+---
+
+# 24.1 Performance Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+REQUEST["API Request"]
+
+
+CACHE["Cache Layer"]
+
+
+OPTIMIZED["Optimized Queries"]
+
+
+DATABASE["MySQL"]
+
+
+RESPONSE["Fast Response"]
+
+
+
+REQUEST --> CACHE
+
+CACHE --> OPTIMIZED
+
+OPTIMIZED --> DATABASE
+
+DATABASE --> RESPONSE
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class REQUEST,CACHE,OPTIMIZED backend;
+
+class DATABASE database;
+
+class RESPONSE backend;
+
+```
+
+---
+
+# 25. Backend Testing Strategy
+
+
+Testing ensures backend reliability.
+
+
+Testing levels:
+
+
+```
+Unit Testing
+
+        ↓
+
+Feature Testing
+
+        ↓
+
+API Testing
+
+        ↓
+
+Integration Testing
+
+```
+
+---
+
+# 25.1 Testing Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+CODE["Laravel Code"]
+
+
+UNIT["Unit Tests"]
+
+
+FEATURE["Feature Tests"]
+
+
+API["API Tests"]
+
+
+CI["CI Pipeline"]
 
 
 
@@ -2619,6 +2953,7 @@ CODE --> FEATURE
 
 CODE --> API
 
+
 UNIT --> CI
 
 FEATURE --> CI
@@ -2627,338 +2962,302 @@ API --> CI
 
 
 
-classDef code fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#2563EB,color:white;
 
-classDef test fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
-
-classDef ci fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef test fill:#059669,color:white;
 
 
-
-class CODE code;
+class CODE backend;
 
 class UNIT,FEATURE,API test;
 
-class CI ci;
+class CI fill:#7C3AED,color:white;
 
 ```
 
 ---
 
-# 20.2 Testing Types
+# 25.2 Testing Tools
 
 
-## Unit Testing
-
-
-Tests individual components.
-
-
-Examples:
-
-
-- Services
-- Helper classes
-- Business logic
+| Testing Type | Tool |
+|---|---|
+|Unit Testing|PHPUnit|
+|Feature Testing|Laravel Test Framework|
+|API Testing|Postman|
+|Database Testing|Laravel Database Testing|
+|Performance Testing|JMeter|
 
 
 ---
 
-## Feature Testing
+# 26. CI/CD Pipeline
 
 
-Tests complete workflows.
-
-
-Examples:
-
-
-```
-User Login
-
-Resume Upload
-
-Career Analysis
-
-```
+Backend deployment is automated through GitHub Actions.
 
 
 ---
 
-## Integration Testing
-
-
-Tests:
-
-
-```
-Laravel
-
-+
-
-FastAPI
-
-+
-
-Database
-
-```
-
----
-
-# 21. Coding Standards
-
-
-CareerIQ AI follows professional PHP standards.
-
-
----
-
-# 21.1 PHP Standards
-
-
-Follow:
-
-
-```
-PSR-12 Coding Standard
-
-```
-
-
----
-
-# 21.2 Naming Convention
-
-
-## Classes
-
-
-PascalCase:
-
-
-```php
-ResumeService
-
-CareerController
-
-```
-
-
----
-
-## Functions
-
-
-camelCase:
-
-
-```php
-generateRoadmap()
-
-calculateSkillGap()
-
-```
-
-
----
-
-## Database
-
-
-snake_case:
-
-
-```
-user_skills
-
-career_goals
-
-resume_analysis
-
-```
-
-
----
-
-# 21.3 SOLID Principles
-
-
-CareerIQ AI follows SOLID principles.
-
-
----
-
-## Single Responsibility Principle
-
-
-A class should have one responsibility.
-
-
-Example:
-
-
-Bad:
-
-
-```
-ResumeController
-
-- Upload file
-- Analyze AI
-- Save database
-
-```
-
-
-Good:
-
-
-```
-ResumeController
-
-        |
-
-ResumeService
-
-        |
-
-AIService
-
-        |
-
-Repository
-
-```
-
----
-
-## Dependency Injection
-
-
-Example:
-
-
-```php
-public function __construct(
-
-ResumeService $service
-
-)
-
-{
-
-$this->service=$service;
-
+# 26.1 Backend Deployment Flow
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
+}}%%
+
+
+flowchart LR
+
+
+PUSH["Git Push"]
+
+
+TEST["Run Tests"]
+
+
+BUILD["Build Docker Image"]
+
+
+DEPLOY["Deploy Backend"]
+
+
+AWS["AWS Infrastructure"]
+
+
+
+PUSH --> TEST
+
+TEST --> BUILD
+
+BUILD --> DEPLOY
+
+DEPLOY --> AWS
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef cloud fill:#0891B2,color:white;
+
+
+class PUSH,TEST,BUILD,DEPLOY backend;
+
+class AWS cloud;
 
 ```
 
 ---
 
-# 22. Backend Development Roadmap
+# 27. Docker Deployment Architecture
 
 
-Backend implementation will follow incremental development phases.
+CareerIQ AI uses containerized deployment.
 
 
 ---
 
-# Phase 1: Laravel Foundation
+# 27.1 Docker Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+DOCKER["Docker Environment"]
+
+
+LARAVEL["Laravel Container"]
+
+
+MYSQL["MySQL Container"]
+
+
+REDIS["Redis Container"]
+
+
+FASTAPI["FastAPI Container"]
+
+
+
+DOCKER --> LARAVEL
+
+DOCKER --> MYSQL
+
+DOCKER --> REDIS
+
+DOCKER --> FASTAPI
+
+
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+
+class LARAVEL,REDIS backend;
+
+class MYSQL database;
+
+class FASTAPI ai;
+
+```
+
+---
+
+# 28. AWS Deployment Architecture
+
+
+Production deployment uses AWS services.
+
+
+Architecture:
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
+}
+}}%%
+
+
+flowchart LR
+
+
+USER["Users"]
+
+
+ALB["Load Balancer"]
+
+
+EC2["Laravel EC2 Instance"]
+
+
+RDS["MySQL RDS"]
+
+
+S3["AWS S3"]
+
+
+AI["FastAPI Service"]
+
+
+
+USER --> ALB
+
+ALB --> EC2
+
+EC2 --> RDS
+
+EC2 --> S3
+
+EC2 --> AI
+
+
+
+classDef cloud fill:#0891B2,color:white;
+
+classDef backend fill:#2563EB,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class USER,ALB,EC2 cloud;
+
+class RDS database;
+
+class S3,AI backend;
+
+```
+
+---
+
+# 29. Backend Development Roadmap
+
+
+## Phase 1: Foundation
 
 
 Tasks:
 
 
-- Install Laravel
-- Configure MySQL
-- Setup environment
-- Setup authentication
-- Create project structure
+- Laravel setup
+- Database configuration
+- Authentication
 
 
 ---
 
-# Phase 2: Core User Module
+## Phase 2: Core Modules
 
 
 Develop:
 
 
-- Registration
-- Login
-- Profile
-- Education
-- Experience
-- Projects
+- User profile
+- Resume management
+- Skill system
 
 
 ---
 
-# Phase 3: Skill Intelligence Module
+## Phase 3: AI Integration
 
 
 Develop:
 
 
-- Skill database
-- User skills
-- Skill assessment
+- FastAPI communication
+- Resume analysis
+- Recommendation engine
 
 
 ---
 
-# Phase 4: Resume Intelligence Module
+## Phase 4: Optimization
 
 
 Develop:
 
 
-- Resume upload
-- File storage
-- Text extraction
-- AI communication
-
-
----
-
-# Phase 5: Career Intelligence Module
-
-
-Develop:
-
-
-- Career goals
-- Skill gap analysis
-- Roadmap generation
-
-
----
-
-# Phase 6: Advanced Features
-
-
-Develop:
-
-
-- AI interview simulator
-- Notifications
-- Analytics dashboard
-
-
----
-
-# Phase 7: Production Preparation
-
-
-Implement:
-
-
-- Testing
-- Docker
-- CI/CD
-- AWS deployment
+- Queue system
+- Caching
 - Monitoring
+
+
+---
+
+## Phase 5: Production Deployment
+
+
+Develop:
+
+
+- Docker deployment
+- AWS infrastructure
+- CI/CD pipeline
 
 
 ---
@@ -2968,10 +3267,11 @@ Implement:
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#64748B"
 }
 }}%%
 
@@ -2979,25 +3279,28 @@ Implement:
 flowchart TB
 
 
-FRONTEND("Angular Frontend")
+FRONTEND["Angular Frontend"]
 
 
-API("Laravel API")
+API["Laravel REST API"]
 
 
-SERVICE("Business Services")
+SERVICE["Service Layer"]
 
 
-QUEUE("Queue Workers")
+QUEUE["Queue Workers"]
 
 
-AI("FastAPI AI Service")
+AI["FastAPI AI Service"]
 
 
-DATABASE("MySQL")
+DATABASE["MySQL Database"]
 
 
-CLOUD("AWS Infrastructure")
+CACHE["Redis Cache"]
+
+
+CLOUD["AWS Cloud"]
 
 
 
@@ -3005,38 +3308,40 @@ FRONTEND --> API
 
 API --> SERVICE
 
+SERVICE --> QUEUE
+
 SERVICE --> DATABASE
 
-SERVICE --> QUEUE
+SERVICE --> CACHE
 
 QUEUE --> AI
 
-DATABASE --> CLOUD
-
-AI --> CLOUD
+API --> CLOUD
 
 
 
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef frontend fill:#2563EB,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
-classDef cloud fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
+classDef cloud fill:#0891B2,color:white;
 
+classDef ai fill:#D97706,color:white;
 
 
 class FRONTEND frontend;
 
-class API,SERVICE,QUEUE,AI backend;
+class API,SERVICE,QUEUE,CACHE backend;
 
 class DATABASE database;
 
 class CLOUD cloud;
 
+class AI ai;
+
 ```
 
 ---
 
-# End of Document

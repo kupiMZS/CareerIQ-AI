@@ -2,38 +2,75 @@
 
 # CareerIQ AI
 
+
 ---
 
 # Document Information
+
 
 | Field | Description |
 |---|---|
 | Project Name | CareerIQ AI |
 | Document Type | System Architecture Document |
-| Version | 1.0 |
-| Architecture Style | Layered Modular Architecture |
-| Backend Architecture | Laravel Modular Backend |
-| AI Architecture | Independent AI Service |
+| Version | 2.0 |
+| Architecture Style | Modular Layered Cloud-Native Architecture |
+| Backend Architecture | Laravel Modular Service Architecture |
+| Frontend Architecture | Angular Component-Based Architecture |
+| AI Architecture | Independent AI Microservice |
 | Database | MySQL 8.x |
+| Cache & Queue | Redis |
 | Cloud Platform | AWS |
+| Deployment Approach | Docker-Based Deployment |
+
 
 ---
 
-# Table of Contents
+# Document Purpose
 
-1. Architecture Vision  
-2. System Context Architecture  
-3. High-Level Architecture  
-4. Frontend Architecture  
-5. Backend Architecture  
-6. AI Intelligence Architecture  
-7. Database Architecture  
-8. Infrastructure Architecture  
-9. Cloud Deployment Architecture  
-10. Security Architecture  
-11. CI/CD Architecture  
-12. Scalability Strategy  
-13. Technology Decisions  
+
+This document defines the complete technical architecture of CareerIQ AI.
+
+
+The purpose is to describe:
+
+
+- System components
+- Architecture decisions
+- Service communication
+- Data flow
+- AI processing architecture
+- Cloud deployment strategy
+- Security integration
+- Scalability approach
+
+
+CareerIQ AI is designed as an AI-powered career intelligence platform combining:
+
+
+```
+Angular Frontend
+
+        +
+
+Laravel Backend API
+
+        +
+
+Python AI Services
+
+        +
+
+MySQL Database
+
+        +
+
+Redis Queue System
+
+        +
+
+AWS Cloud Infrastructure
+
+```
 
 
 ---
@@ -41,51 +78,296 @@
 # 1. Architecture Vision
 
 
-## 1.1 Purpose
+## 1.1 System Overview
 
 
-This document defines the technical architecture of CareerIQ AI.
+CareerIQ AI is a modern intelligent career platform that helps users:
 
 
-The purpose is to describe:
+- Analyze resumes
+- Identify skills
+- Discover career opportunities
+- Generate learning roadmaps
+- Receive AI-based career recommendations
+- Practice interviews
 
 
-- System components
-- Application structure
-- Data flow
-- Communication between services
-- Cloud deployment strategy
-- Security model
-- Scalability approach
-
-
-CareerIQ AI is designed as a modern AI-powered career intelligence platform combining:
-
-
-- Angular frontend
-- Laravel backend
-- MySQL database
-- Python AI services
-- AWS cloud infrastructure
+The system follows a modular architecture where each major responsibility is separated into independent components.
 
 
 ---
 
-# 2. System Context Architecture
+# 1.2 Architecture Goals
 
 
-## 2.1 Overview
+The architecture is designed around the following goals:
 
 
-The system connects users, application services, AI capabilities, and cloud infrastructure.
+| Goal | Description |
+|---|---|
+|Maintainability|Clear separation between system modules|
+|Scalability|Independent scaling of services|
+|Security|Protection of user and career data|
+|Performance|Fast response and efficient processing|
+|AI Flexibility|Easy replacement and improvement of AI models|
+|Cloud Readiness|Production deployment on AWS|
+
+
+---
+
+# 1.3 Architectural Approach
+
+
+CareerIQ AI follows:
+
+
+```
+Modular Architecture
+
+        +
+
+Service Separation
+
+        +
+
+API-First Communication
+
+        +
+
+Cloud-Native Deployment
+
+        +
+
+AI Service Isolation
+
+```
+
+
+---
+
+# 2. Architecture Principles
+
+
+CareerIQ AI follows professional software architecture principles.
+
+
+---
+
+# 2.1 Separation of Concerns
+
+
+Each system component has a dedicated responsibility.
+
+
+Example:
+
+
+```
+Angular
+
+↓
+
+User Interface
+
+
+Laravel
+
+↓
+
+Business Logic
+
+
+FastAPI
+
+↓
+
+AI Processing
+
+
+MySQL
+
+↓
+
+Data Storage
+
+```
+
+
+Benefits:
+
+
+- Easier maintenance
+- Better testing
+- Independent development
+
+
+---
+
+# 2.2 Modular Design
+
+
+The system is divided into independent modules.
+
+
+Example:
+
+
+```
+Authentication Module
+
+Resume Module
+
+Career Module
+
+Skill Module
+
+AI Module
+
+Interview Module
+
+```
+
+
+Each module can evolve independently.
+
+
+---
+
+# 2.3 API-First Architecture
+
+
+All communication between services occurs through defined APIs.
+
+
+Architecture:
+
+
+```
+Frontend
+
+        |
+
+        | REST API
+
+        |
+
+Backend
+
+        |
+
+        | Internal API
+
+        |
+
+AI Service
+
+```
+
+
+Benefits:
+
+
+- Platform independence
+- Easier integration
+- Better scalability
+
+
+---
+
+# 2.4 Cloud-Native Design
+
+
+CareerIQ AI is designed for cloud deployment.
+
+
+Features:
+
+
+- Containerized services
+- Automated deployment
+- Elastic scaling
+- Managed cloud services
+
+
+---
+
+# 2.5 Security by Design
+
+
+Security is integrated throughout the architecture.
+
+
+Security controls include:
+
+
+- Authentication
+- Authorization
+- Encryption
+- Secure API communication
+- Access control
+
+
+---
+
+# 2.6 AI Service Independence
+
+
+AI workloads are separated from the main application.
+
+
+Reasons:
+
+
+- Independent scaling
+- Python AI ecosystem support
+- Easier model replacement
+- Better resource management
+
+
+Architecture:
+
+
+```
+Laravel Application
+
+        |
+
+        |
+
+FastAPI AI Service
+
+        |
+
+        |
+
+AI Models
+
+```
+
+
+---
+
+# 3. System Context Architecture
+
+
+## 3.1 Overview
+
+
+CareerIQ AI connects users, application services, AI systems, and cloud infrastructure.
+
+
+---
+
+# 3.2 System Context Diagram
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#94A3B8"
 }
 }}%%
 
@@ -93,41 +375,40 @@ The system connects users, application services, AI capabilities, and cloud infr
 flowchart TB
 
 
-USER("Users<br/><br/>Students<br/>Graduates<br/>Professionals")
+USER["Users<br/><br/>Students<br/>Graduates<br/>Professionals"]
 
 
-SYSTEM("CareerIQ AI Platform")
+SYSTEM["CareerIQ AI Platform"]
 
 
-AIAPI("External AI Services<br/><br/>LLM APIs<br/>AI Models")
+AI["External AI Services<br/><br/>LLM APIs<br/>AI Models"]
 
 
-CLOUD("Cloud Infrastructure<br/><br/>AWS Services")
-
+CLOUD["AWS Cloud Infrastructure<br/><br/>Storage<br/>Compute<br/>Monitoring"]
 
 
 USER --> SYSTEM
 
-SYSTEM --> AIAPI
+SYSTEM --> AI
 
 SYSTEM --> CLOUD
 
 
 
-classDef user fill:#334155,stroke:#CBD5E1,color:#FFFFFF;
+classDef user fill:#334155,color:white;
 
-classDef system fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef system fill:#7C3AED,color:white;
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef cloud fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
+classDef cloud fill:#0891B2,color:white;
 
 
 class USER user;
 
 class SYSTEM system;
 
-class AIAPI ai;
+class AI ai;
 
 class CLOUD cloud;
 
@@ -135,10 +416,58 @@ class CLOUD cloud;
 
 ---
 
-# 3. High-Level Architecture
+# 3.3 External Actors
 
 
-## 3.1 Architectural Layers
+## Users
+
+
+CareerIQ AI serves:
+
+
+- Students
+- Fresh graduates
+- Professionals
+- Career changers
+
+
+Users interact through the Angular frontend.
+
+
+---
+
+## AI Services
+
+
+External and internal AI services provide:
+
+
+- Natural language processing
+- Resume understanding
+- Recommendation generation
+- Career intelligence
+
+
+---
+
+## Cloud Infrastructure
+
+
+AWS provides:
+
+
+- Application hosting
+- File storage
+- Database services
+- Monitoring
+
+
+---
+
+# 4. High-Level System Architecture
+
+
+## 4.1 Architectural Layers
 
 
 CareerIQ AI follows a layered architecture:
@@ -161,22 +490,160 @@ Data Layer
 
         ↓
 
-Cloud Infrastructure Layer
+Infrastructure Layer
 
 ```
 
 
 ---
 
-## 3.2 Complete System Architecture
+# 4.2 Layer Responsibilities
+
+
+## Presentation Layer
+
+
+Responsible for:
+
+
+- User interaction
+- Dashboard visualization
+- Resume upload
+- Career analytics
+
+
+Technology:
+
+
+```
+Angular
+
+TypeScript
+
+Tailwind CSS
+
+```
+
+
+---
+
+## Application Layer
+
+
+Responsible for:
+
+
+- Authentication
+- Business logic
+- API management
+- Data processing
+
+
+Technology:
+
+
+```
+Laravel
+
+PHP
+
+REST API
+
+```
+
+
+---
+
+## AI Intelligence Layer
+
+
+Responsible for:
+
+
+- Resume analysis
+- Skill extraction
+- Career recommendation
+- Interview evaluation
+
+
+Technology:
+
+
+```
+Python
+
+FastAPI
+
+Machine Learning Models
+
+LLM APIs
+
+```
+
+
+---
+
+## Data Layer
+
+
+Responsible for:
+
+
+- Persistent storage
+- Caching
+- Queue processing
+
+
+Technology:
+
+
+```
+MySQL
+
+Redis
+
+```
+
+
+---
+
+## Infrastructure Layer
+
+
+Responsible for:
+
+
+- Deployment
+- Monitoring
+- Storage
+- Networking
+
+
+Technology:
+
+
+```
+AWS
+
+Docker
+
+CI/CD
+
+```
+
+
+---
+
+# 4.3 Complete High-Level Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#94A3B8"
 }
 }}%%
 
@@ -184,44 +651,48 @@ Cloud Infrastructure Layer
 flowchart TB
 
 
-USER("Users")
+USER["Users"]
 
 
 subgraph PRESENTATION["Presentation Layer"]
 
-ANGULAR("Angular Frontend<br/><br/>TypeScript<br/>Tailwind CSS")
+ANGULAR["Angular Frontend<br/><br/>TypeScript<br/>Tailwind CSS"]
 
 end
+
 
 
 subgraph APPLICATION["Application Layer"]
 
-LARAVEL("Laravel Backend API<br/><br/>PHP<br/>REST Services<br/>Business Logic")
+LARAVEL["Laravel Backend API<br/><br/>Business Logic<br/>REST Services"]
 
 end
 
 
-subgraph INTELLIGENCE["AI Intelligence Layer"]
 
-FASTAPI("Python FastAPI<br/><br/>AI Processing")
+subgraph AI_LAYER["AI Intelligence Layer"]
 
-LLM("Large Language Models<br/><br/>Career Analysis<br/>Recommendations")
+FASTAPI["Python FastAPI<br/><br/>AI Processing"]
+
+MODEL["AI Models<br/><br/>NLP<br/>Recommendation Engine"]
 
 end
+
 
 
 subgraph DATA["Data Layer"]
 
-MYSQL("MySQL 8.x<br/><br/>Application Database")
+MYSQL["MySQL Database"]
 
-REDIS("Redis<br/><br/>Cache<br/>Queue Management")
+REDIS["Redis Cache<br/><br/>Queue Management"]
 
 end
 
 
-subgraph CLOUD["Cloud Layer"]
 
-AWS("AWS Infrastructure<br/><br/>Storage<br/>Monitoring<br/>Deployment")
+subgraph CLOUD["Infrastructure Layer"]
+
+AWS["AWS Cloud Services"]
 
 end
 
@@ -233,7 +704,7 @@ ANGULAR --> LARAVEL
 
 LARAVEL --> FASTAPI
 
-FASTAPI --> LLM
+FASTAPI --> MODEL
 
 LARAVEL --> MYSQL
 
@@ -243,29 +714,24 @@ LARAVEL --> AWS
 
 
 
-classDef user fill:#334155,stroke:#CBD5E1,color:#FFFFFF;
+classDef frontend fill:#2563EB,color:white;
 
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef intelligence fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
-classDef data fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef cloud fill:#0891B2,color:white;
 
-classDef cloud fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
-
-
-
-class USER user;
 
 class ANGULAR frontend;
 
 class LARAVEL backend;
 
-class FASTAPI,LLM intelligence;
+class FASTAPI,MODEL ai;
 
-class MYSQL,REDIS data;
+class MYSQL,REDIS database;
 
 class AWS cloud;
 
@@ -273,135 +739,54 @@ class AWS cloud;
 
 ---
 
-# Architecture Explanation
+---
+
+# 5. Component Architecture
 
 
-## Presentation Layer
-
-Responsible for:
-
-- User interface
-- Dashboard visualization
-- Resume upload
-- Career analytics
+## 5.1 Overview
 
 
-Technology:
+CareerIQ AI is divided into independent software components.
+
+
+Each component has a specific responsibility:
+
 
 ```
-Angular
-TypeScript
-Tailwind CSS
+Frontend Components
+
+        ↓
+
+Backend Services
+
+        ↓
+
+AI Services
+
+        ↓
+
+Data Services
+
+        ↓
+
+Infrastructure Services
+
 ```
 
 
 ---
 
-## Application Layer
-
-
-Responsible for:
-
-- Authentication
-- Business logic
-- API management
-- User management
-- Database communication
-
-
-Technology:
-
-```
-Laravel
-PHP
-REST API
-```
-
-
----
-
-## AI Intelligence Layer
-
-
-Responsible for:
-
-- Resume analysis
-- Skill extraction
-- Career recommendations
-- Interview evaluation
-
-
-Technology:
-
-```
-Python
-FastAPI
-LLM Models
-```
-
-
----
-
-## Data Layer
-
-
-Responsible for:
-
-- Persistent storage
-- Caching
-- Background processing
-
-
-Technology:
-
-```
-MySQL
-Redis
-```
-
-
----
-
-# 4. Frontend Architecture
-
-
-## 4.1 Technology Stack
-
-
-| Technology | Purpose |
-|-|-|
-| Angular | Frontend Framework |
-| TypeScript | Programming Language |
-| Tailwind CSS | Styling |
-| Angular Material | UI Components |
-
-
----
-
-## 4.2 Frontend Responsibilities
-
-
-The frontend manages:
-
-
-- User interaction
-- Dashboard rendering
-- Resume upload interface
-- Career visualization
-- API communication
-
-
----
-
-## 4.3 Angular Module Architecture
+# 5.2 Complete Component Architecture
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#94A3B8"
 }
 }}%%
 
@@ -409,22 +794,308 @@ The frontend manages:
 flowchart TB
 
 
-APP("Angular Application")
+USER["User"]
 
 
-AUTH("Authentication Module")
+subgraph FRONTEND["Angular Frontend"]
 
-PROFILE("Career Profile Module")
+AUTH_UI["Authentication UI"]
 
-RESUME("Resume Intelligence Module")
+PROFILE_UI["Profile Management"]
 
-DASH("Career Dashboard")
+RESUME_UI["Resume Upload"]
 
-ROADMAP("Learning Roadmap")
+CAREER_UI["Career Dashboard"]
 
-SKILL("Skill Management")
+INTERVIEW_UI["Interview Module"]
+
+end
 
 
+
+subgraph BACKEND["Laravel Backend"]
+
+AUTH_SERVICE["Authentication Service"]
+
+USER_SERVICE["User Service"]
+
+RESUME_SERVICE["Resume Service"]
+
+CAREER_SERVICE["Career Service"]
+
+NOTIFICATION_SERVICE["Notification Service"]
+
+QUEUE["Queue Manager"]
+
+end
+
+
+
+subgraph AI["AI Platform"]
+
+PARSER["Resume Parser"]
+
+NLP["NLP Engine"]
+
+MATCHING["Career Matching"]
+
+RECOMMENDATION["Recommendation Engine"]
+
+INTERVIEW_AI["Interview Evaluation"]
+
+end
+
+
+
+subgraph DATA["Data Services"]
+
+MYSQL["MySQL Database"]
+
+REDIS["Redis Cache"]
+
+S3["Object Storage"]
+
+end
+
+
+
+USER --> FRONTEND
+
+
+FRONTEND --> AUTH_SERVICE
+
+FRONTEND --> USER_SERVICE
+
+FRONTEND --> RESUME_SERVICE
+
+FRONTEND --> CAREER_SERVICE
+
+
+RESUME_SERVICE --> QUEUE
+
+QUEUE --> PARSER
+
+PARSER --> NLP
+
+NLP --> MATCHING
+
+MATCHING --> RECOMMENDATION
+
+
+BACKEND --> MYSQL
+
+BACKEND --> REDIS
+
+RESUME_SERVICE --> S3
+
+
+classDef frontend fill:#2563EB,color:white;
+
+classDef backend fill:#7C3AED,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+classDef data fill:#059669,color:white;
+
+
+class AUTH_UI,PROFILE_UI,RESUME_UI,CAREER_UI,INTERVIEW_UI frontend;
+
+class AUTH_SERVICE,USER_SERVICE,RESUME_SERVICE,CAREER_SERVICE,NOTIFICATION_SERVICE,QUEUE backend;
+
+class PARSER,NLP,MATCHING,RECOMMENDATION,INTERVIEW_AI ai;
+
+class MYSQL,REDIS,S3 data;
+
+```
+
+---
+
+# 5.3 Component Responsibilities
+
+
+## Frontend Components
+
+
+Responsible for:
+
+
+- User interaction
+- Data visualization
+- Form handling
+- API communication
+- User experience
+
+
+---
+
+## Backend Components
+
+
+Responsible for:
+
+
+- Business rules
+- Authentication
+- Authorization
+- Data processing
+- API management
+
+
+---
+
+## AI Components
+
+
+Responsible for:
+
+
+- Document processing
+- Natural language understanding
+- Recommendation generation
+- Intelligent evaluation
+
+
+---
+
+## Data Components
+
+
+Responsible for:
+
+
+- Persistent storage
+- Temporary caching
+- File storage
+
+
+---
+
+# 6. Frontend Architecture
+
+
+## 6.1 Technology Stack
+
+
+| Technology | Purpose |
+|---|---|
+|Angular|Frontend Framework|
+|TypeScript|Programming Language|
+|Tailwind CSS|Styling Framework|
+|Angular Material|UI Components|
+|RxJS|Reactive Programming|
+
+
+---
+
+# 6.2 Frontend Responsibilities
+
+
+The Angular application manages:
+
+
+- User authentication
+- Dashboard rendering
+- Resume upload interface
+- Career visualization
+- Learning roadmap display
+- Interview interface
+
+
+---
+
+# 6.3 Angular Application Structure
+
+
+CareerIQ AI follows a feature-based Angular architecture.
+
+
+Example:
+
+
+```
+frontend/
+
+│
+
+├── core/
+
+│   ├── authentication/
+
+│   ├── guards/
+
+│   └── interceptors/
+
+
+├── shared/
+
+│   ├── components/
+
+│   ├── services/
+
+│   └── utilities/
+
+
+├── features/
+
+│
+
+├── profile/
+
+├── resume/
+
+├── career/
+
+├── interview/
+
+└── dashboard/
+
+```
+
+
+---
+
+# 6.4 Angular Module Architecture
+
+
+```mermaid
+%%{init:{
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#2563EB",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#94A3B8"
+}
+}}%%
+
+
+flowchart TB
+
+
+APP["Angular Application"]
+
+
+CORE["Core Module"]
+
+SHARED["Shared Module"]
+
+
+AUTH["Authentication Module"]
+
+PROFILE["Profile Module"]
+
+RESUME["Resume Intelligence Module"]
+
+CAREER["Career Module"]
+
+DASHBOARD["Dashboard Module"]
+
+INTERVIEW["Interview Module"]
+
+
+
+APP --> CORE
+
+APP --> SHARED
 
 APP --> AUTH
 
@@ -432,67 +1103,112 @@ APP --> PROFILE
 
 APP --> RESUME
 
-APP --> DASH
+APP --> CAREER
 
-APP --> ROADMAP
+APP --> DASHBOARD
 
-APP --> SKILL
-
-
-
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+APP --> INTERVIEW
 
 
-class APP frontend;
 
-class AUTH,PROFILE,RESUME,DASH,ROADMAP,SKILL frontend;
+classDef frontend fill:#2563EB,color:white;
+
+
+class APP,CORE,SHARED,AUTH,PROFILE,RESUME,CAREER,DASHBOARD,INTERVIEW frontend;
 
 ```
 
 ---
 
-# 5. Backend Architecture
+# 6.5 Frontend Data Flow
 
 
-## 5.1 Technology Stack
+```mermaid
+flowchart LR
 
 
-| Technology | Purpose |
+USER["User Action"]
+
+
+COMPONENT["Angular Component"]
+
+
+SERVICE["Angular Service"]
+
+
+HTTP["HTTP Client"]
+
+
+API["Laravel API"]
+
+
+
+USER --> COMPONENT
+
+COMPONENT --> SERVICE
+
+SERVICE --> HTTP
+
+HTTP --> API
+
+
+
+classDef frontend fill:#2563EB,color:white;
+
+
+class USER,COMPONENT,SERVICE,HTTP,API frontend;
+
+```
+
+---
+
+# 7. Backend Architecture
+
+
+## 7.1 Technology Stack
+
+
+|Technology|Purpose|
 |-|-|
-| Laravel | Backend Framework |
-| PHP | Programming Language |
-| REST API | Communication |
-| Laravel Sanctum | Authentication |
-| Laravel Queue | Background Jobs |
+|Laravel|Backend Framework|
+|PHP|Programming Language|
+|REST API|Communication|
+|Laravel Sanctum|Authentication|
+|Laravel Queue|Background Processing|
+|Eloquent ORM|Database Interaction|
 
 
 ---
 
-## 5.2 Backend Responsibilities
+# 7.2 Backend Responsibilities
 
 
 Laravel handles:
 
 
-- Authentication
-- Authorization
+- User authentication
+- API endpoints
 - Business logic
 - Database operations
-- API endpoints
-- Background processing
+- AI service communication
+- Background jobs
 
 
 ---
 
-## 5.3 Laravel Internal Architecture
+# 7.3 Laravel Internal Architecture
+
+
+CareerIQ AI follows a service-oriented Laravel architecture.
 
 
 ```mermaid
 %%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
+"theme":"base",
+"themeVariables":{
+"primaryColor":"#7C3AED",
+"primaryTextColor":"#FFFFFF",
+"lineColor":"#94A3B8"
 }
 }}%%
 
@@ -500,28 +1216,33 @@ Laravel handles:
 flowchart TB
 
 
-API("REST API")
+API["REST API Layer"]
 
 
-CONTROLLER("Controllers")
+CONTROLLER["Controllers"]
 
 
-SERVICE("Service Layer")
+REQUEST["Request Validation"]
 
 
-REPOSITORY("Repository Layer")
+SERVICE["Service Layer"]
 
 
-MODEL("Eloquent Models")
+REPOSITORY["Repository Layer"]
 
 
-DATABASE("MySQL Database")
+MODEL["Eloquent Models"]
+
+
+DATABASE["MySQL Database"]
 
 
 
 API --> CONTROLLER
 
-CONTROLLER --> SERVICE
+CONTROLLER --> REQUEST
+
+REQUEST --> SERVICE
 
 SERVICE --> REPOSITORY
 
@@ -531,106 +1252,121 @@ MODEL --> DATABASE
 
 
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef data fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
 
-class API,CONTROLLER,SERVICE,REPOSITORY,MODEL backend;
+class API,CONTROLLER,REQUEST,SERVICE,REPOSITORY,MODEL backend;
 
-class DATABASE data;
+class DATABASE database;
 
 ```
 
 ---
 
-**End of Part 1/3**
+# 7.4 Backend Module Structure
 
-I will provide **Part 2/3** next:
-- AI Intelligence Architecture
-- AI processing pipeline
-- Database architecture
-- ER diagram
-- Redis queue architecture
 
-Then **Part 3/3**:
-- Docker architecture
-- AWS deployment
-- Security
-- CI/CD
-- Scalability
-- Technology decisions
+Example:
+
+
+```
+backend/
+
+
+app/
+
+
+├── Http/
+
+│   ├── Controllers/
+
+
+├── Services/
+
+
+│   ├── ResumeService.php
+
+│   ├── CareerService.php
+
+
+├── Repositories/
+
+
+├── Models/
+
+
+├── Jobs/
+
+
+└── Policies/
+
+```
+
+
 ---
 
-# 6. AI Intelligence Architecture
+# 8. AI Intelligence Architecture
 
 
-## 6.1 AI Service Design
+## 8.1 AI Service Design
 
 
-CareerIQ AI separates artificial intelligence workloads from the main Laravel application.
+CareerIQ AI separates AI workloads from the Laravel application.
 
 
-This approach provides:
+Benefits:
 
 
 - Independent scaling
-- Easier AI model replacement
-- Better resource management
-- Faster AI development cycle
+- Faster AI development
+- Model replacement flexibility
+- Better resource allocation
 
 
 ---
 
-## 6.2 AI Technology Stack
+# 8.2 AI Technology Stack
 
 
-| Technology | Purpose |
+|Technology|Purpose|
 |-|-|
-| Python | AI Development |
-| FastAPI | AI Service API |
-| NLP Models | Text Processing |
-| LLM APIs | Intelligent Recommendations |
-| Machine Learning Models | Prediction and Analysis |
+|Python|AI Development|
+|FastAPI|AI Service API|
+|NLP Models|Text Understanding|
+|LLM APIs|AI Reasoning|
+|ML Models|Prediction|
 
 
 ---
 
-## 6.3 AI Service Architecture
+# 8.3 AI Service Architecture
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 flowchart TB
 
 
-LARAVEL("Laravel Backend<br/><br/>Request AI Analysis")
+LARAVEL["Laravel Backend"]
 
 
-FASTAPI("Python FastAPI Service<br/><br/>AI Processing Layer")
+FASTAPI["FastAPI AI Service"]
 
 
-PARSER("Resume Parser<br/><br/>Text Extraction")
+PARSER["Resume Parser"]
 
 
-NLP("NLP Engine<br/><br/>Skill Identification")
+EXTRACTOR["Information Extraction"]
 
 
-MODEL("Recommendation Engine<br/><br/>Career Intelligence")
+NLP["NLP Processing"]
 
 
-LLM("Large Language Model<br/><br/>AI Generated Insights")
+MODEL["AI Models"]
 
 
-RESULT("Career Report<br/><br/>Recommendations<br/>Roadmap")
+OUTPUT["Career Insights"]
 
 
 
@@ -638,38 +1374,70 @@ LARAVEL --> FASTAPI
 
 FASTAPI --> PARSER
 
-PARSER --> NLP
+PARSER --> EXTRACTOR
+
+EXTRACTOR --> NLP
 
 NLP --> MODEL
 
-MODEL --> LLM
-
-LLM --> RESULT
+MODEL --> OUTPUT
 
 
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef output fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
-
+classDef output fill:#0891B2,color:white;
 
 
 class LARAVEL backend;
 
-class FASTAPI,PARSER,NLP,MODEL,LLM ai;
+class FASTAPI,PARSER,EXTRACTOR,NLP,MODEL ai;
 
-class RESULT output;
+class OUTPUT output;
 
 ```
 
 ---
 
-# 6.4 AI Resume Analysis Workflow
+# 9. API Communication Architecture
 
 
-The resume analysis process follows these steps:
+## 9.1 Communication Overview
+
+
+CareerIQ AI uses API-based communication between services.
+
+
+Communication:
+
+
+```
+Angular
+
+        |
+
+        HTTPS REST API
+
+        |
+
+Laravel Backend
+
+        |
+
+        Internal API
+
+        |
+
+FastAPI AI Service
+
+```
+
+
+---
+
+# 9.2 API Communication Diagram
 
 
 ```mermaid
@@ -682,407 +1450,612 @@ participant Angular
 
 participant Laravel
 
-participant AI as FastAPI Service
+participant FastAPI
 
-participant Model as AI Model
-
-participant MySQL
+participant Database
 
 
 
-User->>Angular: Upload Resume PDF
+User->>Angular: User Request
 
-Angular->>Laravel: Send Resume File
+Angular->>Laravel: HTTPS API Request
 
-Laravel->>MySQL: Store Resume Metadata
+Laravel->>Database: Read/Write Data
 
-Laravel->>AI: Request Analysis
+Laravel->>FastAPI: AI Processing Request
 
-AI->>AI: Extract Text
+FastAPI-->>Laravel: AI Result
 
-AI->>AI: Identify Skills
+Laravel-->>Angular: Response
 
-AI->>Model: Generate Career Insights
-
-Model-->>AI: Return Recommendations
-
-AI-->>Laravel: Send Analysis Result
-
-Laravel->>MySQL: Save Results
-
-Laravel-->>Angular: Display Insights
-
-Angular-->>User: Show Career Report
+Angular-->>User: Display Result
 
 ```
 
 ---
 
-# 7. Database Architecture
+---
+
+# 10. Advanced AI Intelligence Architecture
 
 
-## 7.1 Database Overview
+## 10.1 AI Processing Pipeline Overview
 
 
-CareerIQ AI uses a relational database architecture.
+CareerIQ AI uses a multi-stage AI processing pipeline for transforming raw user data into intelligent career insights.
 
 
-Technology:
+The pipeline includes:
 
 
 ```
-MySQL 8.x
+User Data
 
-+
+        ↓
 
-InnoDB Storage Engine
+Document Processing
 
-+
+        ↓
 
-Laravel Eloquent ORM
+Information Extraction
+
+        ↓
+
+Skill Identification
+
+        ↓
+
+Career Matching
+
+        ↓
+
+Recommendation Generation
+
+        ↓
+
+User Insights
 
 ```
 
 
 ---
 
-# 7.2 Database Responsibilities
-
-
-The database manages:
-
-
-- User accounts
-- Career profiles
-- Education records
-- Professional experience
-- Technical skills
-- Projects
-- Resumes
-- Career goals
-- Learning progress
-- AI analysis results
-
-
----
-
-# 7.3 Database Design Principles
-
-
-The database follows:
-
-
-## Normalization
-
-Reducing duplicate data and maintaining consistency.
-
-
-## Indexing
-
-Improving query performance for:
-
-
-- User search
-- Skill lookup
-- Career matching
-
-
-## Relationships
-
-Maintaining:
-
-- One-to-many relationships
-- Many-to-many relationships
-- Foreign key constraints
-
-
----
-
-# 7.4 Entity Relationship Diagram
+# 10.2 AI Processing Pipeline
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter'
-}
-}}%%
+flowchart TB
 
 
-erDiagram
+INPUT["User Data<br/><br/>Resume<br/>Profile<br/>Experience"]
 
 
-USER ||--o{ RESUME : uploads
+PROCESS["Document Processing<br/><br/>File Parsing<br/>Text Extraction"]
 
-USER ||--o{ PROJECT : creates
 
-USER ||--o{ EXPERIENCE : has
+FEATURE["Feature Extraction<br/><br/>Skills<br/>Experience<br/>Education"]
 
-USER ||--o{ USER_SKILL : owns
 
-SKILL ||--o{ USER_SKILL : contains
+NLP["NLP Processing<br/><br/>Entity Recognition<br/>Semantic Analysis"]
 
-USER ||--o{ CAREER_GOAL : selects
 
-CAREER_GOAL ||--o{ LEARNING_ROADMAP : generates
+MATCH["Career Matching Engine<br/><br/>Role Matching<br/>Skill Gap Analysis"]
 
-RESUME ||--o{ AI_ANALYSIS : produces
 
+LLM["LLM Reasoning Layer<br/><br/>Recommendations<br/>Career Advice"]
 
 
-USER {
+OUTPUT["Career Intelligence Output<br/><br/>Roadmap<br/>Suggestions<br/>Reports"]
 
-INT id PK
 
-VARCHAR name
 
-VARCHAR email
+INPUT --> PROCESS
 
-VARCHAR password
+PROCESS --> FEATURE
 
-DATETIME created_at
+FEATURE --> NLP
 
-}
+NLP --> MATCH
 
+MATCH --> LLM
 
+LLM --> OUTPUT
 
-RESUME {
 
-INT id PK
 
-INT user_id FK
+classDef input fill:#2563EB,color:white;
 
-VARCHAR file_path
+classDef ai fill:#D97706,color:white;
 
-DATETIME uploaded_at
+classDef output fill:#0891B2,color:white;
 
-}
 
+class INPUT input;
 
+class PROCESS,FEATURE,NLP,MATCH,LLM ai;
 
-PROJECT {
-
-INT id PK
-
-INT user_id FK
-
-VARCHAR title
-
-TEXT description
-
-}
-
-
-
-EXPERIENCE {
-
-INT id PK
-
-INT user_id FK
-
-VARCHAR company
-
-VARCHAR position
-
-}
-
-
-
-SKILL {
-
-INT id PK
-
-VARCHAR name
-
-VARCHAR category
-
-}
-
-
-
-USER_SKILL {
-
-INT id PK
-
-INT user_id FK
-
-INT skill_id FK
-
-VARCHAR level
-
-}
-
-
-
-CAREER_GOAL {
-
-INT id PK
-
-VARCHAR title
-
-TEXT description
-
-}
-
-
-
-LEARNING_ROADMAP {
-
-INT id PK
-
-INT career_goal_id FK
-
-TEXT roadmap
-
-}
-
-
-
-AI_ANALYSIS {
-
-INT id PK
-
-INT resume_id FK
-
-TEXT result
-
-}
+class OUTPUT output;
 
 ```
 
 ---
 
-# 7.5 Database Access Architecture
+# 10.3 Resume Intelligence Workflow
 
 
-The application communicates with MySQL through Laravel's ORM layer.
+The resume intelligence module processes uploaded resumes through multiple stages.
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
+sequenceDiagram
 
 
+participant User
+
+participant Frontend
+
+participant Backend
+
+participant Parser
+
+participant NLP
+
+participant AI_Model
+
+participant Database
+
+
+
+User->>Frontend: Upload Resume
+
+Frontend->>Backend: Send File
+
+Backend->>Database: Store Metadata
+
+Backend->>Parser: Extract Resume Content
+
+Parser->>NLP: Process Text
+
+NLP->>AI_Model: Generate Analysis
+
+AI_Model-->>Backend: Return Insights
+
+Backend->>Database: Store Results
+
+Backend-->>Frontend: Display Report
+
+Frontend-->>User: Career Insights
+
+```
+
+---
+
+# 10.4 AI Model Lifecycle Management
+
+
+CareerIQ AI manages AI models through a controlled lifecycle.
+
+
+Lifecycle:
+
+
+```
+Development
+
+        ↓
+
+Training
+
+        ↓
+
+Evaluation
+
+        ↓
+
+Versioning
+
+        ↓
+
+Deployment
+
+        ↓
+
+Monitoring
+
+        ↓
+
+Improvement
+
+```
+
+
+---
+
+# 10.5 AI Model Management Architecture
+
+
+```mermaid
 flowchart LR
 
 
-APPLICATION("Laravel Application")
+DATA["Training Data"]
 
 
-ORM("Eloquent ORM")
+TRAIN["Model Training"]
 
 
-QUERY("SQL Query Layer")
+EVALUATE["Model Evaluation"]
 
 
-MYSQL("MySQL Database")
+REGISTRY["Model Registry"]
 
 
-
-APPLICATION --> ORM
-
-ORM --> QUERY
-
-QUERY --> MYSQL
+DEPLOY["Production Model"]
 
 
-
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+MONITOR["Performance Monitoring"]
 
 
 
-class APPLICATION,ORM,QUERY backend;
+DATA --> TRAIN
 
-class MYSQL database;
+TRAIN --> EVALUATE
+
+EVALUATE --> REGISTRY
+
+REGISTRY --> DEPLOY
+
+DEPLOY --> MONITOR
+
+
+
+classDef ai fill:#D97706,color:white;
+
+
+class DATA,TRAIN,EVALUATE,REGISTRY,DEPLOY,MONITOR ai;
 
 ```
 
 ---
 
-# 8. Redis Cache and Queue Architecture
+# 10.6 AI Model Versioning
 
 
-## 8.1 Purpose of Redis
+Each AI model maintains:
 
 
-Redis improves system performance by handling:
+| Information | Purpose |
+|---|---|
+|Model Name|Identify model|
+|Version|Track changes|
+|Accuracy|Measure performance|
+|Training Date|Maintain history|
+|Deployment Status|Control production usage|
 
 
-### Cache Layer
-
-Stores:
+Example:
 
 
-- Frequently accessed career recommendations
-- Skill information
-- Dashboard statistics
+```
+Career Recommendation Model
+
+Version:
+
+v2.1
 
 
-### Queue Layer
+Status:
 
-Handles:
+Production
 
 
-- Resume processing
-- AI analysis tasks
-- Background reports
+Accuracy:
+
+94%
+
+```
+
+---
+
+# 11. Data Architecture
+
+
+## 11.1 Data Management Overview
+
+
+CareerIQ AI manages different categories of data:
+
+
+```
+User Data
+
+        +
+
+Career Data
+
+        +
+
+Resume Data
+
+        +
+
+AI Generated Data
+
+        +
+
+System Data
+
+```
 
 
 ---
 
-# 8.2 Redis Processing Flow
+# 11.2 Data Architecture Layers
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
+flowchart TB
 
 
+USERDATA["User Data"]
+
+
+APPLICATION["Application Processing"]
+
+
+DATABASE["MySQL Database"]
+
+
+CACHE["Redis Cache"]
+
+
+STORAGE["Object Storage"]
+
+
+AI_DATA["AI Data Layer"]
+
+
+
+USERDATA --> APPLICATION
+
+APPLICATION --> DATABASE
+
+APPLICATION --> CACHE
+
+APPLICATION --> STORAGE
+
+APPLICATION --> AI_DATA
+
+
+
+classDef app fill:#2563EB,color:white;
+
+classDef data fill:#059669,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+
+class USERDATA,APPLICATION app;
+
+class DATABASE,CACHE,STORAGE data;
+
+class AI_DATA ai;
+
+```
+
+---
+
+# 11.3 Data Storage Responsibilities
+
+
+|Storage|Purpose|
+|-|-|
+|MySQL|Structured application data|
+|Redis|Temporary cache and queues|
+|AWS S3|Resume files and documents|
+|AI Storage|Model and prediction data|
+
+
+---
+
+# 12. Database Architecture Integration
+
+
+## 12.1 Database Communication Flow
+
+
+CareerIQ AI uses Laravel Eloquent ORM for database interaction.
+
+
+Architecture:
+
+
+```
+Frontend Request
+
+        ↓
+
+Laravel Controller
+
+        ↓
+
+Service Layer
+
+        ↓
+
+Eloquent ORM
+
+        ↓
+
+MySQL Database
+
+```
+
+
+---
+
+# 12.2 Database Integration Diagram
+
+
+```mermaid
 flowchart LR
 
 
-REQUEST("User Request")
+API["Laravel API"]
 
 
-API("Laravel API")
+SERVICE["Business Service Layer"]
 
 
-JOB("Background Job")
+ORM["Eloquent ORM"]
 
 
-REDIS("Redis Queue")
+MYSQL["MySQL Database"]
 
 
-WORKER("Queue Worker")
-
-
-AI("AI Processing")
-
-
-RESULT("Stored Result")
+TABLES["Application Tables"]
 
 
 
-REQUEST --> API
+API --> SERVICE
+
+SERVICE --> ORM
+
+ORM --> MYSQL
+
+MYSQL --> TABLES
+
+
+
+classDef backend fill:#7C3AED,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class API,SERVICE,ORM backend;
+
+class MYSQL,TABLES database;
+
+```
+
+---
+
+# 12.3 Database Responsibilities
+
+
+The database stores:
+
+
+## User Management
+
+
+```
+Users
+
+Profiles
+
+Education
+
+Experience
+
+Projects
+
+```
+
+
+---
+
+## Career Intelligence
+
+
+```
+Skills
+
+Career Goals
+
+Learning Roadmaps
+
+Progress Tracking
+
+```
+
+
+---
+
+## AI Intelligence
+
+
+```
+AI Models
+
+AI Predictions
+
+Analysis Results
+
+```
+
+
+---
+
+# 13. Redis Queue and Event Architecture
+
+
+## 13.1 Purpose of Asynchronous Processing
+
+
+Some operations require significant processing time:
+
+
+Examples:
+
+
+- Resume analysis
+- AI recommendation generation
+- Interview evaluation
+- Report generation
+
+
+Instead of blocking users, these tasks run asynchronously.
+
+
+---
+
+# 13.2 Queue Architecture
+
+
+```mermaid
+flowchart LR
+
+
+USER["User Action"]
+
+
+API["Laravel API"]
+
+
+JOB["Background Job"]
+
+
+QUEUE["Redis Queue"]
+
+
+WORKER["Queue Worker"]
+
+
+AI["AI Service"]
+
+
+RESULT["Database Result"]
+
+
+
+USER --> API
 
 API --> JOB
 
-JOB --> REDIS
+JOB --> QUEUE
 
-REDIS --> WORKER
+QUEUE --> WORKER
 
 WORKER --> AI
 
@@ -1090,181 +2063,183 @@ AI --> RESULT
 
 
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef queue fill:#DC2626,color:white;
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef output fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
-
+classDef data fill:#059669,color:white;
 
 
 class API,JOB,WORKER backend;
 
-class REDIS database;
+class QUEUE queue;
 
 class AI ai;
 
-class RESULT output;
+class RESULT data;
 
 ```
 
 ---
 
-# 9. Data Flow Summary
+# 13.3 Event-Driven Processing Flow
 
 
-The complete data lifecycle:
+Example:
 
 
-```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
+Resume analysis:
 
 
-flowchart TB
+```
+Resume Uploaded
 
+        ↓
 
-USER("User")
+ResumeUpload Event
 
+        ↓
 
-FRONTEND("Angular")
+Queue Job Created
 
+        ↓
 
-BACKEND("Laravel")
+AI Worker Processes Resume
 
+        ↓
 
-DATABASE("MySQL")
+Analysis Completed Event
 
+        ↓
 
-AI("AI Engine")
-
-
-INSIGHT("Career Insights")
-
-
-
-USER --> FRONTEND
-
-FRONTEND --> BACKEND
-
-BACKEND --> DATABASE
-
-BACKEND --> AI
-
-AI --> DATABASE
-
-DATABASE --> BACKEND
-
-BACKEND --> FRONTEND
-
-FRONTEND --> INSIGHT
-
-
-
-classDef user fill:#334155,stroke:#CBD5E1,color:#FFFFFF;
-
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
-
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef data fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
-
-classDef output fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
-
-
-
-class USER user;
-
-class FRONTEND frontend;
-
-class BACKEND backend;
-
-class DATABASE data;
-
-class AI ai;
-
-class INSIGHT output;
+User Notification
 
 ```
 
+
 ---
 
-**End of Part 2/3**
+# 13.4 Queue Benefits
 
-Next Part 3/3 will contain:
 
-- Docker container architecture
-- AWS production architecture
-- Security architecture
-- CI/CD pipeline
-- Scalability strategy
-- Future architecture evolution
-- Technology decisions table
-- Final conclusion
+Using asynchronous processing provides:
+
+
+- Faster user response
+- Better resource utilization
+- Independent AI scaling
+- Improved reliability
+
+
 ---
 
-# 10. Infrastructure Architecture
+---
+
+# 14. Infrastructure Architecture
 
 
-## 10.1 Docker Container Strategy
+## 14.1 Infrastructure Overview
 
 
-CareerIQ AI uses Docker to provide:
+CareerIQ AI uses a cloud-native infrastructure approach.
+
+
+The infrastructure supports:
+
+
+- Application hosting
+- AI processing
+- Database services
+- File storage
+- Monitoring
+- Automated deployment
+
+
+Architecture:
+
+
+```
+User Request
+
+        ↓
+
+Cloud Infrastructure
+
+        ↓
+
+Application Services
+
+        ↓
+
+Data Services
+
+```
+
+
+---
+
+# 14.2 Infrastructure Components
+
+
+| Component | Technology | Purpose |
+|---|---|---|
+|Application Hosting|AWS EC2/ECS|Run application services|
+|Database|Amazon RDS MySQL|Managed relational database|
+|Cache|Amazon ElastiCache Redis|Caching and queues|
+|Storage|Amazon S3|Resume and document storage|
+|CDN|CloudFront|Content delivery|
+|Monitoring|CloudWatch|System monitoring|
+|Deployment|GitHub Actions|CI/CD automation|
+
+
+---
+
+# 15. Docker Architecture
+
+
+## 15.1 Containerization Strategy
+
+
+CareerIQ AI uses Docker to ensure:
 
 
 - Environment consistency
 - Service isolation
-- Easier deployment
-- Cloud readiness
-- Simplified development workflow
+- Easy deployment
+- Developer productivity
+- Cloud compatibility
 
 
-Each major service runs inside an independent container.
+Each major service runs independently.
 
 
 ---
 
-# 10.2 Container Architecture
+# 15.2 Docker Container Architecture
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 flowchart TB
 
 
-DOCKER("Docker Environment")
+DOCKER["Docker Environment"]
 
 
-FRONTEND("Angular Container<br/><br/>Node.js Runtime")
+FRONTEND["Angular Container<br/><br/>Node.js Runtime"]
 
 
-BACKEND("Laravel Container<br/><br/>PHP Runtime")
+BACKEND["Laravel Container<br/><br/>PHP Runtime"]
 
 
-AI("AI Service Container<br/><br/>Python Runtime")
+AI["FastAPI Container<br/><br/>Python Runtime"]
 
 
-DATABASE("MySQL Container<br/><br/>Database Service")
+DATABASE["MySQL Container"]
 
 
-CACHE("Redis Container<br/><br/>Cache Service")
+REDIS["Redis Container"]
 
 
 
@@ -1276,23 +2251,22 @@ DOCKER --> AI
 
 DOCKER --> DATABASE
 
-DOCKER --> CACHE
+DOCKER --> REDIS
 
 
 
-classDef infrastructure fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
+classDef container fill:#0891B2,color:white;
 
-classDef frontend fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef frontend fill:#2563EB,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
 
-
-class DOCKER infrastructure;
+class DOCKER container;
 
 class FRONTEND frontend;
 
@@ -1300,97 +2274,150 @@ class BACKEND backend;
 
 class AI ai;
 
-class DATABASE,CACHE database;
+class DATABASE,REDIS database;
 
 ```
 
 ---
 
-# 11. Cloud Deployment Architecture
+# 15.3 Container Responsibilities
 
 
-## 11.1 AWS Production Design
+## Angular Container
 
 
-CareerIQ AI is designed for deployment on AWS cloud infrastructure.
+Responsible for:
 
 
-The production architecture includes:
-
-
-| AWS Service | Purpose |
-|-|-|
-| Route 53 | Domain management |
-| CloudFront | Content delivery |
-| Load Balancer | Traffic distribution |
-| ECS / EC2 | Application hosting |
-| RDS | Managed MySQL database |
-| ElastiCache | Redis caching |
-| S3 | File storage |
-| CloudWatch | Monitoring |
+- Frontend application
+- Static assets
+- User interface
 
 
 ---
 
-# 11.2 AWS Architecture Diagram
+## Laravel Container
+
+
+Responsible for:
+
+
+- REST API
+- Authentication
+- Business logic
+- Database communication
+
+
+---
+
+## FastAPI Container
+
+
+Responsible for:
+
+
+- AI processing
+- Model execution
+- Recommendation generation
+
+
+---
+
+## Database Containers
+
+
+Responsible for:
+
+
+- Data persistence
+- Cache management
+- Queue processing
+
+
+---
+
+# 16. AWS Cloud Architecture
+
+
+## 16.1 Cloud Deployment Strategy
+
+
+CareerIQ AI uses AWS as the production cloud platform.
+
+
+The architecture follows:
+
+
+```
+Managed Services
+
+        +
+
+Container Deployment
+
+        +
+
+Automated Scaling
+
+        +
+
+Monitoring
+
+```
+
+
+---
+
+# 16.2 AWS Production Architecture
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 flowchart TB
 
 
-USERS("Global Users")
+USER["Global Users"]
 
 
-ROUTE53("AWS Route 53")
+ROUTE["AWS Route 53"]
 
 
-CLOUDFRONT("CloudFront CDN")
+CDN["CloudFront CDN"]
 
 
-ALB("Application Load Balancer")
+ALB["Application Load Balancer"]
 
 
 
 subgraph AWS["AWS Cloud Environment"]
 
 
-APP("Laravel Application<br/><br/>EC2 / ECS")
+APP["Application Service<br/><br/>EC2 / ECS"]
 
 
-AI("AI Service<br/><br/>FastAPI")
+AI["AI Service<br/><br/>FastAPI"]
 
 
-RDS("Amazon RDS<br/><br/>MySQL")
+RDS["Amazon RDS<br/><br/>MySQL"]
 
 
-CACHE("ElastiCache<br/><br/>Redis")
+CACHE["ElastiCache<br/><br/>Redis"]
 
 
-S3("Amazon S3<br/><br/>Resume Storage")
+S3["Amazon S3<br/><br/>Resume Storage"]
 
 
-MONITOR("CloudWatch<br/><br/>Monitoring")
+MONITOR["CloudWatch<br/><br/>Monitoring"]
 
 
 end
 
 
 
-USERS --> ROUTE53
+USER --> ROUTE
 
-ROUTE53 --> CLOUDFRONT
+ROUTE --> CDN
 
-CLOUDFRONT --> ALB
+CDN --> ALB
 
 ALB --> APP
 
@@ -1407,16 +2434,16 @@ APP --> MONITOR
 
 
 
-classDef cloud fill:#0891B2,stroke:#67E8F9,color:#FFFFFF;
+classDef cloud fill:#0891B2,color:white;
 
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
+classDef backend fill:#7C3AED,color:white;
 
-classDef ai fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+classDef ai fill:#D97706,color:white;
 
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
+classDef database fill:#059669,color:white;
 
 
-class ROUTE53,CLOUDFRONT,ALB cloud;
+class ROUTE,CDN,ALB cloud;
 
 class APP backend;
 
@@ -1430,28 +2457,285 @@ class S3,MONITOR cloud;
 
 ---
 
-# 12. Security Architecture
+# 16.3 AWS Service Responsibilities
 
 
-## 12.1 Security Strategy
+## Amazon EC2 / ECS
 
 
-Security is implemented across every layer of the system.
+Used for:
+
+
+- Laravel backend hosting
+- AI service deployment
+- Container execution
 
 
 ---
 
+## Amazon RDS
+
+
+Used for:
+
+
+- MySQL database hosting
+- Automated backups
+- Database maintenance
+
+
+---
+
+## Amazon S3
+
+
+Used for:
+
+
+- Resume documents
+- User uploaded files
+- Static resources
+
+
+---
+
+## CloudFront
+
+
+Used for:
+
+
+- Faster content delivery
+- Reduced latency
+- CDN caching
+
+
+---
+
+## CloudWatch
+
+
+Used for:
+
+
+- Logs
+- Metrics
+- Alerts
+
+
+---
+
+# 17. Network Architecture
+
+
+## 17.1 Network Design
+
+
+CareerIQ AI follows a secure cloud network structure.
+
+
+Architecture:
+
+
+```
+Internet
+
+        ↓
+
+CDN Layer
+
+        ↓
+
+Load Balancer
+
+        ↓
+
+Application Layer
+
+        ↓
+
+Private Database Layer
+
+```
+
+
+---
+
+# 17.2 AWS Network Architecture
+
+
+```mermaid
+flowchart TB
+
+
+INTERNET["Internet Users"]
+
+
+CLOUDFRONT["CloudFront"]
+
+
+ALB["Load Balancer"]
+
+
+
+subgraph VPC["AWS VPC"]
+
+
+PUBLIC["Public Subnet<br/><br/>Application Servers"]
+
+
+PRIVATE["Private Subnet<br/><br/>Database Services"]
+
+
+STORAGE["Private Storage<br/><br/>S3 Access"]
+
+
+end
+
+
+
+INTERNET --> CLOUDFRONT
+
+CLOUDFRONT --> ALB
+
+ALB --> PUBLIC
+
+PUBLIC --> PRIVATE
+
+PUBLIC --> STORAGE
+
+
+
+classDef network fill:#0891B2,color:white;
+
+classDef database fill:#059669,color:white;
+
+
+class INTERNET,CLOUDFRONT,ALB,PUBLIC network;
+
+class PRIVATE,STORAGE database;
+
+```
+
+---
+
+# 17.3 Network Security Controls
+
+
+Implemented controls:
+
+
+- HTTPS communication
+- Security groups
+- Private database access
+- Restricted ports
+- Network isolation
+- IAM permissions
+
+
+---
+
+# 18. Security Architecture Integration
+
+
+## 18.1 Security Overview
+
+
+Security is integrated into every architectural layer.
+
+
+Security layers:
+
+
+```
+Frontend Security
+
+        ↓
+
+API Security
+
+        ↓
+
+Application Security
+
+        ↓
+
+Database Security
+
+        ↓
+
+Cloud Security
+
+```
+
+
+---
+
+# 18.2 Security Architecture Diagram
+
+
+```mermaid
+flowchart TB
+
+
+USER["User"]
+
+
+FRONTEND["Angular Security Layer"]
+
+
+API["Laravel API Security"]
+
+
+AUTH["Authentication"]
+
+
+AI["AI Security Controls"]
+
+
+DATABASE["Database Security"]
+
+
+CLOUD["AWS Security"]
+
+
+
+USER --> FRONTEND
+
+FRONTEND --> API
+
+API --> AUTH
+
+API --> AI
+
+API --> DATABASE
+
+API --> CLOUD
+
+
+
+classDef security fill:#DC2626,color:white;
+
+
+class USER,FRONTEND,API,AUTH,AI,DATABASE,CLOUD security;
+
+```
+
+---
+
+# 18.3 Security Controls
+
+
 ## Application Security
 
 
-Implemented using:
+Includes:
 
 
 - Authentication
 - Authorization
 - Input validation
-- Secure API communication
-- OWASP security practices
+- Secure API requests
 
 
 ---
@@ -1459,13 +2743,13 @@ Implemented using:
 ## Database Security
 
 
-Implemented through:
+Includes:
 
 
-- Secure credentials
-- Prepared statements
-- Role-based access
-- Backup policies
+- Encryption
+- Access control
+- Query protection
+- Backup security
 
 
 ---
@@ -1473,211 +2757,546 @@ Implemented through:
 ## Cloud Security
 
 
-Implemented through:
+Includes:
 
 
-- AWS IAM
-- Security Groups
-- HTTPS certificates
+- IAM roles
+- Security groups
 - Network isolation
+- Monitoring
 
 
 ---
 
-# 12.2 Security Flow
+# 19. Authentication Architecture
+
+
+## 19.1 Authentication Flow
+
+
+CareerIQ AI uses token-based authentication.
+
+
+Flow:
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
+sequenceDiagram
 
 
-flowchart LR
+participant User
 
+participant Frontend
 
-USER("User")
+participant Backend
 
-
-AUTH("Authentication Layer")
-
-
-API("Protected API")
-
-
-SECURITY("Security Controls")
-
-
-DATABASE("Protected Database")
+participant Database
 
 
 
-USER --> AUTH
+User->>Frontend: Enter Credentials
 
-AUTH --> API
+Frontend->>Backend: Login Request
 
-API --> SECURITY
+Backend->>Database: Verify User
 
-SECURITY --> DATABASE
+Database-->>Backend: User Data
 
+Backend-->>Frontend: Authentication Token
 
+Frontend->>Backend: Protected Request
 
-classDef user fill:#334155,stroke:#CBD5E1,color:#FFFFFF;
-
-classDef security fill:#BE123C,stroke:#FB7185,color:#FFFFFF;
-
-classDef database fill:#059669,stroke:#6EE7B7,color:#FFFFFF;
-
-
-
-class USER user;
-
-class AUTH,API,SECURITY security;
-
-class DATABASE database;
+Backend-->>Frontend: Authorized Response
 
 ```
 
+
 ---
 
-# 13. CI/CD Architecture
+# 19.2 Authentication Responsibilities
 
 
-## 13.1 Development Pipeline
+## Frontend
 
 
-CareerIQ AI follows an automated CI/CD workflow.
+Handles:
 
 
-Pipeline stages:
-
-
-1. Code Development
-2. Version Control
-3. Automated Testing
-4. Docker Build
-5. Deployment
+- Login interface
+- Token management
+- Route protection
 
 
 ---
 
-# 13.2 CI/CD Pipeline Diagram
+## Backend
+
+
+Handles:
+
+
+- Credential validation
+- Token generation
+- Permission checking
+
+
+---
+
+## Database
+
+
+Stores:
+
+
+- User identity
+- Password hash
+- Account information
+
+
+---
+
+---
+
+# 20. CI/CD Architecture
+
+
+## 20.1 Deployment Philosophy
+
+
+CareerIQ AI uses an automated CI/CD pipeline to ensure reliable software delivery.
+
+
+The pipeline provides:
+
+
+- Automated testing
+- Consistent builds
+- Container deployment
+- Faster releases
+- Reduced deployment errors
+
+
+---
+
+# 20.2 CI/CD Pipeline Flow
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 flowchart LR
 
 
-DEVELOPER("Developer")
+DEVELOPER["Developer"]
 
 
-GITHUB("GitHub Repository")
+GITHUB["GitHub Repository"]
 
 
-ACTION("GitHub Actions")
+CI["GitHub Actions"]
 
 
-TEST("Automated Testing")
+TEST["Automated Testing"]
 
 
-BUILD("Docker Build")
+BUILD["Docker Build"]
 
 
-DEPLOY("AWS Deployment")
+SECURITY["Security Scan"]
+
+
+DEPLOY["AWS Deployment"]
+
+
+MONITOR["Production Monitoring"]
 
 
 
 DEVELOPER --> GITHUB
 
-GITHUB --> ACTION
+GITHUB --> CI
 
-ACTION --> TEST
+CI --> TEST
 
 TEST --> BUILD
 
-BUILD --> DEPLOY
+BUILD --> SECURITY
+
+SECURITY --> DEPLOY
+
+DEPLOY --> MONITOR
 
 
 
-classDef pipeline fill:#2563EB,stroke:#93C5FD,color:#FFFFFF;
+classDef pipeline fill:#2563EB,color:white;
+
+classDef security fill:#DC2626,color:white;
+
+classDef cloud fill:#0891B2,color:white;
 
 
-class DEVELOPER,GITHUB,ACTION,TEST,BUILD,DEPLOY pipeline;
+class DEVELOPER,GITHUB,CI,TEST,BUILD pipeline;
+
+class SECURITY security;
+
+class DEPLOY,MONITOR cloud;
+
+```
+
+---
+
+# 20.3 CI/CD Pipeline Stages
+
+
+| Stage | Purpose |
+|---|---|
+|Code Commit|Developer pushes changes|
+|Build|Create application artifacts|
+|Testing|Execute automated tests|
+|Security Scan|Detect vulnerabilities|
+|Docker Build|Create containers|
+|Deployment|Release to AWS|
+|Monitoring|Track application health|
+
+
+---
+
+# 21. Monitoring and Observability
+
+
+## 21.1 Overview
+
+
+Production systems require continuous monitoring to maintain reliability.
+
+
+CareerIQ AI monitors:
+
+
+- Application performance
+- API requests
+- Database health
+- AI processing status
+- Infrastructure metrics
+
+
+---
+
+# 21.2 Observability Architecture
+
+
+```mermaid
+flowchart TB
+
+
+APPLICATION["CareerIQ AI Services"]
+
+
+LOGS["Application Logs"]
+
+
+METRICS["Performance Metrics"]
+
+
+ERRORS["Error Tracking"]
+
+
+MONITOR["Monitoring Platform"]
+
+
+ALERT["Alerts"]
+
+
+TEAM["Engineering Team"]
+
+
+
+APPLICATION --> LOGS
+
+APPLICATION --> METRICS
+
+APPLICATION --> ERRORS
+
+
+LOGS --> MONITOR
+
+METRICS --> MONITOR
+
+ERRORS --> MONITOR
+
+
+MONITOR --> ALERT
+
+ALERT --> TEAM
+
+
+
+classDef application fill:#2563EB,color:white;
+
+classDef monitor fill:#0891B2,color:white;
+
+classDef alert fill:#DC2626,color:white;
+
+
+class APPLICATION application;
+
+class LOGS,METRICS,ERRORS,MONITOR monitor;
+
+class ALERT,TEAM alert;
 
 ```
 
 ---
 
-# 14. Scalability Strategy
+# 21.3 Monitoring Components
 
 
-CareerIQ AI is designed to grow from a single deployment into a large-scale platform.
+| Component | Purpose |
+|---|---|
+|AWS CloudWatch|Infrastructure monitoring|
+|Application Logs|Debugging and analysis|
+|Error Tracking|Identify failures|
+|Performance Metrics|Measure system health|
+|Database Monitoring|Track database performance|
 
 
 ---
 
-## Current Architecture
+# 21.4 Logging Architecture
+
+
+CareerIQ AI maintains structured logs.
+
+
+Log categories:
 
 
 ```
-Modular Laravel Backend
+Application Logs
 
-+
+        +
 
-Independent AI Service
+Security Logs
 
-+
+        +
 
-Relational Database
+API Logs
+
+        +
+
+AI Processing Logs
+
+        +
+
+Database Logs
 
 ```
 
 
 ---
 
-## Future Scaling Improvements
+# 21.5 Logging Flow
 
 
-## Application Scaling
+```mermaid
+flowchart LR
 
-Future improvements:
+
+SERVICE["Application Services"]
 
 
-- Multiple backend instances
-- Load balancing
-- Auto scaling
+LOGGER["Logging Layer"]
+
+
+STORAGE["Log Storage"]
+
+
+ANALYSIS["Monitoring Analysis"]
+
+
+ALERT["Alerts"]
+
+
+
+SERVICE --> LOGGER
+
+LOGGER --> STORAGE
+
+STORAGE --> ANALYSIS
+
+ANALYSIS --> ALERT
+
+
+
+classDef logging fill:#0891B2,color:white;
+
+
+class SERVICE,LOGGER,STORAGE,ANALYSIS,ALERT logging;
+
+```
+
+---
+
+# 22. Disaster Recovery Architecture
+
+
+## 22.1 Recovery Strategy
+
+
+CareerIQ AI follows a disaster recovery approach to maintain availability during failures.
+
+
+Recovery objectives:
+
+
+|Objective|Description|
+|-|-|
+|Backup|Protect critical data|
+|Recovery|Restore services quickly|
+|Availability|Minimize downtime|
+|Data Integrity|Prevent data loss|
 
 
 ---
 
-## Database Scaling
+# 22.2 Disaster Recovery Flow
 
 
-Future improvements:
+```mermaid
+flowchart LR
 
 
-- Query optimization
-- Advanced indexing
-- Read replicas
-- Database clustering
+PRIMARY["Primary AWS Environment"]
+
+
+BACKUP["Automated Backup"]
+
+
+STORAGE["Secure Backup Storage"]
+
+
+RECOVERY["Recovery Environment"]
+
+
+SERVICE["Restored Service"]
+
+
+
+PRIMARY --> BACKUP
+
+BACKUP --> STORAGE
+
+STORAGE --> RECOVERY
+
+RECOVERY --> SERVICE
+
+
+
+classDef cloud fill:#0891B2,color:white;
+
+classDef recovery fill:#059669,color:white;
+
+
+class PRIMARY,BACKUP,STORAGE cloud;
+
+class RECOVERY,SERVICE recovery;
+
+```
+
+---
+
+# 22.3 Recovery Components
+
+
+## Database Recovery
+
+
+Includes:
+
+
+- Automated database snapshots
+- Backup verification
+- Restore procedures
 
 
 ---
 
-## AI Scaling
+## File Recovery
+
+
+Includes:
+
+
+- S3 versioning
+- File backup
+- Access control
+
+
+---
+
+## Application Recovery
+
+
+Includes:
+
+
+- Container redeployment
+- Infrastructure automation
+- CI/CD restoration
+
+
+---
+
+# 23. Scalability Strategy
+
+
+## 23.1 Scalability Goals
+
+
+CareerIQ AI is designed to support:
+
+
+- Increasing users
+- Larger AI workloads
+- More stored documents
+- Higher request volume
+
+
+---
+
+# 23.2 Application Scaling
+
+
+Current:
+
+
+```
+Single Application Instance
+
+```
+
+
+Future:
+
+
+```
+Multiple Application Instances
+
+        +
+
+Load Balancer
+
+        +
+
+Auto Scaling
+
+```
+
+
+---
+
+# 23.3 AI Scaling Strategy
+
+
+AI workloads can scale independently.
 
 
 Future improvements:
@@ -1685,93 +3304,281 @@ Future improvements:
 
 - Dedicated AI workers
 - GPU acceleration
+- Distributed model execution
 - Model optimization
-- Vector database integration
 
 
----
-
-## Infrastructure Scaling
-
-
-Future improvements:
-
-
-- Kubernetes deployment
-- Microservice architecture
-- Event-driven processing
-
-
----
-
-# 15. Future Architecture Evolution
-
-
-CareerIQ AI can evolve from a modular platform into a highly scalable AI ecosystem.
+Architecture:
 
 
 ```mermaid
-%%{init:{
-'theme':'base',
-'themeVariables':{
-'fontFamily':'Inter',
-'lineColor':'#94A3B8'
-}
-}}%%
-
-
 flowchart LR
 
 
-CURRENT("Current System<br/><br/>Laravel + AI Service")
+REQUEST["AI Requests"]
 
 
-NEXT("Future Platform<br/><br/>Microservices")
+QUEUE["AI Queue"]
 
 
-ADVANCED("Advanced AI Platform<br/><br/>Kubernetes<br/>Vector Database<br/>AI Infrastructure")
+WORKER1["AI Worker 1"]
+
+WORKER2["AI Worker 2"]
+
+WORKER3["AI Worker 3"]
 
 
-
-CURRENT --> NEXT
-
-NEXT --> ADVANCED
-
-
-
-classDef backend fill:#7C3AED,stroke:#C4B5FD,color:#FFFFFF;
-
-classDef future fill:#D97706,stroke:#FCD34D,color:#FFFFFF;
+MODEL["AI Models"]
 
 
 
-class CURRENT,NEXT backend;
+REQUEST --> QUEUE
 
-class ADVANCED future;
+QUEUE --> WORKER1
+
+QUEUE --> WORKER2
+
+QUEUE --> WORKER3
+
+
+WORKER1 --> MODEL
+
+WORKER2 --> MODEL
+
+WORKER3 --> MODEL
+
+
+
+classDef ai fill:#D97706,color:white;
+
+
+class REQUEST,QUEUE,WORKER1,WORKER2,WORKER3,MODEL ai;
 
 ```
 
 ---
 
-# 16. Technology Decisions
+# 23.4 Database Scaling
 
 
-| Technology | Reason |
-|-|-|
-| Angular | Enterprise frontend framework with strong TypeScript support |
-| Laravel | Mature PHP ecosystem and rapid backend development |
-| MySQL 8.x | Reliable relational database with strong transactional support |
-| FastAPI | Lightweight and scalable AI service framework |
-| Redis | High-performance caching and background processing |
-| Docker | Consistent development and deployment environments |
-| GitHub Actions | Automated CI/CD workflow |
-| AWS | Production-ready cloud infrastructure |
-| Terraform | Infrastructure as Code automation |
+Future improvements:
+
+
+```
+Query Optimization
+
+        ↓
+
+Advanced Indexing
+
+        ↓
+
+Read Replicas
+
+        ↓
+
+Database Clustering
+
+```
 
 
 ---
 
-# 17. Final Architecture Summary
+# 24. Future Architecture Evolution
+
+
+CareerIQ AI can evolve into a large-scale AI platform.
+
+
+---
+
+# 24.1 Evolution Roadmap
+
+
+```mermaid
+flowchart LR
+
+
+CURRENT["Current Architecture<br/><br/>Modular Monolith<br/>+ AI Service"]
+
+
+FUTURE1["Service-Oriented Architecture<br/><br/>Independent Services"]
+
+
+FUTURE2["Cloud-Native AI Platform<br/><br/>Kubernetes<br/>Vector Database<br/>Distributed AI"]
+
+
+
+CURRENT --> FUTURE1
+
+FUTURE1 --> FUTURE2
+
+
+
+classDef current fill:#7C3AED,color:white;
+
+classDef future fill:#D97706,color:white;
+
+
+class CURRENT current;
+
+class FUTURE1,FUTURE2 future;
+
+```
+
+---
+
+# 24.2 Future Improvements
+
+
+Potential improvements:
+
+
+## Microservices
+
+
+Separate:
+
+
+- Authentication service
+- Career service
+- AI service
+- Notification service
+
+
+---
+
+## Vector Database
+
+
+Used for:
+
+
+- Semantic resume search
+- Skill similarity
+- AI matching
+
+
+---
+
+## Kubernetes
+
+
+Used for:
+
+
+- Container orchestration
+- Automatic scaling
+- High availability
+
+
+---
+
+# 25. Architecture Decision Records (ADR)
+
+
+Architecture decisions are documented to maintain technical clarity.
+
+
+---
+
+# ADR-001: Separate AI Service
+
+
+## Decision
+
+
+Use an independent FastAPI AI service.
+
+
+## Reason
+
+
+- Python AI ecosystem
+- Independent scaling
+- Easier model replacement
+
+
+---
+
+# ADR-002: Use MySQL Database
+
+
+## Decision
+
+
+Use relational database architecture.
+
+
+## Reason
+
+
+- Structured career data
+- Strong relationships
+- Transaction support
+- Data consistency
+
+
+---
+
+# ADR-003: Use Redis Queue
+
+
+## Decision
+
+
+Use asynchronous processing.
+
+
+## Reason
+
+
+- Long AI tasks should not block users
+- Better performance
+- Improved reliability
+
+
+---
+
+# ADR-004: Use AWS Cloud
+
+
+## Decision
+
+
+Deploy production infrastructure on AWS.
+
+
+## Reason
+
+
+- Managed services
+- Scalability
+- Monitoring
+- Security features
+
+
+---
+
+# 26. Technology Decisions
+
+
+| Technology | Reason |
+|---|---|
+|Angular|Enterprise frontend framework|
+|TypeScript|Reliable frontend development|
+|Laravel|Rapid backend development|
+|FastAPI|Efficient AI service development|
+|MySQL|Reliable relational database|
+|Redis|Caching and background processing|
+|Docker|Environment consistency|
+|AWS|Cloud infrastructure|
+|GitHub Actions|Automated deployment|
+
+
+---
+
+# 27. Final Architecture Summary
 
 
 CareerIQ AI architecture provides:
@@ -1779,40 +3586,134 @@ CareerIQ AI architecture provides:
 
 ## Maintainability
 
-Through:
-
-- Modular design
-- Clear separation of responsibilities
-- Documented architecture
-
-
-## Scalability
 
 Through:
 
-- Independent AI services
-- Cloud deployment
-- Containerization
 
-
-## Reliability
-
-Through:
-
-- Automated testing
-- CI/CD pipeline
-- Monitoring
-
-
-## Intelligence
-
-Through:
-
-- AI-powered analysis
-- Recommendation systems
-- Data-driven career insights
+- Modular components
+- Clear responsibilities
+- Service separation
 
 
 ---
 
-# End of Document
+## Scalability
+
+
+Through:
+
+
+- Independent AI services
+- Cloud deployment
+- Container architecture
+
+
+---
+
+## Reliability
+
+
+Through:
+
+
+- CI/CD automation
+- Monitoring
+- Backup strategy
+
+
+---
+
+## Intelligence
+
+
+Through:
+
+
+- AI-powered analysis
+- Recommendation systems
+- Career prediction
+
+
+---
+
+# Final System Architecture
+
+
+```mermaid
+flowchart TB
+
+
+USER["Users"]
+
+
+FRONTEND["Angular Frontend"]
+
+
+BACKEND["Laravel Backend"]
+
+
+AI["FastAPI AI Platform"]
+
+
+DATABASE["MySQL Database"]
+
+
+CACHE["Redis Queue"]
+
+
+STORAGE["AWS S3"]
+
+
+CLOUD["AWS Infrastructure"]
+
+
+MONITOR["Monitoring System"]
+
+
+
+USER --> FRONTEND
+
+FRONTEND --> BACKEND
+
+BACKEND --> AI
+
+BACKEND --> DATABASE
+
+BACKEND --> CACHE
+
+BACKEND --> STORAGE
+
+BACKEND --> CLOUD
+
+
+CLOUD --> MONITOR
+
+AI --> MONITOR
+
+
+
+classDef frontend fill:#2563EB,color:white;
+
+classDef backend fill:#7C3AED,color:white;
+
+classDef ai fill:#D97706,color:white;
+
+classDef database fill:#059669,color:white;
+
+classDef cloud fill:#0891B2,color:white;
+
+
+class FRONTEND frontend;
+
+class BACKEND backend;
+
+class AI ai;
+
+class DATABASE,CACHE database;
+
+class STORAGE,CLOUD,MONITOR cloud;
+
+```
+
+---
+
