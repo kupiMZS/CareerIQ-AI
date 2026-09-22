@@ -1,15 +1,106 @@
+# ==================================
+# Environment Variables
+# ==================================
+
 .env
+.env.*
+!.env.example
+
+
+# ==================================
+# Node / Angular
+# ==================================
 
 node_modules/
+dist/
+.angular/
+frontend/node_modules/
+frontend/dist/
 
-vendor/
 
-storage/logs/
+# ==================================
+# Laravel / PHP
+# ==================================
+
+backend/vendor/
+
+backend/storage/logs/
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+*.phpunit.result.cache
+
+
+# ==================================
+# Python / AI Engine
+# ==================================
+
+ai-engine/venv/
 
 __pycache__/
+*.py[cod]
+
+.pytest_cache/
+
+*.egg-info/
+
+
+# ==================================
+# Database
+# ==================================
+
+*.sqlite
+*.sql
+
+
+# ==================================
+# Docker
+# ==================================
 
 *.log
+
+docker-compose.override.yml
+
+
+# ==================================
+# IDE
+# ==================================
 
 .idea/
 
 .vscode/
+
+
+# ==================================
+# OS Generated Files
+# ==================================
+
+.DS_Store
+Thumbs.db
+
+
+# ==================================
+# Terraform
+# ==================================
+
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+
+
+# ==================================
+# AWS Credentials
+# ==================================
+
+.aws/
+
+
+# ==================================
+# Coverage Reports
+# ==================================
+
+coverage/
+
+htmlcov/
