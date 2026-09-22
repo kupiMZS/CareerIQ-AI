@@ -1,0 +1,29 @@
+name: Deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    name: Validate deployment configuration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate development Compose file
+        run: docker compose -f docker-compose.yml config --quiet
+
+      - name: Check production configuration
+        shell: bash
+        run: |
+          if [[ ! -s docker-compose.prod.yml ]]; then
+            echo "docker-compose.prod.yml is empty; production deployment is not configured."
+            exit 1
+          fi
+
+          docker compose -f docker-compose.prod.yml config --quiet
