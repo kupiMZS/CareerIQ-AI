@@ -9,6 +9,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use App\Http\Responses\ApiResponse;
 
 
 class AuthController extends Controller
@@ -33,13 +34,21 @@ class AuthController extends Controller
             ->plainTextToken;
 
 
-        return response()->json([
+        return ApiResponse::success(
 
-            'user' => new UserResource($user),
+            'Registration successful',
 
-            'token' => $token
+            [
 
-        ], 201);
+                'user' => new UserResource($user),
+
+                'token' => $token
+
+            ],
+
+            201
+
+        );
 
     }
 
@@ -55,11 +64,10 @@ class AuthController extends Controller
 
         if (!$user) {
 
-            return response()->json([
-
-                'message' => 'Invalid credentials'
-
-            ], 401);
+            return ApiResponse::error(
+                'Invalid credentials',
+                401
+            );
 
         }
 
@@ -69,13 +77,19 @@ class AuthController extends Controller
             ->plainTextToken;
 
 
-        return response()->json([
+        return ApiResponse::success(
 
-            'user' => new UserResource($user),
+            'Login successful',
 
-            'token' => $token
+            [
 
-        ]);
+                'user' => new UserResource($user),
+
+                'token' => $token
+
+            ]
+
+        );
 
     }
 
@@ -90,11 +104,9 @@ class AuthController extends Controller
             ->delete();
 
 
-        return response()->json([
-
-            'message' => 'Logged out successfully'
-
-        ]);
+        return ApiResponse::success(
+            'Logged out successfully'
+        );
 
     }
 
@@ -103,8 +115,14 @@ class AuthController extends Controller
     public function user(Request $request)
     {
 
-        return new UserResource(
-            $request->user()
+        return ApiResponse::success(
+
+            'User retrieved successfully',
+
+            new UserResource(
+                $request->user()
+            )
+
         );
 
     }
