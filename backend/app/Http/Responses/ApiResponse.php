@@ -2,10 +2,8 @@
 
 namespace App\Http\Responses;
 
-
 class ApiResponse
 {
-
     public static function success(
         string $message,
         mixed $data = null,
@@ -18,13 +16,11 @@ class ApiResponse
 
             'message' => $message,
 
-            'data' => $data
+            'data' => $data,
 
         ], $status);
 
     }
-
-
 
     public static function error(
         string $message,
@@ -38,10 +34,9 @@ class ApiResponse
 
             'message' => $message,
 
-            'errors' => $errors
+            'errors' => $errors,
 
         ], $status);
 
     }
-
 }

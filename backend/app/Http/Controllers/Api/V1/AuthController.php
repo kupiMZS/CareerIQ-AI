@@ -2,24 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
+use App\Http\Responses\ApiResponse;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
-use App\Http\Responses\ApiResponse;
-
 
 class AuthController extends Controller
 {
-
     public function __construct(
         private AuthService $authService
-    ) {
-    }
-
+    ) {}
 
     public function register(RegisterRequest $request)
     {
@@ -28,11 +23,9 @@ class AuthController extends Controller
             $request->validated()
         );
 
-
         $token = $user
             ->createToken('auth-token')
             ->plainTextToken;
-
 
         return ApiResponse::success(
 
@@ -42,7 +35,7 @@ class AuthController extends Controller
 
                 'user' => new UserResource($user),
 
-                'token' => $token
+                'token' => $token,
 
             ],
 
@@ -52,8 +45,6 @@ class AuthController extends Controller
 
     }
 
-
-
     public function login(LoginRequest $request)
     {
 
@@ -61,8 +52,7 @@ class AuthController extends Controller
             $request->validated()
         );
 
-
-        if (!$user) {
+        if (! $user) {
 
             return ApiResponse::error(
                 'Invalid credentials',
@@ -71,11 +61,9 @@ class AuthController extends Controller
 
         }
 
-
         $token = $user
             ->createToken('auth-token')
             ->plainTextToken;
-
 
         return ApiResponse::success(
 
@@ -85,15 +73,13 @@ class AuthController extends Controller
 
                 'user' => new UserResource($user),
 
-                'token' => $token
+                'token' => $token,
 
             ]
 
         );
 
     }
-
-
 
     public function logout(Request $request)
     {
@@ -103,14 +89,11 @@ class AuthController extends Controller
             ->currentAccessToken()
             ->delete();
 
-
         return ApiResponse::success(
             'Logged out successfully'
         );
 
     }
-
-
 
     public function user(Request $request)
     {
@@ -126,5 +109,4 @@ class AuthController extends Controller
         );
 
     }
-
 }

@@ -6,13 +6,9 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-
 class AuthTest extends TestCase
 {
-
     use RefreshDatabase;
-
-
 
     public function test_user_can_register(): void
     {
@@ -27,35 +23,29 @@ class AuthTest extends TestCase
 
         ]);
 
-
         $response
             ->assertStatus(201)
             ->assertJson([
                 'success' => true,
-                'message' => 'Registration successful'
+                'message' => 'Registration successful',
             ]);
-
 
         $this->assertDatabaseHas('users', [
 
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
 
         ]);
 
     }
-
-
-
 
     public function test_duplicate_email_registration_fails(): void
     {
 
         User::factory()->create([
 
-            'email' => 'test@example.com'
+            'email' => 'test@example.com',
 
         ]);
-
 
         $response = $this->postJson('/api/v1/register', [
 
@@ -67,14 +57,10 @@ class AuthTest extends TestCase
 
         ]);
 
-
         $response
             ->assertStatus(422);
 
     }
-
-
-
 
     public function test_user_can_login(): void
     {
@@ -83,10 +69,9 @@ class AuthTest extends TestCase
 
             'email' => 'test@example.com',
 
-            'password' => bcrypt('password123')
+            'password' => bcrypt('password123'),
 
         ]);
-
 
         $response = $this->postJson('/api/v1/login', [
 
@@ -96,23 +81,18 @@ class AuthTest extends TestCase
 
         ]);
 
-
         $response
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Login successful'
+                'message' => 'Login successful',
             ]);
-
 
         $this->assertNotEmpty(
             $response->json('data.token')
         );
 
     }
-
-
-
 
     public function test_invalid_password_fails(): void
     {
@@ -121,10 +101,9 @@ class AuthTest extends TestCase
 
             'email' => 'test@example.com',
 
-            'password' => bcrypt('password123')
+            'password' => bcrypt('password123'),
 
         ]);
-
 
         $response = $this->postJson('/api/v1/login', [
 
@@ -134,25 +113,19 @@ class AuthTest extends TestCase
 
         ]);
 
-
         $response
             ->assertStatus(401);
 
     }
-
-
-
 
     public function test_authenticated_user_can_access_profile(): void
     {
 
         $user = User::factory()->create();
 
-
         $token = $user
             ->createToken('test-token')
             ->plainTextToken;
-
 
         $response = $this
             ->withHeader(
@@ -161,28 +134,22 @@ class AuthTest extends TestCase
             )
             ->getJson('/api/v1/user');
 
-
         $response
             ->assertStatus(200)
             ->assertJson([
-                'success' => true
+                'success' => true,
             ]);
 
     }
-
-
-
 
     public function test_user_can_logout(): void
     {
 
         $user = User::factory()->create();
 
-
         $token = $user
             ->createToken('test-token')
             ->plainTextToken;
-
 
         $response = $this
             ->withHeader(
@@ -191,14 +158,12 @@ class AuthTest extends TestCase
             )
             ->postJson('/api/v1/logout');
 
-
         $response
             ->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'message' => 'Logged out successfully'
+                'message' => 'Logged out successfully',
             ]);
 
     }
-
 }

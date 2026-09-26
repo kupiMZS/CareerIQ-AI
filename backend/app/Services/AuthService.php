@@ -5,10 +5,8 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
-
 class AuthService
 {
-
     public function register(array $data)
     {
 
@@ -18,12 +16,9 @@ class AuthService
             'password' => Hash::make($data['password']),
         ]);
 
-
         return $user;
 
     }
-
-
 
     public function login(array $data)
     {
@@ -33,8 +28,7 @@ class AuthService
             $data['email']
         )->first();
 
-
-        if (!$user || !Hash::check(
+        if (! $user || ! Hash::check(
             $data['password'],
             $user->password
         )) {
@@ -43,10 +37,7 @@ class AuthService
 
         }
 
-
         return $user;
 
     }
-
-
 }
