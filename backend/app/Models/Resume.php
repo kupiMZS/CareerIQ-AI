@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Resume extends Model
 {
@@ -29,4 +30,9 @@ class Resume extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function analysis(): HasOne
+    {
+        return $this->hasOne(ResumeAnalysis::class);
+    }
 }
+

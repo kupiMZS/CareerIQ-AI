@@ -10,4 +10,6 @@ Route::prefix('v1')->group(function () {
 
     require base_path('routes/api/v1/resume.php');
 
+    require base_path('routes/api/v1/resume_analysis.php');
+
 });
