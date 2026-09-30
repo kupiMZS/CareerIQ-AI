@@ -5,10 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-
 class ResumeAnalysis extends Model
 {
-
     protected $fillable = [
 
         'resume_id',
@@ -31,8 +29,6 @@ class ResumeAnalysis extends Model
 
     ];
 
-
-
     protected $casts = [
 
         'skills' => 'array',
@@ -43,11 +39,8 @@ class ResumeAnalysis extends Model
 
     ];
 
-
-
     public function resume(): BelongsTo
     {
         return $this->belongsTo(Resume::class);
     }
-
 }

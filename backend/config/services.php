@@ -13,6 +13,9 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'ai_engine' => [
+        'url' => env('AI_ENGINE_URL', 'http://ai-engine:8000'),
+    ],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

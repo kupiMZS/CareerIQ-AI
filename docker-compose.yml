@@ -34,7 +34,6 @@ services:
       - careeriq-network
 
 
-
   redis:
     image: redis:7-alpine
     container_name: careeriq-redis
@@ -58,14 +57,12 @@ services:
       - careeriq-network
 
 
-
   backend:
     build:
       context: .
       dockerfile: infrastructure/docker/php/Dockerfile
 
     container_name: careeriq-backend
-
     restart: unless-stopped
 
     working_dir: /var/www/html
@@ -77,7 +74,6 @@ services:
       - "8000:8000"
 
     depends_on:
-
       mysql:
         condition: service_healthy
 
@@ -95,15 +91,30 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
+      AI_ENGINE_URL: http://ai-engine:8000
+
     networks:
       - careeriq-network
 
+
+  ai-engine:
+    build:
+      context: ./ai-engine
+      dockerfile: Dockerfile
+
+    container_name: careeriq-ai-engine
+    restart: unless-stopped
+
+    ports:
+      - "8001:8000"
+
+    networks:
+      - careeriq-network
 
 
 volumes:
 
   mysql_data:
-
 
 
 networks:

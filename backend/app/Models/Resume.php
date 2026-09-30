@@ -30,9 +30,9 @@ class Resume extends Model
     {
         return $this->belongsTo(User::class);
     }
+
     public function analysis(): HasOne
     {
         return $this->hasOne(ResumeAnalysis::class);
     }
 }
-
