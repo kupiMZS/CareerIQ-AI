@@ -1,0 +1,34 @@
+John Doe
+Software Engineer
+Email: john.doe@example.com
+
+PROFESSIONAL SUMMARY
+
+Software Engineer with experience developing web applications
+using Python, Laravel, Angular, Docker and MySQL.
+
+SKILLS
+
+Python
+Laravel
+Angular
+Docker
+MySQL
+Git
+
+EDUCATION
+
+BSc Computer Science
+
+EXPERIENCE
+
+Software Engineer
+ABC Technologies
+
+Junior Software Developer
+XYZ Solutions
+
+PROJECTS
+
+CareerIQ AI
+AI-powered career intelligence platform.
