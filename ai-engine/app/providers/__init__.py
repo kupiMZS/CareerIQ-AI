@@ -7,10 +7,16 @@ from app.providers.factory import (
     create_orchestrator,
     create_provider,
 )
+from app.providers.ollama import (
+    OllamaProvider,
+    OllamaProviderError,
+)
 from app.providers.rule_based import RuleBasedProvider
 
 __all__ = [
     "LLMProvider",
+    "OllamaProvider",
+    "OllamaProviderError",
     "ProviderFactoryError",
     "ResumeAnalysisProvider",
     "RuleBasedProvider",

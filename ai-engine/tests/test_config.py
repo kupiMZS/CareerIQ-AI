@@ -6,23 +6,63 @@ from app.core.config import (
     get_settings,
 )
 
+AI_ENV_VARS = (
+    "AI_PROVIDER",
+    "AI_MODEL",
+    "AI_BASE_URL",
+    "AI_REQUEST_PATH",
+    "AI_TIMEOUT_SECONDS",
+    "AI_MAX_RETRIES",
+    "AI_FALLBACK_ENABLED",
+    "AI_FALLBACK_PROVIDER",
+)
 
-def test_settings_have_safe_defaults():
-    settings = Settings(
-        _env_file=None,
-    )
+
+def clear_ai_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for variable in AI_ENV_VARS:
+        monkeypatch.delenv(
+            variable,
+            raising=False,
+        )
+
+
+def test_settings_have_safe_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
+    settings = Settings()
+
+    assert settings.ai_base_url == "http://localhost:11434"
+
+    assert settings.ai_request_path == "/api/chat"
 
     assert settings.ai_provider == "rule_based"
+
     assert settings.ai_model == "rule-based-v1"
+
     assert settings.ai_timeout_seconds == 30.0
+
     assert settings.ai_max_retries == 2
+
     assert settings.ai_fallback_enabled is True
+
     assert settings.ai_fallback_provider == "rule_based"
 
 
 def test_settings_can_be_loaded_from_environment(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
 ):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
     monkeypatch.setenv(
         "AI_PROVIDER",
         "local",
@@ -31,6 +71,16 @@ def test_settings_can_be_loaded_from_environment(
     monkeypatch.setenv(
         "AI_MODEL",
         "local-test-model",
+    )
+
+    monkeypatch.setenv(
+        "AI_BASE_URL",
+        "http://ollama.test:11434",
+    )
+
+    monkeypatch.setenv(
+        "AI_REQUEST_PATH",
+        "/api/chat",
     )
 
     monkeypatch.setenv(
@@ -48,42 +98,89 @@ def test_settings_can_be_loaded_from_environment(
         "false",
     )
 
-    settings = Settings(
-        _env_file=None,
+    monkeypatch.setenv(
+        "AI_FALLBACK_PROVIDER",
+        "rule_based",
     )
 
+    settings = Settings()
+
     assert settings.ai_provider == "local"
+
     assert settings.ai_model == "local-test-model"
+
+    assert settings.ai_base_url == "http://ollama.test:11434"
+
+    assert settings.ai_request_path == "/api/chat"
+
     assert settings.ai_timeout_seconds == 45.0
+
     assert settings.ai_max_retries == 3
+
     assert settings.ai_fallback_enabled is False
 
+    assert settings.ai_fallback_provider == "rule_based"
 
-def test_settings_reject_invalid_provider():
+
+def test_settings_reject_invalid_provider(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "AI_PROVIDER",
+        "invalid",
+    )
+
     with pytest.raises(ValidationError):
-        Settings(
-            ai_provider="invalid",
-            _env_file=None,
-        )
+        Settings()
 
 
-def test_settings_reject_non_positive_timeout():
+def test_settings_reject_non_positive_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "AI_TIMEOUT_SECONDS",
+        "0",
+    )
+
     with pytest.raises(ValidationError):
-        Settings(
-            ai_timeout_seconds=0,
-            _env_file=None,
-        )
+        Settings()
 
 
-def test_settings_reject_negative_retry_count():
+def test_settings_reject_negative_retry_count(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "AI_MAX_RETRIES",
+        "-1",
+    )
+
     with pytest.raises(ValidationError):
-        Settings(
-            ai_max_retries=-1,
-            _env_file=None,
-        )
+        Settings()
 
 
-def test_get_settings_is_cached():
+def test_get_settings_is_cached(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
     get_settings.cache_clear()
 
     first = get_settings()

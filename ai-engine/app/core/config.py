@@ -45,6 +45,10 @@ class Settings(BaseSettings):
 
     ai_fallback_provider: ProviderName = "rule_based"
 
+    ai_base_url: str = "http://localhost:11434"
+
+    ai_request_path: str = "/api/chat"
+
 
 @lru_cache
 def get_settings() -> Settings:
