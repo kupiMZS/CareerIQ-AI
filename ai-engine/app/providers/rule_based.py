@@ -1,5 +1,5 @@
 from app.analyzer import analyze_resume
-from app.providers.base import LLMProvider
+from app.providers.base import ResumeAnalysisProvider
 from app.schemas.resume import (
     Candidate,
     Education,
@@ -9,7 +9,7 @@ from app.schemas.resume import (
 )
 
 
-class RuleBasedProvider(LLMProvider):
+class RuleBasedProvider(ResumeAnalysisProvider):
     """
     Adapter around CareerIQ's deterministic
     rule-based resume analyzer.

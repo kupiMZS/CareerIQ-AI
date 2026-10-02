@@ -1,6 +1,5 @@
 import re
 
-
 SKILL_KEYWORDS = [
     "python",
     "java",
@@ -53,20 +52,17 @@ SECTION_ALIASES = {
     "professional profile": "summary",
     "objective": "summary",
     "career objective": "summary",
-
     # Experience
     "experience": "experience",
     "work experience": "experience",
     "professional experience": "experience",
     "employment history": "experience",
     "work history": "experience",
-
     # Education
     "education": "education",
     "educational background": "education",
     "academic background": "education",
     "academic qualifications": "education",
-
     # Skills
     "skills": "skills",
     "technical skills": "skills",
@@ -74,13 +70,11 @@ SECTION_ALIASES = {
     "key skills": "skills",
     "technologies": "skills",
     "technical expertise": "skills",
-
     # Projects
     "projects": "projects",
     "personal projects": "projects",
     "academic projects": "projects",
     "key projects": "projects",
-
     # Certifications
     "certifications": "certifications",
     "certificates": "certifications",
@@ -98,11 +92,7 @@ def extract_email(text: str) -> str | None:
 
 
 def extract_name(text: str) -> str | None:
-    lines = [
-        line.strip()
-        for line in text.splitlines()
-        if line.strip()
-    ]
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
 
     if not lines:
         return None
@@ -139,16 +129,9 @@ def extract_name(text: str) -> str | None:
         "skills",
     }
 
-    normalized_skills = {
-        skill.lower()
-        for skill in SKILL_KEYWORDS
-    }
+    normalized_skills = {skill.lower() for skill in SKILL_KEYWORDS}
 
-    single_word_skills = {
-        skill.lower()
-        for skill in SKILL_KEYWORDS
-        if " " not in skill
-    }
+    single_word_skills = {skill.lower() for skill in SKILL_KEYWORDS if " " not in skill}
 
     for line in lines[:5]:
         line_lower = line.lower().strip()
@@ -172,10 +155,7 @@ def extract_name(text: str) -> str | None:
             continue
 
         # Reject obvious job titles and resume section labels.
-        if any(
-            term in line_lower
-            for term in excluded_terms
-        ):
+        if any(term in line_lower for term in excluded_terms):
             continue
 
         # Reject lines that exactly match a known skill,
@@ -190,10 +170,7 @@ def extract_name(text: str) -> str | None:
         # Java Docker Git
         #
         # This was the specific bug causing the failing test.
-        if words and all(
-            word in single_word_skills
-            for word in words
-        ):
+        if words and all(word in single_word_skills for word in words):
             continue
 
         return line
@@ -278,11 +255,7 @@ def extract_skills(text: str) -> list[str]:
     # Avoid reporting "c" when the resume explicitly contains
     # the more specific "c++" or "c#".
     if "c++" in found or "c#" in found:
-        found = [
-            skill
-            for skill in found
-            if skill != "c"
-        ]
+        found = [skill for skill in found if skill != "c"]
 
     return found
 
@@ -299,9 +272,7 @@ def extract_education(text: str) -> list[str]:
     sections = detect_sections(text)
 
     if "education" in sections:
-        education_text = "\n".join(
-            sections["education"]
-        )
+        education_text = "\n".join(sections["education"])
     else:
         education_text = text
 
@@ -338,11 +309,7 @@ def extract_experience(text: str) -> list[str]:
     if "experience" in sections:
         lines = sections["experience"]
     else:
-        lines = [
-            line.strip()
-            for line in text.splitlines()
-            if line.strip()
-        ]
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
 
     keywords = [
         "engineer",
@@ -363,10 +330,7 @@ def extract_experience(text: str) -> list[str]:
         line_lower = line.lower()
 
         if (
-            any(
-                keyword in line_lower
-                for keyword in keywords
-            )
+            any(keyword in line_lower for keyword in keywords)
             and line not in candidates
         ):
             candidates.append(line)
@@ -389,14 +353,11 @@ def generate_summary(
         )
 
     if skills:
-        parts.append(
-            f"The resume mentions {len(skills)} technical skills."
-        )
+        parts.append(f"The resume mentions {len(skills)} technical skills.")
 
     if education:
         parts.append(
-            f"{len(education)} education-related qualification(s) "
-            f"were identified."
+            f"{len(education)} education-related qualification(s) were identified."
         )
 
     if not parts:

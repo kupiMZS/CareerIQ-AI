@@ -76,8 +76,7 @@ def test_calculate_ats_score():
         "Software Engineer\n"
         "Python Laravel Angular Docker\n"
         "BSc Computer Science\n"
-        "Software Engineer at ABC Company\n"
-        + ("Additional resume information. " * 5)
+        "Software Engineer at ABC Company\n" + ("Additional resume information. " * 5)
     )
 
     skills = extract_skills(text)

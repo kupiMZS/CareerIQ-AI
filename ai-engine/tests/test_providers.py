@@ -1,6 +1,9 @@
 import pytest
 
-from app.providers import LLMProvider
+from app.providers import (
+    LLMProvider,
+    ResumeAnalysisProvider,
+)
 from app.schemas.resume import (
     Candidate,
     ResumeIntelligence,
@@ -26,6 +29,11 @@ class TestProvider(LLMProvider):
                 )
             ],
         )
+
+
+def test_resume_analysis_provider_is_abstract():
+    with pytest.raises(TypeError):
+        ResumeAnalysisProvider()
 
 
 def test_llm_provider_is_abstract():

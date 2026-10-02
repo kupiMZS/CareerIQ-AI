@@ -18,9 +18,7 @@ class Skill(BaseModel):
         le=1.0,
     )
 
-    evidence: list[str] = Field(
-        default_factory=list
-    )
+    evidence: list[str] = Field(default_factory=list)
 
 
 class Education(BaseModel):
@@ -37,9 +35,7 @@ class Experience(BaseModel):
     start_date: str | None = None
     end_date: str | None = None
 
-    responsibilities: list[str] = Field(
-        default_factory=list
-    )
+    responsibilities: list[str] = Field(default_factory=list)
 
 
 class Project(BaseModel):
@@ -47,9 +43,7 @@ class Project(BaseModel):
 
     description: str | None = None
 
-    technologies: list[str] = Field(
-        default_factory=list
-    )
+    technologies: list[str] = Field(default_factory=list)
 
 
 class Certification(BaseModel):
@@ -63,28 +57,16 @@ class Certification(BaseModel):
 class ResumeIntelligence(BaseModel):
     analysis_version: str = "1.0"
 
-    candidate: Candidate = Field(
-        default_factory=Candidate
-    )
+    candidate: Candidate = Field(default_factory=Candidate)
 
     professional_summary: str | None = None
 
-    skills: list[Skill] = Field(
-        default_factory=list
-    )
+    skills: list[Skill] = Field(default_factory=list)
 
-    education: list[Education] = Field(
-        default_factory=list
-    )
+    education: list[Education] = Field(default_factory=list)
 
-    experience: list[Experience] = Field(
-        default_factory=list
-    )
+    experience: list[Experience] = Field(default_factory=list)
 
-    projects: list[Project] = Field(
-        default_factory=list
-    )
+    projects: list[Project] = Field(default_factory=list)
 
-    certifications: list[Certification] = Field(
-        default_factory=list
-    )
+    certifications: list[Certification] = Field(default_factory=list)

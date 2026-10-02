@@ -3,12 +3,12 @@ from abc import ABC, abstractmethod
 from app.schemas.resume import ResumeIntelligence
 
 
-class LLMProvider(ABC):
+class ResumeAnalysisProvider(ABC):
     """
-    Base interface for all CareerIQ LLM providers.
+    Base interface for any CareerIQ resume analysis provider.
 
-    Concrete providers may use a local model,
-    cloud API, or another inference service.
+    Implementations may use deterministic rules,
+    local models, cloud LLMs, or other inference systems.
     """
 
     @abstractmethod
@@ -16,9 +16,11 @@ class LLMProvider(ABC):
         self,
         resume_text: str,
     ) -> ResumeIntelligence:
-        """
-        Analyze resume text and return validated
-        structured resume intelligence.
-        """
-
         raise NotImplementedError
+
+
+class LLMProvider(ResumeAnalysisProvider, ABC):
+    """
+    Base interface for resume analysis providers
+    powered specifically by large language models.
+    """

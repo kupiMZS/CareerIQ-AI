@@ -2,7 +2,6 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
-
 client = TestClient(app)
 
 
@@ -20,9 +19,7 @@ def test_health_check():
 def test_analyze_resume():
     response = client.post(
         "/analyze",
-        json={
-            "resume_text": "John Doe\nSoftware Engineer\nLaravel Angular"
-        },
+        json={"resume_text": "John Doe\nSoftware Engineer\nLaravel Angular"},
     )
 
     assert response.status_code == 200
@@ -41,9 +38,7 @@ def test_analyze_resume():
 def test_analyze_requires_resume_text():
     response = client.post(
         "/analyze",
-        json={
-            "resume_text": ""
-        },
+        json={"resume_text": ""},
     )
 
     assert response.status_code == 422
