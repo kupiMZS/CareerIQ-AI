@@ -5,6 +5,7 @@ from pathlib import Path
 from app.core import get_settings
 from app.providers.factory import create_provider
 from evals.loader import load_resume_eval_dataset
+from evals.providers import EnrichedResumeProvider
 from evals.runner import run_resume_benchmark
 
 DEFAULT_DATASET_PATH = Path(__file__).parent / "datasets" / "resume_extraction_v1.jsonl"
@@ -12,7 +13,7 @@ DEFAULT_DATASET_PATH = Path(__file__).parent / "datasets" / "resume_extraction_v
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description=("Run CareerIQ resume extraction benchmark.")
+        description="Run CareerIQ resume extraction benchmark."
     )
 
     parser.add_argument(
@@ -20,6 +21,7 @@ def parse_args() -> argparse.Namespace:
         choices=[
             "rule_based",
             "local",
+            "local_enriched",
         ],
         default="rule_based",
     )
@@ -38,10 +40,18 @@ async def run() -> None:
 
     settings = get_settings()
 
-    provider = create_provider(
-        args.provider,
-        settings,
-    )
+    if args.provider == "local_enriched":
+        provider = EnrichedResumeProvider(
+            create_provider(
+                "local",
+                settings,
+            )
+        )
+    else:
+        provider = create_provider(
+            args.provider,
+            settings,
+        )
 
     cases = load_resume_eval_dataset(args.dataset)
 
