@@ -6,14 +6,18 @@ from app.prompts.resume_analysis import (
     get_resume_analysis_schema,
 )
 from app.providers.base import LLMProvider
+from app.providers.errors import (
+    ProviderConnectionError,
+    ProviderError,
+    ProviderHTTPError,
+    ProviderResponseError,
+    ProviderTimeoutError,
+)
 from app.schemas.resume import ResumeIntelligence
 
-
-class OllamaProviderError(RuntimeError):
-    """
-    Raised when the Ollama provider cannot return
-    valid structured resume intelligence.
-    """
+# Backward-compatible alias for code that currently
+# imports OllamaProviderError.
+OllamaProviderError = ProviderError
 
 
 class OllamaProvider(LLMProvider):
@@ -58,7 +62,7 @@ class OllamaProvider(LLMProvider):
         payload = {
             "model": self.model,
             "stream": False,
-            "messages": build_resume_analysis_messages(resume_text),
+            "messages": (build_resume_analysis_messages(resume_text)),
             "format": get_resume_analysis_schema(),
             "options": {
                 "temperature": 0,
@@ -67,7 +71,7 @@ class OllamaProvider(LLMProvider):
 
         try:
             response = await client.post(
-                f"{self.base_url}{self.request_path}",
+                (f"{self.base_url}{self.request_path}"),
                 json=payload,
             )
 
@@ -78,20 +82,36 @@ class OllamaProvider(LLMProvider):
             content = body["message"]["content"]
 
             if not isinstance(content, str):
-                raise OllamaProviderError("Ollama returned invalid message content.")
+                raise ProviderResponseError("Ollama returned invalid message content.")
 
             return ResumeIntelligence.model_validate_json(content)
 
-        except OllamaProviderError:
+        except ProviderError:
             raise
 
+        except httpx.TimeoutException as exception:
+            raise ProviderTimeoutError("Ollama request timed out.") from exception
+
+        except httpx.ConnectError as exception:
+            raise ProviderConnectionError("Could not connect to Ollama.") from exception
+
+        except httpx.HTTPStatusError as exception:
+            status_code = exception.response.status_code
+
+            raise ProviderHTTPError(
+                (f"Ollama returned HTTP {status_code}."),
+                status_code=status_code,
+            ) from exception
+
+        except httpx.RequestError as exception:
+            raise ProviderConnectionError("Ollama request failed.") from exception
+
         except (
-            httpx.HTTPError,
             KeyError,
             TypeError,
             ValueError,
             ValidationError,
         ) as exception:
-            raise OllamaProviderError(
+            raise ProviderResponseError(
                 "Ollama returned an invalid response."
             ) from exception

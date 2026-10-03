@@ -1,6 +1,11 @@
 import pytest
 
-from app.providers.base import ResumeAnalysisProvider
+from app.providers.base import (
+    ResumeAnalysisProvider,
+)
+from app.providers.errors import (
+    ProviderConnectionError,
+)
 from app.schemas.resume import (
     Candidate,
     ResumeIntelligence,
@@ -15,7 +20,7 @@ class SuccessfulProvider(ResumeAnalysisProvider):
     ) -> ResumeIntelligence:
         return ResumeIntelligence(
             candidate=Candidate(
-                name="Primary Provider Candidate",
+                name=("Primary Provider Candidate"),
             )
         )
 
@@ -25,7 +30,15 @@ class FailingProvider(ResumeAnalysisProvider):
         self,
         resume_text: str,
     ) -> ResumeIntelligence:
-        raise RuntimeError("Primary provider failed")
+        raise ProviderConnectionError("Primary provider failed")
+
+
+class UnexpectedBugProvider(ResumeAnalysisProvider):
+    async def analyze_resume(
+        self,
+        resume_text: str,
+    ) -> ResumeIntelligence:
+        raise RuntimeError("Unexpected programming bug")
 
 
 class FallbackProvider(ResumeAnalysisProvider):
@@ -69,7 +82,21 @@ async def test_orchestrator_reraises_when_no_fallback_exists():
     orchestrator = AIOrchestrator(primary_provider=FailingProvider())
 
     with pytest.raises(
-        RuntimeError,
+        ProviderConnectionError,
         match="Primary provider failed",
+    ):
+        await orchestrator.analyze_resume("John Doe Software Engineer")
+
+
+@pytest.mark.anyio
+async def test_orchestrator_does_not_swallow_unexpected_errors():
+    orchestrator = AIOrchestrator(
+        primary_provider=UnexpectedBugProvider(),
+        fallback_provider=FallbackProvider(),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="Unexpected programming bug",
     ):
         await orchestrator.analyze_resume("John Doe Software Engineer")

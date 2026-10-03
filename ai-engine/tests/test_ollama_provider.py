@@ -3,6 +3,12 @@ import json
 import httpx
 import pytest
 
+from app.providers.errors import (
+    ProviderConnectionError,
+    ProviderHTTPError,
+    ProviderResponseError,
+    ProviderTimeoutError,
+)
 from app.providers.ollama import (
     OllamaProvider,
     OllamaProviderError,
@@ -17,7 +23,7 @@ def build_success_response() -> dict:
             "email": "john.doe@example.com",
             "headline": "Software Engineer",
         },
-        "professional_summary": ("Backend software engineer."),
+        "professional_summary": "Backend software engineer.",
         "skills": [
             {
                 "name": "Python",
@@ -81,11 +87,13 @@ async def test_ollama_provider_rejects_empty_resume():
 
 
 @pytest.mark.anyio
-async def test_ollama_provider_handles_http_failure():
+async def test_ollama_provider_classifies_http_failure():
     def handler(
         request: httpx.Request,
     ) -> httpx.Response:
-        return httpx.Response(status_code=500)
+        return httpx.Response(
+            status_code=500,
+        )
 
     transport = httpx.MockTransport(handler)
 
@@ -97,20 +105,25 @@ async def test_ollama_provider_handles_http_failure():
         )
 
         with pytest.raises(
-            OllamaProviderError,
-            match="invalid response",
-        ):
+            ProviderHTTPError,
+        ) as exception_info:
             await provider.analyze_resume("John Doe Software Engineer")
+
+    assert exception_info.value.status_code == 500
 
 
 @pytest.mark.anyio
-async def test_ollama_provider_handles_invalid_json():
+async def test_ollama_provider_classifies_invalid_response():
     def handler(
         request: httpx.Request,
     ) -> httpx.Response:
         return httpx.Response(
             status_code=200,
-            json={"message": {"content": "not-json"}},
+            json={
+                "message": {
+                    "content": "not-json",
+                }
+            },
         )
 
     transport = httpx.MockTransport(handler)
@@ -123,7 +136,56 @@ async def test_ollama_provider_handles_invalid_json():
         )
 
         with pytest.raises(
-            OllamaProviderError,
-            match="invalid response",
+            ProviderResponseError,
+        ):
+            await provider.analyze_resume("John Doe Software Engineer")
+
+
+@pytest.mark.anyio
+async def test_ollama_provider_classifies_timeout():
+    def handler(
+        request: httpx.Request,
+    ) -> httpx.Response:
+        raise httpx.ReadTimeout(
+            "Request timed out",
+            request=request,
+        )
+
+    transport = httpx.MockTransport(handler)
+
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = OllamaProvider(
+            base_url="http://ollama.test",
+            model="test-model",
+            client=client,
+        )
+
+        with pytest.raises(
+            ProviderTimeoutError,
+        ):
+            await provider.analyze_resume("John Doe Software Engineer")
+
+
+@pytest.mark.anyio
+async def test_ollama_provider_classifies_connection_failure():
+    def handler(
+        request: httpx.Request,
+    ) -> httpx.Response:
+        raise httpx.ConnectError(
+            "Connection refused",
+            request=request,
+        )
+
+    transport = httpx.MockTransport(handler)
+
+    async with httpx.AsyncClient(transport=transport) as client:
+        provider = OllamaProvider(
+            base_url="http://ollama.test",
+            model="test-model",
+            client=client,
+        )
+
+        with pytest.raises(
+            ProviderConnectionError,
         ):
             await provider.analyze_resume("John Doe Software Engineer")

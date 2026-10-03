@@ -1,4 +1,7 @@
-from app.providers.base import ResumeAnalysisProvider
+from app.providers.base import (
+    ResumeAnalysisProvider,
+)
+from app.providers.errors import ProviderError
 from app.schemas.resume import ResumeIntelligence
 
 
@@ -7,14 +10,17 @@ class AIOrchestrator:
     Coordinates resume analysis providers.
 
     The primary provider is attempted first.
-    If it fails and a fallback provider exists,
-    the fallback provider is used.
+    Expected provider failures may trigger the
+    configured fallback provider.
+
+    Unexpected application errors are allowed
+    to propagate.
     """
 
     def __init__(
         self,
         primary_provider: ResumeAnalysisProvider,
-        fallback_provider: ResumeAnalysisProvider | None = None,
+        fallback_provider: (ResumeAnalysisProvider | None) = None,
     ):
         self.primary_provider = primary_provider
         self.fallback_provider = fallback_provider
@@ -25,7 +31,8 @@ class AIOrchestrator:
     ) -> ResumeIntelligence:
         try:
             return await self.primary_provider.analyze_resume(resume_text)
-        except Exception:
+
+        except ProviderError:
             if self.fallback_provider is None:
                 raise
 
