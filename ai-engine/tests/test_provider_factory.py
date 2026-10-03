@@ -89,6 +89,7 @@ def test_factory_creates_default_orchestrator():
     )
 
     assert orchestrator.fallback_provider is None
+    assert orchestrator.max_retries == 2
 
 
 def test_factory_creates_local_provider_with_rule_fallback():
