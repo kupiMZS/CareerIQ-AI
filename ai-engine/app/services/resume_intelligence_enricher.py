@@ -11,28 +11,299 @@ def _normalize(value: str) -> str:
     return value.strip().casefold()
 
 
-def _split_experience(
+def _normalize_optional(
+    value: str | None,
+) -> str | None:
+    if not value:
+        return None
+
+    normalized = _normalize(value)
+
+    return normalized or None
+
+
+def _split_education(
     value: str,
 ) -> tuple[str | None, str | None]:
+    cleaned = value.strip()
+
     separator = " at "
 
-    if separator not in value:
-        cleaned = value.strip()
-
+    if separator not in cleaned:
         return (
             cleaned or None,
             None,
         )
 
-    job_title, company = value.split(
+    degree, institution = cleaned.split(
         separator,
         maxsplit=1,
     )
 
     return (
-        job_title.strip() or None,
-        company.strip() or None,
+        degree.strip() or None,
+        institution.strip() or None,
     )
+
+
+def _split_experience(
+    value: str,
+) -> tuple[str | None, str | None]:
+    cleaned = value.strip()
+
+    for separator in (
+        " at ",
+        " - ",
+        " – ",
+        " — ",
+    ):
+        if separator not in cleaned:
+            continue
+
+        job_title, company = cleaned.split(
+            separator,
+            maxsplit=1,
+        )
+
+        return (
+            job_title.strip() or None,
+            company.strip() or None,
+        )
+
+    return (
+        cleaned or None,
+        None,
+    )
+
+
+def _normalize_education_entry(
+    item: Education,
+) -> None:
+    if not item.degree or item.institution:
+        return
+
+    degree, institution = _split_education(item.degree)
+
+    if institution is None:
+        return
+
+    item.degree = degree
+    item.institution = institution
+
+
+def _education_entries_are_mergeable(
+    first: Education,
+    second: Education,
+) -> bool:
+    first_degree = _normalize_optional(first.degree)
+    second_degree = _normalize_optional(second.degree)
+
+    first_institution = _normalize_optional(first.institution)
+    second_institution = _normalize_optional(second.institution)
+
+    first_is_empty = first_degree is None and first_institution is None
+
+    second_is_empty = second_degree is None and second_institution is None
+
+    if first_is_empty or second_is_empty:
+        return True
+
+    same_degree = (
+        first_degree is not None
+        and second_degree is not None
+        and first_degree == second_degree
+    )
+
+    same_institution = (
+        first_institution is not None
+        and second_institution is not None
+        and first_institution == second_institution
+    )
+
+    if same_degree and same_institution:
+        return True
+
+    if same_institution and (first_degree is None or second_degree is None):
+        return True
+
+    return same_degree and (first_institution is None or second_institution is None)
+
+
+def _merge_education_values(
+    target: Education,
+    source: Education,
+) -> None:
+    for field_name in (
+        "institution",
+        "degree",
+        "field_of_study",
+        "start_date",
+        "end_date",
+    ):
+        target_value = getattr(
+            target,
+            field_name,
+        )
+
+        source_value = getattr(
+            source,
+            field_name,
+        )
+
+        if target_value is None and source_value is not None:
+            setattr(
+                target,
+                field_name,
+                source_value,
+            )
+
+
+def _deduplicate_education(
+    intelligence: ResumeIntelligence,
+) -> None:
+    merged: list[Education] = []
+
+    for item in intelligence.education:
+        _normalize_education_entry(item)
+
+        matching_entry = next(
+            (
+                existing
+                for existing in merged
+                if _education_entries_are_mergeable(
+                    existing,
+                    item,
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            merged.append(item)
+            continue
+
+        _merge_education_values(
+            matching_entry,
+            item,
+        )
+
+    intelligence.education = merged
+
+
+def _normalize_experience_entry(
+    item: Experience,
+) -> None:
+    if not item.job_title or item.company:
+        return
+
+    job_title, company = _split_experience(item.job_title)
+
+    if company is None:
+        return
+
+    item.job_title = job_title
+    item.company = company
+
+
+def _experience_entries_are_mergeable(
+    first: Experience,
+    second: Experience,
+) -> bool:
+    first_title = _normalize_optional(first.job_title)
+    second_title = _normalize_optional(second.job_title)
+
+    first_company = _normalize_optional(first.company)
+    second_company = _normalize_optional(second.company)
+
+    first_is_empty = first_title is None and first_company is None
+
+    second_is_empty = second_title is None and second_company is None
+
+    if first_is_empty or second_is_empty:
+        return True
+
+    same_title = (
+        first_title is not None
+        and second_title is not None
+        and first_title == second_title
+    )
+
+    same_company = (
+        first_company is not None
+        and second_company is not None
+        and first_company == second_company
+    )
+
+    if same_title and same_company:
+        return True
+
+    if same_title and (first_company is None or second_company is None):
+        return True
+
+    return same_company and (first_title is None or second_title is None)
+
+
+def _merge_experience_values(
+    target: Experience,
+    source: Experience,
+) -> None:
+    for field_name in (
+        "company",
+        "job_title",
+        "start_date",
+        "end_date",
+    ):
+        target_value = getattr(
+            target,
+            field_name,
+        )
+
+        source_value = getattr(
+            source,
+            field_name,
+        )
+
+        if target_value is None and source_value is not None:
+            setattr(
+                target,
+                field_name,
+                source_value,
+            )
+
+    if not target.responsibilities and source.responsibilities:
+        target.responsibilities = list(source.responsibilities)
+
+
+def _deduplicate_experience(
+    intelligence: ResumeIntelligence,
+) -> None:
+    merged: list[Experience] = []
+
+    for item in intelligence.experience:
+        _normalize_experience_entry(item)
+
+        matching_entry = next(
+            (
+                existing
+                for existing in merged
+                if _experience_entries_are_mergeable(
+                    existing,
+                    item,
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            merged.append(item)
+            continue
+
+        _merge_experience_values(
+            matching_entry,
+            item,
+        )
+
+    intelligence.experience = merged
 
 
 def _enrich_skills(
@@ -60,99 +331,76 @@ def _enrich_education(
     intelligence: ResumeIntelligence,
     baseline_education: list[str],
 ) -> None:
+    _deduplicate_education(intelligence)
+
     for education_value in baseline_education:
-        normalized_value = _normalize(education_value)
+        degree, institution = _split_education(education_value)
 
-        already_present = any(
-            item.degree and _normalize(item.degree) == normalized_value
-            for item in intelligence.education
+        candidate = Education(
+            degree=degree,
+            institution=institution,
         )
-
-        if already_present:
-            continue
-
-        empty_degree_entry = next(
-            (item for item in intelligence.education if not item.degree),
-            None,
-        )
-
-        if empty_degree_entry is not None:
-            empty_degree_entry.degree = education_value
-            continue
-
-        intelligence.education.append(
-            Education(
-                degree=education_value,
-            )
-        )
-
-
-def _enrich_experience(
-    intelligence: ResumeIntelligence,
-    baseline_experience: list[str],
-) -> None:
-    for experience_value in baseline_experience:
-        job_title, company = _split_experience(experience_value)
-
-        normalized_full = _normalize(experience_value)
-
-        normalized_job_title = _normalize(job_title) if job_title else None
-
-        normalized_company = _normalize(company) if company else None
 
         matching_entry = next(
             (
                 item
-                for item in intelligence.experience
-                if (item.job_title and _normalize(item.job_title) == normalized_full)
-                or (
-                    item.job_title
-                    and normalized_job_title
-                    and _normalize(item.job_title) == normalized_job_title
-                )
-                or (
-                    item.company
-                    and normalized_company
-                    and _normalize(item.company) == normalized_company
-                )
-                or (
-                    item.job_title
-                    and item.company
-                    and _normalize((f"{item.job_title} at {item.company}"))
-                    == normalized_full
+                for item in intelligence.education
+                if _education_entries_are_mergeable(
+                    item,
+                    candidate,
                 )
             ),
             None,
         )
 
         if matching_entry is not None:
-            if (
-                matching_entry.job_title
-                and _normalize(matching_entry.job_title) == normalized_full
-                and job_title
-                and company
-            ):
-                matching_entry.job_title = job_title
-
-                if not matching_entry.company:
-                    matching_entry.company = company
-
-                continue
-
-            if not matching_entry.job_title and job_title:
-                matching_entry.job_title = job_title
-
-            if not matching_entry.company and company:
-                matching_entry.company = company
-
+            _merge_education_values(
+                matching_entry,
+                candidate,
+            )
             continue
 
-        intelligence.experience.append(
-            Experience(
-                job_title=job_title,
-                company=company,
-            )
+        intelligence.education.append(candidate)
+
+    _deduplicate_education(intelligence)
+
+
+def _enrich_experience(
+    intelligence: ResumeIntelligence,
+    baseline_experience: list[str],
+) -> None:
+    _deduplicate_experience(intelligence)
+
+    for experience_value in baseline_experience:
+        job_title, company = _split_experience(experience_value)
+
+        candidate = Experience(
+            job_title=job_title,
+            company=company,
         )
+
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.experience
+                if _experience_entries_are_mergeable(
+                    item,
+                    candidate,
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is not None:
+            _merge_experience_values(
+                matching_entry,
+                candidate,
+            )
+            continue
+
+        intelligence.experience.append(candidate)
+
+    _deduplicate_experience(intelligence)
 
 
 def enrich_resume_intelligence(
