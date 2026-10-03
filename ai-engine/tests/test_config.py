@@ -15,6 +15,7 @@ AI_ENV_VARS = (
     "AI_MAX_RETRIES",
     "AI_FALLBACK_ENABLED",
     "AI_FALLBACK_PROVIDER",
+    "AI_RETRY_BACKOFF_SECONDS",
 )
 
 
@@ -49,6 +50,8 @@ def test_settings_have_safe_defaults(
     assert settings.ai_timeout_seconds == 30.0
 
     assert settings.ai_max_retries == 2
+
+    assert settings.ai_retry_backoff_seconds == 0.5
 
     assert settings.ai_fallback_enabled is True
 
@@ -94,6 +97,11 @@ def test_settings_can_be_loaded_from_environment(
     )
 
     monkeypatch.setenv(
+        "AI_RETRY_BACKOFF_SECONDS",
+        "0.25",
+    )
+
+    monkeypatch.setenv(
         "AI_FALLBACK_ENABLED",
         "false",
     )
@@ -116,6 +124,8 @@ def test_settings_can_be_loaded_from_environment(
     assert settings.ai_timeout_seconds == 45.0
 
     assert settings.ai_max_retries == 3
+
+    assert settings.ai_retry_backoff_seconds == 0.25
 
     assert settings.ai_fallback_enabled is False
 
@@ -189,3 +199,20 @@ def test_get_settings_is_cached(
     assert first is second
 
     get_settings.cache_clear()
+
+
+def test_settings_reject_negative_retry_backoff(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+):
+    monkeypatch.chdir(tmp_path)
+
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "AI_RETRY_BACKOFF_SECONDS",
+        "-0.1",
+    )
+
+    with pytest.raises(ValidationError):
+        Settings()

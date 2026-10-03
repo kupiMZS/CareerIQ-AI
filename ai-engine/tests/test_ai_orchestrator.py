@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import pytest
@@ -84,6 +85,17 @@ class FlakyProvider(ResumeAnalysisProvider):
                 name="Recovered Candidate",
             )
         )
+
+
+class RecordingSleeper:
+    def __init__(self):
+        self.delays: list[float] = []
+
+    async def __call__(
+        self,
+        delay: float,
+    ) -> None:
+        self.delays.append(delay)
 
 
 @pytest.mark.anyio
@@ -226,15 +238,20 @@ async def test_orchestrator_does_not_retry_response_error():
         error_factory=lambda: ProviderResponseError("Invalid provider response"),
     )
 
+    sleeper = RecordingSleeper()
+
     orchestrator = AIOrchestrator(
         primary_provider=provider,
         fallback_provider=FallbackProvider(),
         max_retries=2,
+        retry_backoff_seconds=0.5,
+        sleep_func=sleeper,
     )
 
     result = await orchestrator.analyze_resume("John Doe Software Engineer")
 
     assert provider.attempts == 1
+    assert sleeper.delays == []
 
     assert result.candidate.name == "Fallback Candidate"
 
@@ -257,3 +274,59 @@ async def test_orchestrator_falls_back_after_retries_exhausted():
     assert provider.attempts == 3
 
     assert result.candidate.name == "Fallback Candidate"
+
+
+@pytest.mark.anyio
+async def test_orchestrator_uses_exponential_retry_backoff(
+    caplog: pytest.LogCaptureFixture,
+):
+    provider = FlakyProvider(
+        failures_before_success=2,
+        error_factory=lambda: ProviderConnectionError("Connection failed"),
+    )
+
+    sleeper = RecordingSleeper()
+
+    orchestrator = AIOrchestrator(
+        primary_provider=provider,
+        max_retries=2,
+        retry_backoff_seconds=0.5,
+        sleep_func=sleeper,
+    )
+
+    caplog.set_level(
+        logging.INFO,
+        logger=("app.services.ai_orchestrator"),
+    )
+
+    result = await orchestrator.analyze_resume("John Doe Software Engineer")
+
+    assert provider.attempts == 3
+
+    assert sleeper.delays == [
+        0.5,
+        1.0,
+    ]
+
+    assert result.candidate.name == "Recovered Candidate"
+
+    messages = [record.getMessage() for record in caplog.records]
+
+    assert any(
+        "attempt=1" in message
+        and "retrying=True" in message
+        and "retry_delay_seconds=0.50" in message
+        for message in messages
+    )
+
+    assert any(
+        "attempt=2" in message
+        and "retrying=True" in message
+        and "retry_delay_seconds=1.00" in message
+        for message in messages
+    )
+
+    assert any(
+        "AI primary provider succeeded" in message and "attempt=3" in message
+        for message in messages
+    )

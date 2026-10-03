@@ -41,6 +41,12 @@ class Settings(BaseSettings):
         le=10,
     )
 
+    ai_retry_backoff_seconds: float = Field(
+        default=0.5,
+        ge=0,
+        le=60,
+    )
+
     ai_fallback_enabled: bool = True
 
     ai_fallback_provider: ProviderName = "rule_based"

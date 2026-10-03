@@ -1,3 +1,8 @@
+import asyncio
+import logging
+import time
+from collections.abc import Awaitable, Callable
+
 from app.providers.base import ResumeAnalysisProvider
 from app.providers.errors import (
     ProviderError,
@@ -5,14 +10,21 @@ from app.providers.errors import (
 )
 from app.schemas.resume import ResumeIntelligence
 
+logger = logging.getLogger(__name__)
+
+SleepFunction = Callable[
+    [float],
+    Awaitable[None],
+]
+
 
 class AIOrchestrator:
     """
     Coordinates resume analysis providers.
 
     Retryable failures from the primary provider
-    are retried before the configured fallback
-    provider is used.
+    are retried with exponential backoff before
+    the configured fallback provider is used.
 
     Non-retryable provider failures may trigger
     fallback immediately.
@@ -26,32 +38,108 @@ class AIOrchestrator:
         primary_provider: ResumeAnalysisProvider,
         fallback_provider: (ResumeAnalysisProvider | None) = None,
         max_retries: int = 0,
+        retry_backoff_seconds: float = 0.0,
+        sleep_func: SleepFunction = asyncio.sleep,
     ):
         self.primary_provider = primary_provider
         self.fallback_provider = fallback_provider
         self.max_retries = max_retries
+        self.retry_backoff_seconds = retry_backoff_seconds
+        self.sleep_func = sleep_func
 
     async def analyze_resume(
         self,
         resume_text: str,
     ) -> ResumeIntelligence:
-        retry_count = 0
+        max_attempts = self.max_retries + 1
 
-        while True:
+        primary_name = type(self.primary_provider).__name__
+
+        for attempt in range(
+            1,
+            max_attempts + 1,
+        ):
+            started_at = time.perf_counter()
+
             try:
-                return await self.primary_provider.analyze_resume(resume_text)
+                result = await self.primary_provider.analyze_resume(resume_text)
 
             except ProviderError as exception:
-                should_retry = (
-                    is_retryable_provider_error(exception)
-                    and retry_count < self.max_retries
+                latency_ms = (time.perf_counter() - started_at) * 1000
+
+                retrying = (
+                    is_retryable_provider_error(exception) and attempt < max_attempts
                 )
 
-                if should_retry:
-                    retry_count += 1
+                retry_delay = 0.0
+
+                if retrying:
+                    retry_delay = self.retry_backoff_seconds * (2 ** (attempt - 1))
+
+                logger.warning(
+                    "AI primary provider failed "
+                    "provider=%s "
+                    "error=%s "
+                    "attempt=%d "
+                    "max_attempts=%d "
+                    "latency_ms=%.2f "
+                    "retrying=%s "
+                    "retry_delay_seconds=%.2f",
+                    primary_name,
+                    type(exception).__name__,
+                    attempt,
+                    max_attempts,
+                    latency_ms,
+                    retrying,
+                    retry_delay,
+                )
+
+                if retrying:
+                    if retry_delay > 0:
+                        await self.sleep_func(retry_delay)
+
                     continue
 
                 if self.fallback_provider is None:
                     raise
 
-                return await self.fallback_provider.analyze_resume(resume_text)
+                fallback_name = type(self.fallback_provider).__name__
+
+                logger.warning(
+                    "AI fallback provider activated "
+                    "primary_provider=%s "
+                    "fallback_provider=%s "
+                    "error=%s",
+                    primary_name,
+                    fallback_name,
+                    type(exception).__name__,
+                )
+
+                fallback_started_at = time.perf_counter()
+
+                fallback_result = await self.fallback_provider.analyze_resume(
+                    resume_text
+                )
+
+                fallback_latency_ms = (time.perf_counter() - fallback_started_at) * 1000
+
+                logger.info(
+                    "AI fallback provider succeeded provider=%s latency_ms=%.2f",
+                    fallback_name,
+                    fallback_latency_ms,
+                )
+
+                return fallback_result
+
+            latency_ms = (time.perf_counter() - started_at) * 1000
+
+            logger.info(
+                "AI primary provider succeeded provider=%s attempt=%d latency_ms=%.2f",
+                primary_name,
+                attempt,
+                latency_ms,
+            )
+
+            return result
+
+        raise RuntimeError("AI orchestration reached an unreachable state.")

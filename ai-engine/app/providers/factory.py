@@ -53,4 +53,5 @@ def create_orchestrator(
         primary_provider=primary_provider,
         fallback_provider=fallback_provider,
         max_retries=settings.ai_max_retries,
+        retry_backoff_seconds=(settings.ai_retry_backoff_seconds),
     )

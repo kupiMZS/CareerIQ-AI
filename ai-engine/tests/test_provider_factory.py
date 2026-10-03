@@ -20,6 +20,7 @@ def build_settings(
         "ai_request_path": "/api/chat",
         "ai_timeout_seconds": 30,
         "ai_max_retries": 2,
+        "ai_retry_backoff_seconds": 0.5,
         "ai_fallback_enabled": True,
         "ai_fallback_provider": "rule_based",
     }
@@ -90,6 +91,8 @@ def test_factory_creates_default_orchestrator():
 
     assert orchestrator.fallback_provider is None
     assert orchestrator.max_retries == 2
+
+    assert orchestrator.retry_backoff_seconds == 0.5
 
 
 def test_factory_creates_local_provider_with_rule_fallback():
