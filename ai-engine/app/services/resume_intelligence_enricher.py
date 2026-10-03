@@ -1,10 +1,40 @@
-from app.analyzer import analyze_resume
+import re
+
+from app.analyzer import analyze_resume, detect_sections
 from app.schemas.resume import (
     Education,
     Experience,
     ResumeIntelligence,
     Skill,
 )
+
+JOB_TITLE_KEYWORDS = (
+    "engineer",
+    "developer",
+    "manager",
+    "analyst",
+    "consultant",
+    "intern",
+    "researcher",
+    "designer",
+    "scientist",
+    "administrator",
+    "architect",
+    "specialist",
+    "director",
+    "officer",
+)
+
+INSTITUTION_KEYWORDS = (
+    "university",
+    "college",
+    "institute",
+    "school",
+    "academy",
+    "polytechnic",
+)
+
+LIST_PREFIX_PATTERN = re.compile(r"^\s*(?:[-*•▪◦‣]+|\d+[.)])\s*")
 
 
 def _normalize(value: str) -> str:
@@ -22,10 +52,35 @@ def _normalize_optional(
     return normalized or None
 
 
+def _strip_list_prefix(
+    value: str,
+) -> str:
+    return LIST_PREFIX_PATTERN.sub(
+        "",
+        value,
+    ).strip()
+
+
+def _looks_like_job_title(
+    value: str,
+) -> bool:
+    normalized = _normalize(value)
+
+    return any(keyword in normalized for keyword in JOB_TITLE_KEYWORDS)
+
+
+def _looks_like_institution(
+    value: str,
+) -> bool:
+    normalized = _normalize(value)
+
+    return any(keyword in normalized for keyword in INSTITUTION_KEYWORDS)
+
+
 def _split_education(
     value: str,
 ) -> tuple[str | None, str | None]:
-    cleaned = value.strip()
+    cleaned = _strip_list_prefix(value)
 
     separator = " at "
 
@@ -49,7 +104,31 @@ def _split_education(
 def _split_experience(
     value: str,
 ) -> tuple[str | None, str | None]:
-    cleaned = value.strip()
+    cleaned = _strip_list_prefix(value)
+
+    if "|" in cleaned:
+        left, right = cleaned.split(
+            "|",
+            maxsplit=1,
+        )
+
+        left = left.strip()
+        right = right.strip()
+
+        left_is_title = _looks_like_job_title(left)
+
+        right_is_title = _looks_like_job_title(right)
+
+        if right_is_title and not left_is_title:
+            return (
+                right or None,
+                left or None,
+            )
+
+        return (
+            left or None,
+            right or None,
+        )
 
     for separator in (
         " at ",
@@ -96,9 +175,11 @@ def _education_entries_are_mergeable(
     second: Education,
 ) -> bool:
     first_degree = _normalize_optional(first.degree)
+
     second_degree = _normalize_optional(second.degree)
 
     first_institution = _normalize_optional(first.institution)
+
     second_institution = _normalize_optional(second.institution)
 
     first_is_empty = first_degree is None and first_institution is None
@@ -190,6 +271,77 @@ def _deduplicate_education(
     intelligence.education = merged
 
 
+def _enrich_multiline_education(
+    intelligence: ResumeIntelligence,
+    resume_text: str,
+    baseline_education: list[str],
+) -> None:
+    sections = detect_sections(resume_text)
+
+    education_lines = sections.get(
+        "education",
+        [],
+    )
+
+    if len(education_lines) < 2:
+        return
+
+    baseline_degrees: set[str] = set()
+
+    for education_value in baseline_education:
+        degree, _ = _split_education(education_value)
+
+        if degree:
+            baseline_degrees.add(_normalize(degree))
+
+    for index, raw_line in enumerate(education_lines[:-1]):
+        degree_line = _strip_list_prefix(raw_line)
+
+        degree, inline_institution = _split_education(degree_line)
+
+        if not degree:
+            continue
+
+        if inline_institution is not None:
+            continue
+
+        if _normalize(degree) not in baseline_degrees:
+            continue
+
+        institution = _strip_list_prefix(education_lines[index + 1])
+
+        if not _looks_like_institution(institution):
+            continue
+
+        candidate = Education(
+            degree=degree,
+            institution=institution,
+        )
+
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.education
+                if _education_entries_are_mergeable(
+                    item,
+                    candidate,
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is not None:
+            _merge_education_values(
+                matching_entry,
+                candidate,
+            )
+            continue
+
+        intelligence.education.append(candidate)
+
+    _deduplicate_education(intelligence)
+
+
 def _normalize_experience_entry(
     item: Experience,
 ) -> None:
@@ -210,9 +362,11 @@ def _experience_entries_are_mergeable(
     second: Experience,
 ) -> bool:
     first_title = _normalize_optional(first.job_title)
+
     second_title = _normalize_optional(second.job_title)
 
     first_company = _normalize_optional(first.company)
+
     second_company = _normalize_optional(second.company)
 
     first_is_empty = first_title is None and first_company is None
@@ -429,12 +583,20 @@ def enrich_resume_intelligence(
         ),
     )
 
+    baseline_education = baseline.get(
+        "education",
+        [],
+    )
+
     _enrich_education(
         enriched,
-        baseline.get(
-            "education",
-            [],
-        ),
+        baseline_education,
+    )
+
+    _enrich_multiline_education(
+        enriched,
+        resume_text,
+        baseline_education,
     )
 
     _enrich_experience(
