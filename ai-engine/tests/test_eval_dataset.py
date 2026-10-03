@@ -13,6 +13,8 @@ V1_DATASET_PATH = EVALS_DIR / "resume_extraction_v1.jsonl"
 
 V2_DATASET_PATH = EVALS_DIR / "resume_extraction_v2.jsonl"
 
+V3_DATASET_PATH = EVALS_DIR / "resume_extraction_v3.jsonl"
+
 
 def get_case_ids(
     dataset_path: Path,
@@ -32,11 +34,18 @@ def test_v2_dataset_loads_fifteen_cases():
     assert len(cases) == 15
 
 
+def test_v3_dataset_loads_twenty_five_cases():
+    cases = load_resume_eval_dataset(V3_DATASET_PATH)
+
+    assert len(cases) == 25
+
+
 @pytest.mark.parametrize(
     "dataset_path",
     [
         V1_DATASET_PATH,
         V2_DATASET_PATH,
+        V3_DATASET_PATH,
     ],
 )
 def test_dataset_case_ids_are_unique(
@@ -55,6 +64,14 @@ def test_v2_preserves_all_v1_cases():
     v2_case_ids = get_case_ids(V2_DATASET_PATH)
 
     assert v1_case_ids <= v2_case_ids
+
+
+def test_v3_preserves_all_v2_cases():
+    v2_case_ids = get_case_ids(V2_DATASET_PATH)
+
+    v3_case_ids = get_case_ids(V3_DATASET_PATH)
+
+    assert v2_case_ids <= v3_case_ids
 
 
 def test_v2_contains_expected_edge_cases():
@@ -76,8 +93,36 @@ def test_v2_contains_expected_edge_cases():
     assert expected_edge_cases <= case_ids
 
 
-def test_v2_cases_have_descriptions_and_tags():
-    cases = load_resume_eval_dataset(V2_DATASET_PATH)
+def test_v3_contains_expected_hard_cases():
+    case_ids = get_case_ids(V3_DATASET_PATH)
+
+    expected_hard_cases = {
+        "experience_em_dash_format",
+        "experience_en_dash_format",
+        "company_first_experience",
+        "pipe_separated_experience",
+        "multiple_roles_same_company",
+        "same_title_different_companies",
+        "education_degree_and_institution_separate_lines",
+        "multiple_education_multiline",
+        "compact_contact_and_inline_skills",
+        "noisy_bulleted_resume",
+    }
+
+    assert expected_hard_cases <= case_ids
+
+
+@pytest.mark.parametrize(
+    "dataset_path",
+    [
+        V2_DATASET_PATH,
+        V3_DATASET_PATH,
+    ],
+)
+def test_dataset_cases_have_descriptions_and_tags(
+    dataset_path: Path,
+):
+    cases = load_resume_eval_dataset(dataset_path)
 
     for case in cases:
         assert case.description
