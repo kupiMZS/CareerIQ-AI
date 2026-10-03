@@ -6,7 +6,10 @@ from app.schemas.analysis import (
     AnalyzeRequest,
     AnalyzeResponse,
 )
-from app.services import build_analysis_response
+from app.services import (
+    build_analysis_response,
+    enrich_resume_intelligence,
+)
 
 app = FastAPI(
     title="CareerIQ AI Engine",
@@ -35,7 +38,12 @@ async def analyze_resume_endpoint(
 
     intelligence = await orchestrator.analyze_resume(request.resume_text)
 
-    return build_analysis_response(
+    enriched_intelligence = enrich_resume_intelligence(
         request.resume_text,
         intelligence,
+    )
+
+    return build_analysis_response(
+        request.resume_text,
+        enriched_intelligence,
     )
