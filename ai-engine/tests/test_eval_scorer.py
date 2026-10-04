@@ -2,17 +2,27 @@ import pytest
 
 from app.schemas.resume import (
     Candidate,
+    Certification,
     Education,
     Experience,
+    Project,
     ResumeIntelligence,
     Skill,
 )
 from evals.schemas import (
+    ExpectedCertification,
     ExpectedEducation,
     ExpectedExperience,
+    ExpectedExtendedEducation,
+    ExpectedExtendedExperience,
+    ExpectedExtendedResumeExtraction,
+    ExpectedProject,
     ExpectedResumeExtraction,
 )
-from evals.scorer import score_resume_extraction
+from evals.scorer import (
+    score_extended_resume_extraction,
+    score_resume_extraction,
+)
 
 
 def test_scorer_gives_perfect_score_for_equivalent_extraction():
@@ -244,3 +254,313 @@ def test_scorer_calculates_equal_weighted_overall_score():
     assert score.experience.f1 == 0.0
 
     assert score.overall == pytest.approx(0.2)
+
+
+def test_extended_scorer_gives_perfect_score():
+    expected = ExpectedExtendedResumeExtraction(
+        headline="Senior Software Engineer",
+        education=[
+            ExpectedExtendedEducation(
+                degree="BSc Computer Science",
+                institution="Example University",
+                field_of_study="Computer Science",
+                start_date="2018",
+                end_date="2022",
+            )
+        ],
+        experience=[
+            ExpectedExtendedExperience(
+                job_title="Software Engineer",
+                company="Example Technologies",
+                start_date="2022",
+                end_date="Present",
+                responsibilities=[
+                    "Built backend APIs",
+                    "Improved deployment automation",
+                ],
+            )
+        ],
+        projects=[
+            ExpectedProject(
+                name="CareerIQ",
+                description="Career intelligence platform",
+                technologies=[
+                    "Python",
+                    "FastAPI",
+                ],
+            )
+        ],
+        certifications=[
+            ExpectedCertification(
+                name="Cloud Developer",
+                issuer="Example Cloud",
+                date="2025",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        candidate=Candidate(
+            headline="  SENIOR   SOFTWARE ENGINEER ",
+        ),
+        education=[
+            Education(
+                degree="BSC COMPUTER SCIENCE",
+                institution="Example University",
+                field_of_study="computer science",
+                start_date="2018",
+                end_date="2022",
+            )
+        ],
+        experience=[
+            Experience(
+                job_title="software engineer",
+                company="EXAMPLE TECHNOLOGIES",
+                start_date="2022",
+                end_date="present",
+                responsibilities=[
+                    "Built backend APIs",
+                    "Improved deployment automation",
+                ],
+            )
+        ],
+        projects=[
+            Project(
+                name="CareerIQ",
+                description="Career intelligence platform",
+                technologies=[
+                    "FastAPI",
+                    "Python",
+                ],
+            )
+        ],
+        certifications=[
+            Certification(
+                name="Cloud Developer",
+                issuer="Example Cloud",
+                date="2025",
+            )
+        ],
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.headline.score == 1.0
+    assert score.education_field_of_study.f1 == 1.0
+    assert score.education_dates.f1 == 1.0
+    assert score.experience_dates.f1 == 1.0
+    assert score.responsibilities.f1 == 1.0
+    assert score.projects.f1 == 1.0
+    assert score.certifications.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_extended_scorer_penalizes_wrong_headline():
+    expected = ExpectedExtendedResumeExtraction(
+        headline="Backend Engineer",
+    )
+
+    actual = ResumeIntelligence(
+        candidate=Candidate(
+            headline="Frontend Engineer",
+        )
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.headline.score == 0.0
+
+
+def test_extended_scorer_scores_education_field_of_study():
+    expected = ExpectedExtendedResumeExtraction(
+        education=[
+            ExpectedExtendedEducation(
+                degree="BSc Computer Science",
+                institution="Example University",
+                field_of_study="Computer Science",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        education=[
+            Education(
+                degree="BSc Computer Science",
+                institution="Example University",
+                field_of_study="Software Engineering",
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.education_field_of_study.f1 == 0.0
+
+
+def test_extended_scorer_keeps_date_matching_strict():
+    expected = ExpectedExtendedResumeExtraction(
+        experience=[
+            ExpectedExtendedExperience(
+                job_title="Software Engineer",
+                company="Example Technologies",
+                start_date="January 2022",
+                end_date="Present",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Software Engineer",
+                company="Example Technologies",
+                start_date="Jan 2022",
+                end_date="present",
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.experience_dates.f1 == 0.0
+
+
+def test_extended_scorer_attributes_responsibilities_to_experience():
+    expected = ExpectedExtendedResumeExtraction(
+        experience=[
+            ExpectedExtendedExperience(
+                job_title="Backend Engineer",
+                company="Alpha Labs",
+                responsibilities=[
+                    "Built APIs",
+                ],
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Backend Engineer",
+                company="Beta Labs",
+                responsibilities=[
+                    "Built APIs",
+                ],
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.responsibilities.f1 == 0.0
+
+
+def test_extended_scorer_ignores_project_technology_order():
+    expected = ExpectedExtendedResumeExtraction(
+        projects=[
+            ExpectedProject(
+                name="CareerIQ",
+                description="Career platform",
+                technologies=[
+                    "Python",
+                    "FastAPI",
+                    "Redis",
+                ],
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        projects=[
+            Project(
+                name="careeriq",
+                description="Career platform",
+                technologies=[
+                    "Redis",
+                    "python",
+                    "FASTAPI",
+                ],
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.projects.f1 == 1.0
+
+
+def test_extended_scorer_scores_certification_metadata():
+    expected = ExpectedExtendedResumeExtraction(
+        certifications=[
+            ExpectedCertification(
+                name="Cloud Developer",
+                issuer="Example Cloud",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        certifications=[
+            Certification(
+                name="Cloud Developer",
+                issuer="Wrong Issuer",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.certifications.f1 == 0.0
+
+
+def test_extended_scorer_does_not_change_core_overall_semantics():
+    expected = ExpectedResumeExtraction(
+        name="John Doe",
+        email="john@example.com",
+        skills=[
+            "Python",
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        candidate=Candidate(
+            name="John Doe",
+            email="wrong@example.com",
+        ),
+    )
+
+    score = score_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.name.score == 1.0
+    assert score.email.score == 0.0
+    assert score.skills.f1 == 0.0
+    assert score.education.f1 == 1.0
+    assert score.experience.f1 == 1.0
+
+    assert score.overall == pytest.approx(0.6)
