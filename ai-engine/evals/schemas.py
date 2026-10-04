@@ -40,6 +40,80 @@ class ExpectedResumeExtraction(BaseModel):
     )
 
 
+class ExpectedExtendedEducation(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    degree: str | None = None
+    institution: str | None = None
+    field_of_study: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
+
+
+class ExpectedExtendedExperience(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    job_title: str | None = None
+    company: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
+
+    responsibilities: list[str] = Field(
+        default_factory=list,
+    )
+
+
+class ExpectedProject(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    name: str
+    description: str | None = None
+
+    technologies: list[str] = Field(
+        default_factory=list,
+    )
+
+
+class ExpectedCertification(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    name: str
+    issuer: str | None = None
+    date: str | None = None
+
+
+class ExpectedExtendedResumeExtraction(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    headline: str | None = None
+
+    education: list[ExpectedExtendedEducation] = Field(
+        default_factory=list,
+    )
+
+    experience: list[ExpectedExtendedExperience] = Field(
+        default_factory=list,
+    )
+
+    projects: list[ExpectedProject] = Field(
+        default_factory=list,
+    )
+
+    certifications: list[ExpectedCertification] = Field(
+        default_factory=list,
+    )
+
+
 class ResumeEvalCase(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -62,3 +136,5 @@ class ResumeEvalCase(BaseModel):
     )
 
     expected: ExpectedResumeExtraction
+
+    extended_expected: ExpectedExtendedResumeExtraction | None = None

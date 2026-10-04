@@ -2,10 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from evals.loader import (
-    EvalDatasetError,
-    load_resume_eval_dataset,
-)
+from evals.loader import EvalDatasetError, load_resume_eval_dataset
+from evals.schemas import ResumeEvalCase
 
 EVALS_DIR = Path(__file__).parents[1] / "evals" / "datasets"
 
@@ -168,3 +166,80 @@ def test_loader_rejects_invalid_json(
         match="Invalid JSON",
     ):
         load_resume_eval_dataset(dataset_path)
+
+
+def test_existing_dataset_case_has_no_extended_expectations():
+    cases = load_resume_eval_dataset(V3_DATASET_PATH)
+
+    assert cases
+    assert all(case.extended_expected is None for case in cases)
+
+
+def test_eval_case_accepts_extended_expectations():
+    case = ResumeEvalCase.model_validate(
+        {
+            "case_id": "extended-example",
+            "description": ("Synthetic extended extraction case"),
+            "tags": [
+                "extended",
+            ],
+            "resume_text": ("Jane Smith\nSenior Software Engineer"),
+            "expected": {
+                "name": "Jane Smith",
+            },
+            "extended_expected": {
+                "headline": ("Senior Software Engineer"),
+                "education": [
+                    {
+                        "degree": ("BSc Computer Science"),
+                        "institution": ("Example University"),
+                        "field_of_study": ("Computer Science"),
+                        "start_date": "2018",
+                        "end_date": "2022",
+                    }
+                ],
+                "experience": [
+                    {
+                        "job_title": ("Software Engineer"),
+                        "company": ("Example Technologies"),
+                        "start_date": "2022",
+                        "end_date": "2025",
+                        "responsibilities": [
+                            ("Built backend APIs"),
+                        ],
+                    }
+                ],
+                "projects": [
+                    {
+                        "name": "CareerIQ",
+                        "description": ("Career intelligence platform"),
+                        "technologies": [
+                            "Python",
+                            "FastAPI",
+                        ],
+                    }
+                ],
+                "certifications": [
+                    {
+                        "name": ("Cloud Developer"),
+                        "issuer": ("Example Cloud"),
+                        "date": "2025",
+                    }
+                ],
+            },
+        }
+    )
+
+    assert case.extended_expected is not None
+
+    extended = case.extended_expected
+
+    assert extended.headline == "Senior Software Engineer"
+
+    assert extended.education[0].field_of_study == "Computer Science"
+
+    assert extended.experience[0].responsibilities == ["Built backend APIs"]
+
+    assert extended.projects[0].technologies == ["Python", "FastAPI"]
+
+    assert extended.certifications[0].issuer == "Example Cloud"
