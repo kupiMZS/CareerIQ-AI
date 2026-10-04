@@ -8,6 +8,7 @@ from app.schemas.resume import (
 )
 from evals.runner import run_resume_benchmark
 from evals.schemas import (
+    ExpectedExtendedResumeExtraction,
     ExpectedResumeExtraction,
     ResumeEvalCase,
 )
@@ -26,19 +27,20 @@ class StaticProvider(ResumeAnalysisProvider):
         resume_text: str,
     ) -> ResumeIntelligence:
         self.calls += 1
-
         return self.result
 
 
 def build_case(
     case_id: str,
     expected: ExpectedResumeExtraction,
+    extended_expected: ExpectedExtendedResumeExtraction | None = None,
 ) -> ResumeEvalCase:
     return ResumeEvalCase(
         case_id=case_id,
         description="Synthetic benchmark case.",
         resume_text="Synthetic resume",
         expected=expected,
+        extended_expected=extended_expected,
     )
 
 
@@ -62,9 +64,7 @@ async def test_runner_produces_perfect_aggregate_score():
             ExpectedResumeExtraction(
                 name="John Doe",
                 email="john@example.com",
-                skills=[
-                    "Python",
-                ],
+                skills=["Python"],
             ),
         ),
         build_case(
@@ -72,9 +72,7 @@ async def test_runner_produces_perfect_aggregate_score():
             ExpectedResumeExtraction(
                 name="John Doe",
                 email="john@example.com",
-                skills=[
-                    "Python",
-                ],
+                skills=["Python"],
             ),
         ),
     ]
@@ -93,6 +91,7 @@ async def test_runner_produces_perfect_aggregate_score():
     assert summary.education_f1 == 1.0
     assert summary.experience_f1 == 1.0
     assert summary.overall_mean == 1.0
+    assert summary.extended is None
 
 
 @pytest.mark.anyio
@@ -169,3 +168,82 @@ async def test_runner_rejects_empty_dataset():
             provider=provider,
             cases=[],
         )
+
+
+@pytest.mark.anyio
+async def test_runner_scores_only_extended_cases():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            candidate=Candidate(
+                headline="Backend Engineer",
+            )
+        )
+    )
+
+    cases = [
+        build_case(
+            "extended",
+            ExpectedResumeExtraction(),
+            ExpectedExtendedResumeExtraction(
+                headline="Backend Engineer",
+            ),
+        ),
+        build_case(
+            "core-only",
+            ExpectedResumeExtraction(),
+        ),
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.case_count == 2
+    assert summary.extended is not None
+    assert summary.extended.case_count == 1
+    assert summary.extended.headline_accuracy == 1.0
+    assert summary.cases[0].extended_score is not None
+    assert summary.cases[1].extended_score is None
+
+
+@pytest.mark.anyio
+async def test_runner_averages_extended_scores_separately():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            candidate=Candidate(
+                headline="Backend Engineer",
+            )
+        )
+    )
+
+    cases = [
+        build_case(
+            "match",
+            ExpectedResumeExtraction(),
+            ExpectedExtendedResumeExtraction(
+                headline="Backend Engineer",
+            ),
+        ),
+        build_case(
+            "mismatch",
+            ExpectedResumeExtraction(),
+            ExpectedExtendedResumeExtraction(
+                headline="Frontend Engineer",
+            ),
+        ),
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.extended is not None
+    assert summary.extended.case_count == 2
+    assert summary.extended.headline_accuracy == 0.5
+
+    # Core scoring remains independent.
+    assert summary.overall_mean == 1.0

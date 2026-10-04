@@ -3,7 +3,35 @@ import pytest
 from evals.reporting import (
     build_resume_benchmark_report,
 )
-from evals.runner import ResumeBenchmarkSummary
+from evals.runner import (
+    ExtendedBenchmarkSummary,
+    ResumeBenchmarkSummary,
+)
+
+
+def build_extended_summary(
+    *,
+    case_count: int = 3,
+    headline_accuracy: float = 1.0,
+    education_field_of_study_f1: float = 1.0,
+    education_dates_f1: float = 1.0,
+    experience_dates_f1: float = 1.0,
+    responsibilities_f1: float = 1.0,
+    projects_f1: float = 1.0,
+    certifications_f1: float = 1.0,
+    overall_mean: float = 1.0,
+) -> ExtendedBenchmarkSummary:
+    return ExtendedBenchmarkSummary(
+        case_count=case_count,
+        headline_accuracy=headline_accuracy,
+        education_field_of_study_f1=education_field_of_study_f1,
+        education_dates_f1=education_dates_f1,
+        experience_dates_f1=experience_dates_f1,
+        responsibilities_f1=responsibilities_f1,
+        projects_f1=projects_f1,
+        certifications_f1=certifications_f1,
+        overall_mean=overall_mean,
+    )
 
 
 def build_summary(
@@ -16,6 +44,7 @@ def build_summary(
     education_f1: float = 1.0,
     experience_f1: float = 1.0,
     overall_mean: float = 1.0,
+    extended: ExtendedBenchmarkSummary | None = None,
 ) -> ResumeBenchmarkSummary:
     return ResumeBenchmarkSummary(
         provider=provider,
@@ -26,6 +55,7 @@ def build_summary(
         education_f1=education_f1,
         experience_f1=experience_f1,
         overall_mean=overall_mean,
+        extended=extended,
         cases=[],
     )
 
@@ -122,8 +152,12 @@ def test_report_rejects_mixed_providers():
             prompt_version="resume-analysis-v2",
             dataset="resume_extraction_v1.jsonl",
             runs=[
-                build_summary(provider="local"),
-                build_summary(provider="rule_based"),
+                build_summary(
+                    provider="local",
+                ),
+                build_summary(
+                    provider="rule_based",
+                ),
             ],
         )
 
@@ -146,6 +180,103 @@ def test_report_rejects_mixed_case_counts():
                 build_summary(
                     provider="local",
                     case_count=6,
+                ),
+            ],
+        )
+
+
+def test_report_has_no_extended_metrics_for_core_only_runs():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v2",
+        dataset="resume_extraction_v3.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+            ),
+        ],
+    )
+
+    assert report.extended is None
+
+
+def test_report_aggregates_extended_metrics():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v2",
+        dataset="extended.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+                extended=build_extended_summary(
+                    headline_accuracy=0.6,
+                    overall_mean=0.7,
+                ),
+            ),
+            build_summary(
+                provider="local",
+                extended=build_extended_summary(
+                    headline_accuracy=0.8,
+                    overall_mean=0.9,
+                ),
+            ),
+        ],
+    )
+
+    assert report.extended is not None
+    assert report.extended.case_count == 3
+
+    assert report.extended.metrics.headline_accuracy.mean == pytest.approx(0.7)
+
+    assert report.extended.metrics.overall_mean.mean == pytest.approx(0.8)
+
+
+def test_report_rejects_mixed_extended_coverage():
+    with pytest.raises(
+        ValueError,
+        match="same extended evaluation coverage",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v2",
+            dataset="extended.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    extended=build_extended_summary(),
+                ),
+                build_summary(
+                    provider="local",
+                ),
+            ],
+        )
+
+
+def test_report_rejects_mixed_extended_case_counts():
+    with pytest.raises(
+        ValueError,
+        match="same extended case count",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v2",
+            dataset="extended.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    extended=build_extended_summary(
+                        case_count=2,
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    extended=build_extended_summary(
+                        case_count=3,
+                    ),
                 ),
             ],
         )

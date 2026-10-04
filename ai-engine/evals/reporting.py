@@ -2,7 +2,10 @@ from statistics import fmean, pstdev
 
 from pydantic import BaseModel, Field
 
-from evals.runner import ResumeBenchmarkSummary
+from evals.runner import (
+    ExtendedBenchmarkSummary,
+    ResumeBenchmarkSummary,
+)
 
 
 class MetricStatistics(BaseModel):
@@ -10,14 +13,17 @@ class MetricStatistics(BaseModel):
         ge=0.0,
         le=1.0,
     )
+
     minimum: float = Field(
         ge=0.0,
         le=1.0,
     )
+
     maximum: float = Field(
         ge=0.0,
         le=1.0,
     )
+
     standard_deviation: float = Field(
         ge=0.0,
         le=1.0,
@@ -33,6 +39,27 @@ class BenchmarkMetrics(BaseModel):
     overall_mean: MetricStatistics
 
 
+class ExtendedBenchmarkMetrics(BaseModel):
+    headline_accuracy: MetricStatistics
+
+    education_field_of_study_f1: MetricStatistics
+
+    education_dates_f1: MetricStatistics
+    experience_dates_f1: MetricStatistics
+    responsibilities_f1: MetricStatistics
+    projects_f1: MetricStatistics
+    certifications_f1: MetricStatistics
+    overall_mean: MetricStatistics
+
+
+class ExtendedBenchmarkReport(BaseModel):
+    case_count: int = Field(
+        ge=1,
+    )
+
+    metrics: ExtendedBenchmarkMetrics
+
+
 class ResumeBenchmarkReport(BaseModel):
     provider: str
     model: str | None = None
@@ -42,11 +69,15 @@ class ResumeBenchmarkReport(BaseModel):
     run_count: int = Field(
         ge=1,
     )
+
     case_count: int = Field(
         ge=1,
     )
 
     metrics: BenchmarkMetrics
+
+    extended: ExtendedBenchmarkReport | None = None
+
     runs: list[ResumeBenchmarkSummary]
 
 
@@ -58,6 +89,43 @@ def _build_metric_statistics(
         minimum=min(values),
         maximum=max(values),
         standard_deviation=pstdev(values),
+    )
+
+
+def _build_extended_report(
+    runs: list[ExtendedBenchmarkSummary],
+) -> ExtendedBenchmarkReport:
+    case_count = runs[0].case_count
+
+    if any(run.case_count != case_count for run in runs):
+        raise ValueError("All benchmark runs must use the same extended case count.")
+
+    metrics = ExtendedBenchmarkMetrics(
+        headline_accuracy=(
+            _build_metric_statistics([run.headline_accuracy for run in runs])
+        ),
+        education_field_of_study_f1=(
+            _build_metric_statistics([run.education_field_of_study_f1 for run in runs])
+        ),
+        education_dates_f1=(
+            _build_metric_statistics([run.education_dates_f1 for run in runs])
+        ),
+        experience_dates_f1=(
+            _build_metric_statistics([run.experience_dates_f1 for run in runs])
+        ),
+        responsibilities_f1=(
+            _build_metric_statistics([run.responsibilities_f1 for run in runs])
+        ),
+        projects_f1=(_build_metric_statistics([run.projects_f1 for run in runs])),
+        certifications_f1=(
+            _build_metric_statistics([run.certifications_f1 for run in runs])
+        ),
+        overall_mean=(_build_metric_statistics([run.overall_mean for run in runs])),
+    )
+
+    return ExtendedBenchmarkReport(
+        case_count=case_count,
+        metrics=metrics,
     )
 
 
@@ -81,13 +149,29 @@ def build_resume_benchmark_report(
         raise ValueError("All benchmark runs must use the same case count.")
 
     metrics = BenchmarkMetrics(
-        name_accuracy=_build_metric_statistics([run.name_accuracy for run in runs]),
-        email_accuracy=_build_metric_statistics([run.email_accuracy for run in runs]),
-        skills_f1=_build_metric_statistics([run.skills_f1 for run in runs]),
-        education_f1=_build_metric_statistics([run.education_f1 for run in runs]),
-        experience_f1=_build_metric_statistics([run.experience_f1 for run in runs]),
-        overall_mean=_build_metric_statistics([run.overall_mean for run in runs]),
+        name_accuracy=(_build_metric_statistics([run.name_accuracy for run in runs])),
+        email_accuracy=(_build_metric_statistics([run.email_accuracy for run in runs])),
+        skills_f1=(_build_metric_statistics([run.skills_f1 for run in runs])),
+        education_f1=(_build_metric_statistics([run.education_f1 for run in runs])),
+        experience_f1=(_build_metric_statistics([run.experience_f1 for run in runs])),
+        overall_mean=(_build_metric_statistics([run.overall_mean for run in runs])),
     )
+
+    extended_values = [run.extended for run in runs]
+
+    has_extended = [value is not None for value in extended_values]
+
+    if any(has_extended) and not all(has_extended):
+        raise ValueError(
+            "All benchmark runs must use the same extended evaluation coverage."
+        )
+
+    extended_report = None
+
+    if all(has_extended):
+        extended_runs = [value for value in extended_values if value is not None]
+
+        extended_report = _build_extended_report(extended_runs)
 
     return ResumeBenchmarkReport(
         provider=provider,
@@ -97,5 +181,6 @@ def build_resume_benchmark_report(
         run_count=len(runs),
         case_count=case_count,
         metrics=metrics,
+        extended=extended_report,
         runs=runs,
     )

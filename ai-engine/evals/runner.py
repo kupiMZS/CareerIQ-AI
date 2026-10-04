@@ -3,7 +3,9 @@ from pydantic import BaseModel, Field
 from app.providers.base import ResumeAnalysisProvider
 from evals.schemas import ResumeEvalCase
 from evals.scorer import (
+    ExtendedResumeExtractionScore,
     ResumeExtractionScore,
+    score_extended_resume_extraction,
     score_resume_extraction,
 )
 
@@ -12,9 +14,58 @@ class ResumeBenchmarkCaseResult(BaseModel):
     case_id: str
     score: ResumeExtractionScore
 
+    extended_score: ExtendedResumeExtractionScore | None = None
+
+
+class ExtendedBenchmarkSummary(BaseModel):
+    case_count: int = Field(
+        ge=1,
+    )
+
+    headline_accuracy: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    education_field_of_study_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    education_dates_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    experience_dates_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    responsibilities_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    projects_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    certifications_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    overall_mean: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
 
 class ResumeBenchmarkSummary(BaseModel):
     provider: str
+
     case_count: int = Field(
         ge=1,
     )
@@ -49,6 +100,8 @@ class ResumeBenchmarkSummary(BaseModel):
         le=1.0,
     )
 
+    extended: ExtendedBenchmarkSummary | None = None
+
     cases: list[ResumeBenchmarkCaseResult]
 
 
@@ -70,10 +123,19 @@ async def run_resume_benchmark(
             actual,
         )
 
+        extended_score = None
+
+        if case.extended_expected is not None:
+            extended_score = score_extended_resume_extraction(
+                case.extended_expected,
+                actual,
+            )
+
         results.append(
             ResumeBenchmarkCaseResult(
                 case_id=case.case_id,
                 score=score,
+                extended_score=extended_score,
             )
         )
 
@@ -91,6 +153,50 @@ async def run_resume_benchmark(
 
     overall_mean = sum(result.score.overall for result in results) / case_count
 
+    extended_scores = [
+        result.extended_score for result in results if result.extended_score is not None
+    ]
+
+    extended_summary = None
+
+    if extended_scores:
+        extended_case_count = len(extended_scores)
+
+        extended_summary = ExtendedBenchmarkSummary(
+            case_count=(extended_case_count),
+            headline_accuracy=(
+                sum(score.headline.score for score in (extended_scores))
+                / extended_case_count
+            ),
+            education_field_of_study_f1=(
+                sum(score.education_field_of_study.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            education_dates_f1=(
+                sum(score.education_dates.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            experience_dates_f1=(
+                sum(score.experience_dates.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            responsibilities_f1=(
+                sum(score.responsibilities.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            projects_f1=(
+                sum(score.projects.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            certifications_f1=(
+                sum(score.certifications.f1 for score in (extended_scores))
+                / extended_case_count
+            ),
+            overall_mean=(
+                sum(score.overall for score in (extended_scores)) / extended_case_count
+            ),
+        )
+
     return ResumeBenchmarkSummary(
         provider=provider_name,
         case_count=case_count,
@@ -100,5 +206,6 @@ async def run_resume_benchmark(
         education_f1=education_f1,
         experience_f1=experience_f1,
         overall_mean=overall_mean,
+        extended=extended_summary,
         cases=results,
     )
