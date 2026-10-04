@@ -13,6 +13,8 @@ V2_DATASET_PATH = EVALS_DIR / "resume_extraction_v2.jsonl"
 
 V3_DATASET_PATH = EVALS_DIR / "resume_extraction_v3.jsonl"
 
+EXTENDED_V1_DATASET_PATH = EVALS_DIR / "resume_extraction_extended_v1.jsonl"
+
 
 def get_case_ids(
     dataset_path: Path,
@@ -44,6 +46,7 @@ def test_v3_dataset_loads_twenty_five_cases():
         V1_DATASET_PATH,
         V2_DATASET_PATH,
         V3_DATASET_PATH,
+        EXTENDED_V1_DATASET_PATH,
     ],
 )
 def test_dataset_case_ids_are_unique(
@@ -115,6 +118,7 @@ def test_v3_contains_expected_hard_cases():
     [
         V2_DATASET_PATH,
         V3_DATASET_PATH,
+        EXTENDED_V1_DATASET_PATH,
     ],
 )
 def test_dataset_cases_have_descriptions_and_tags(
@@ -243,3 +247,34 @@ def test_eval_case_accepts_extended_expectations():
     assert extended.projects[0].technologies == ["Python", "FastAPI"]
 
     assert extended.certifications[0].issuer == "Example Cloud"
+
+
+def test_extended_v1_dataset_loads_ten_cases():
+    cases = load_resume_eval_dataset(EXTENDED_V1_DATASET_PATH)
+
+    assert len(cases) == 10
+
+
+def test_extended_v1_cases_all_have_extended_expectations():
+    cases = load_resume_eval_dataset(EXTENDED_V1_DATASET_PATH)
+
+    assert all(case.extended_expected is not None for case in cases)
+
+
+def test_extended_v1_contains_expected_cases():
+    case_ids = get_case_ids(EXTENDED_V1_DATASET_PATH)
+
+    expected_case_ids = {
+        "extended_full_stack_engineer",
+        "extended_education_dates",
+        "extended_experience_dates",
+        "extended_multiple_responsibilities",
+        "extended_project",
+        "extended_multiple_projects",
+        "extended_certification",
+        "extended_multiple_certifications",
+        "extended_missing_optional_fields",
+        "extended_two_jobs",
+    }
+
+    assert case_ids == expected_case_ids
