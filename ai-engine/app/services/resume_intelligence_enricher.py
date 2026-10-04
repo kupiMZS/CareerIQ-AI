@@ -47,6 +47,12 @@ DATE_EVIDENCE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+EXPERIENCE_DATE_LINE_PATTERN = re.compile(
+    r"^(?:[A-Za-z]{3,9}\s+)?(?:19|20)\d{2}\s*[-–—]\s*"
+    r"(?:(?:[A-Za-z]{3,9}\s+)?(?:19|20)\d{2}|present|current)$",
+    re.IGNORECASE,
+)
+
 
 def _normalize(
     value: str,
@@ -89,7 +95,6 @@ def _extract_headline(
     candidate_email: str | None,
 ) -> str | None:
     normalized_name = _normalize_optional(candidate_name)
-
     normalized_email = _normalize_optional(candidate_email)
 
     for raw_line in resume_text.splitlines():
@@ -164,7 +169,6 @@ def _split_experience(
         right = right.strip()
 
         left_is_title = _looks_like_job_title(left)
-
         right_is_title = _looks_like_job_title(right)
 
         if right_is_title and not left_is_title:
@@ -232,6 +236,35 @@ def _has_date_evidence(
     return any(DATE_EVIDENCE_PATTERN.search(line) is not None for line in lines)
 
 
+def _extract_experience_responsibilities(
+    block_lines: list[str],
+) -> list[str]:
+    responsibilities: list[str] = []
+    seen: set[str] = set()
+
+    for line in block_lines:
+        value = " ".join(_strip_list_prefix(line).split())
+
+        if not value:
+            continue
+
+        if _parse_experience_date_range(value) is not None:
+            continue
+
+        if EXPERIENCE_DATE_LINE_PATTERN.fullmatch(value):
+            continue
+
+        normalized = _normalize(value)
+
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        responsibilities.append(value)
+
+    return responsibilities
+
+
 def _normalize_education_entry(
     item: Education,
 ) -> None:
@@ -252,15 +285,12 @@ def _education_entries_are_mergeable(
     second: Education,
 ) -> bool:
     first_degree = _normalize_optional(first.degree)
-
     second_degree = _normalize_optional(second.degree)
 
     first_institution = _normalize_optional(first.institution)
-
     second_institution = _normalize_optional(second.institution)
 
     first_is_empty = first_degree is None and first_institution is None
-
     second_is_empty = second_degree is None and second_institution is None
 
     if first_is_empty or second_is_empty:
@@ -439,15 +469,12 @@ def _experience_entries_are_mergeable(
     second: Experience,
 ) -> bool:
     first_title = _normalize_optional(first.job_title)
-
     second_title = _normalize_optional(second.job_title)
 
     first_company = _normalize_optional(first.company)
-
     second_company = _normalize_optional(second.company)
 
     first_is_empty = first_title is None and first_company is None
-
     second_is_empty = second_title is None and second_company is None
 
     if first_is_empty or second_is_empty:
@@ -678,6 +705,15 @@ def _reconcile_explicit_experience(
             matching_entry.start_date = None
             matching_entry.end_date = None
 
+        # Literal responsibility lines from a strong
+        # Experience block are authoritative. This
+        # replaces unsupported provider-generated
+        # responsibilities while preserving the
+        # association with the correct job.
+        matching_entry.responsibilities = _extract_experience_responsibilities(
+            block_lines
+        )
+
     _deduplicate_experience(intelligence)
 
 
@@ -808,7 +844,6 @@ def enrich_resume_intelligence(
     baseline = analyze_resume(resume_text)
 
     baseline_name = baseline.get("extracted_name")
-
     baseline_email = baseline.get("extracted_email")
 
     if not enriched.candidate.name and baseline_name:

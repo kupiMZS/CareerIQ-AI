@@ -362,3 +362,109 @@ def test_enricher_preserves_provider_dates_for_unparsed_date_evidence():
     assert len(result.experience) == 1
     assert result.experience[0].start_date == "2021-01-01"
     assert result.experience[0].end_date == "Present"
+
+
+def test_enricher_extracts_responsibilities_from_explicit_experience_block():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+Senior Backend Engineer
+
+Experience
+Backend Engineer at Nova Systems
+2021 - Present
+Built REST APIs
+Improved deployment automation
+""",
+        intelligence,
+    )
+
+    assert len(enriched.experience) == 1
+
+    experience = enriched.experience[0]
+
+    assert experience.job_title == "Backend Engineer"
+    assert experience.company == "Nova Systems"
+    assert experience.start_date == "2021"
+    assert experience.end_date == "Present"
+    assert experience.responsibilities == [
+        "Built REST APIs",
+        "Improved deployment automation",
+    ]
+
+
+def test_enricher_attributes_responsibilities_to_correct_experience():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Victor Chen
+victor.chen@example.com
+Senior Software Engineer
+
+Experience
+Software Engineer at Alpha Systems
+2019 - 2021
+Built internal APIs
+
+Senior Software Engineer at Beta Cloud
+2021 - Present
+Led backend architecture
+Mentored junior engineers
+""",
+        intelligence,
+    )
+
+    assert len(enriched.experience) == 2
+
+    assert enriched.experience[0].responsibilities == [
+        "Built internal APIs",
+    ]
+
+    assert enriched.experience[1].responsibilities == [
+        "Led backend architecture",
+        "Mentored junior engineers",
+    ]
+
+
+def test_enricher_replaces_provider_responsibilities_with_literal_block_evidence():
+    intelligence = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Backend Engineer",
+                company="Nova Systems",
+                start_date="2021-01-01",
+                end_date="Present",
+                responsibilities=[
+                    "Unsupported provider responsibility",
+                ],
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+Backend Engineer
+
+Experience
+Backend Engineer at Nova Systems
+January 2021 - Present
+Built REST APIs
+""",
+        intelligence,
+    )
+
+    assert len(enriched.experience) == 1
+
+    experience = enriched.experience[0]
+
+    assert experience.start_date == "2021-01-01"
+    assert experience.end_date == "Present"
+    assert experience.responsibilities == [
+        "Built REST APIs",
+    ]
