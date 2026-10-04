@@ -196,3 +196,54 @@ def test_enricher_keeps_structured_experience_without_section_heading():
     assert result.experience[0].job_title == "Software Developer"
 
     assert result.experience[0].company == "Bright Apps"
+
+
+def test_enricher_fills_missing_headline_from_resume_preamble():
+    result = enrich_resume_intelligence(
+        (
+            "Aisha Rahman\n"
+            "aisha.rahman@example.com\n"
+            "Senior Backend Engineer\n\n"
+            "Skills\n"
+            "Python\n"
+            "FastAPI"
+        ),
+        ResumeIntelligence(),
+    )
+
+    assert result.candidate.headline == "Senior Backend Engineer"
+
+
+def test_enricher_preserves_existing_llm_headline():
+    intelligence = ResumeIntelligence(
+        candidate=Candidate(
+            headline="LLM Headline",
+        )
+    )
+
+    result = enrich_resume_intelligence(
+        (
+            "Aisha Rahman\n"
+            "aisha.rahman@example.com\n"
+            "Senior Backend Engineer\n\n"
+            "Skills\n"
+            "Python"
+        ),
+        intelligence,
+    )
+
+    assert result.candidate.headline == "LLM Headline"
+
+
+def test_enricher_does_not_infer_headline_from_experience_section():
+    result = enrich_resume_intelligence(
+        (
+            "Aisha Rahman\n"
+            "aisha.rahman@example.com\n\n"
+            "Experience\n"
+            "Senior Backend Engineer at Nova Systems"
+        ),
+        ResumeIntelligence(),
+    )
+
+    assert result.candidate.headline is None

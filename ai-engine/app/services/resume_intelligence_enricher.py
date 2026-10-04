@@ -69,6 +69,41 @@ def _looks_like_job_title(
     return any(keyword in normalized for keyword in JOB_TITLE_KEYWORDS)
 
 
+def _extract_headline(
+    resume_text: str,
+    *,
+    candidate_name: str | None,
+    candidate_email: str | None,
+) -> str | None:
+    normalized_name = _normalize_optional(candidate_name)
+
+    normalized_email = _normalize_optional(candidate_email)
+
+    for raw_line in resume_text.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        # A recognized section heading marks the end
+        # of the resume preamble.
+        if detect_sections(line):
+            break
+
+        normalized_line = _normalize(line)
+
+        if normalized_name is not None and normalized_line == normalized_name:
+            continue
+
+        if normalized_email is not None and normalized_email in normalized_line:
+            continue
+
+        if _looks_like_job_title(line):
+            return line
+
+    return None
+
+
 def _looks_like_institution(
     value: str,
 ) -> bool:
@@ -579,6 +614,13 @@ def enrich_resume_intelligence(
 
     if not enriched.candidate.email and baseline_email:
         enriched.candidate.email = baseline_email
+
+    if not enriched.candidate.headline:
+        enriched.candidate.headline = _extract_headline(
+            resume_text,
+            candidate_name=(enriched.candidate.name or baseline_name),
+            candidate_email=(enriched.candidate.email or baseline_email),
+        )
 
     _enrich_skills(
         enriched,
