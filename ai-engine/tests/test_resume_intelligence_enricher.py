@@ -1,5 +1,6 @@
 from app.schemas.resume import (
     Candidate,
+    Certification,
     Education,
     Experience,
     Project,
@@ -112,7 +113,6 @@ def test_enricher_fills_missing_experience_company():
     )
 
     assert result.experience[0].job_title == "Software Engineer"
-
     assert result.experience[0].company == "ABC Technologies"
 
 
@@ -137,7 +137,6 @@ def test_enricher_does_not_mutate_original_result():
     assert intelligence.experience[0].company is None
 
     assert result.candidate.email == "john.doe@example.com"
-
     assert result.experience[0].company == "ABC Technologies"
 
 
@@ -156,9 +155,7 @@ def test_enricher_normalizes_rule_based_experience_without_duplicate():
     )
 
     assert len(result.experience) == 1
-
     assert result.experience[0].job_title == "Software Engineer"
-
     assert result.experience[0].company == "ABC Technologies"
 
 
@@ -193,9 +190,7 @@ def test_enricher_keeps_structured_experience_without_section_heading():
     )
 
     assert len(result.experience) == 1
-
     assert result.experience[0].job_title == "Software Developer"
-
     assert result.experience[0].company == "Bright Apps"
 
 
@@ -615,3 +610,125 @@ Python
     assert enriched.projects[0].technologies == [
         "Python",
     ]
+
+
+def test_enricher_extracts_inline_certification():
+    intelligence = ResumeIntelligence(
+        certifications=[
+            Certification(
+                name="Unsupported Certification",
+                issuer="Wrong Issuer",
+                date="2020",
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+Senior Backend Engineer
+
+Certifications
+Cloud Developer - Example Cloud - 2024
+""",
+        intelligence,
+    )
+
+    assert len(enriched.certifications) == 1
+
+    certification = enriched.certifications[0]
+
+    assert certification.name == "Cloud Developer"
+    assert certification.issuer == "Example Cloud"
+    assert certification.date == "2024"
+
+
+def test_enricher_extracts_multiline_certification():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Nora Ibrahim
+nora.ibrahim@example.com
+Cloud Engineer
+
+Certifications
+AWS Developer Associate
+Amazon Web Services
+2025
+""",
+        intelligence,
+    )
+
+    assert len(enriched.certifications) == 1
+
+    certification = enriched.certifications[0]
+
+    assert certification.name == "AWS Developer Associate"
+    assert certification.issuer == "Amazon Web Services"
+    assert certification.date == "2025"
+
+
+def test_enricher_extracts_multiple_certifications():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Ethan Cole
+ethan.cole@example.com
+DevOps Engineer
+
+Certifications
+Certified Kubernetes Administrator
+Cloud Native Computing Foundation
+2024
+
+Terraform Associate
+HashiCorp
+2023
+""",
+        intelligence,
+    )
+
+    assert len(enriched.certifications) == 2
+
+    assert enriched.certifications[0].name == "Certified Kubernetes Administrator"
+    assert enriched.certifications[0].issuer == "Cloud Native Computing Foundation"
+    assert enriched.certifications[0].date == "2024"
+
+    assert enriched.certifications[1].name == "Terraform Associate"
+    assert enriched.certifications[1].issuer == "HashiCorp"
+    assert enriched.certifications[1].date == "2023"
+
+
+def test_enricher_preserves_provider_certifications_without_section():
+    intelligence = ResumeIntelligence(
+        certifications=[
+            Certification(
+                name="Existing Certification",
+                issuer="Existing Issuer",
+                date="2025",
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Jane Doe
+jane@example.com
+Software Engineer
+
+Skills
+Python
+""",
+        intelligence,
+    )
+
+    assert len(enriched.certifications) == 1
+
+    certification = enriched.certifications[0]
+
+    assert certification.name == "Existing Certification"
+    assert certification.issuer == "Existing Issuer"
+    assert certification.date == "2025"

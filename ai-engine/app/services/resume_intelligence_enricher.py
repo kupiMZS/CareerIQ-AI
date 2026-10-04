@@ -2,6 +2,7 @@ import re
 
 from app.analyzer import analyze_resume, detect_sections
 from app.schemas.resume import (
+    Certification,
     Education,
     Experience,
     Project,
@@ -58,6 +59,14 @@ PROJECT_TECHNOLOGIES_PATTERN = re.compile(
     r"^technologies?\s*:\s*(?P<values>.+)$",
     re.IGNORECASE,
 )
+
+CERTIFICATION_INLINE_PATTERN = re.compile(
+    r"^(?P<name>.+?)\s+[-–—]\s+"
+    r"(?P<issuer>.+?)\s+[-–—]\s+"
+    r"(?P<date>(?:19|20)\d{2})$"
+)
+
+CERTIFICATION_DATE_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
 
 
 def _normalize(
@@ -175,6 +184,7 @@ def _split_experience(
         right = right.strip()
 
         left_is_title = _looks_like_job_title(left)
+
         right_is_title = _looks_like_job_title(right)
 
         if right_is_title and not left_is_title:
@@ -234,6 +244,66 @@ def _parse_experience_date_range(
         start_date,
         end_date,
     )
+
+
+def _parse_inline_certification(
+    value: str,
+) -> Certification | None:
+    match = CERTIFICATION_INLINE_PATTERN.fullmatch(value.strip())
+
+    if match is None:
+        return None
+
+    return Certification(
+        name=match.group("name").strip(),
+        issuer=match.group("issuer").strip(),
+        date=match.group("date"),
+    )
+
+
+def _extract_structured_certifications(
+    certification_lines: list[str],
+) -> list[Certification]:
+    lines = [
+        _strip_list_prefix(line)
+        for line in certification_lines
+        if _strip_list_prefix(line)
+    ]
+
+    certifications: list[Certification] = []
+    index = 0
+
+    while index < len(lines):
+        inline = _parse_inline_certification(lines[index])
+
+        if inline is not None:
+            certifications.append(inline)
+            index += 1
+            continue
+
+        if index + 2 >= len(lines):
+            index += 1
+            continue
+
+        name = lines[index]
+        issuer = lines[index + 1]
+        date = lines[index + 2]
+
+        if CERTIFICATION_DATE_PATTERN.fullmatch(date) is None:
+            index += 1
+            continue
+
+        certifications.append(
+            Certification(
+                name=name,
+                issuer=issuer,
+                date=date,
+            )
+        )
+
+        index += 3
+
+    return certifications
 
 
 def _has_date_evidence(
@@ -423,12 +493,15 @@ def _education_entries_are_mergeable(
     second: Education,
 ) -> bool:
     first_degree = _normalize_optional(first.degree)
+
     second_degree = _normalize_optional(second.degree)
 
     first_institution = _normalize_optional(first.institution)
+
     second_institution = _normalize_optional(second.institution)
 
     first_is_empty = first_degree is None and first_institution is None
+
     second_is_empty = second_degree is None and second_institution is None
 
     if first_is_empty or second_is_empty:
@@ -496,9 +569,11 @@ def _deduplicate_education(
             (
                 existing
                 for existing in merged
-                if _education_entries_are_mergeable(
-                    existing,
-                    item,
+                if (
+                    _education_entries_are_mergeable(
+                        existing,
+                        item,
+                    )
                 )
             ),
             None,
@@ -542,7 +617,10 @@ def _enrich_multiline_education(
     for index, raw_line in enumerate(education_lines[:-1]):
         degree_line = _strip_list_prefix(raw_line)
 
-        degree, inline_institution = _split_education(degree_line)
+        (
+            degree,
+            inline_institution,
+        ) = _split_education(degree_line)
 
         if not degree:
             continue
@@ -567,9 +645,11 @@ def _enrich_multiline_education(
             (
                 item
                 for item in intelligence.education
-                if _education_entries_are_mergeable(
-                    item,
-                    candidate,
+                if (
+                    _education_entries_are_mergeable(
+                        item,
+                        candidate,
+                    )
                 )
             ),
             None,
@@ -607,12 +687,15 @@ def _experience_entries_are_mergeable(
     second: Experience,
 ) -> bool:
     first_title = _normalize_optional(first.job_title)
+
     second_title = _normalize_optional(second.job_title)
 
     first_company = _normalize_optional(first.company)
+
     second_company = _normalize_optional(second.company)
 
     first_is_empty = first_title is None and first_company is None
+
     second_is_empty = second_title is None and second_company is None
 
     if first_is_empty or second_is_empty:
@@ -682,9 +765,11 @@ def _deduplicate_experience(
             (
                 existing
                 for existing in merged
-                if _experience_entries_are_mergeable(
-                    existing,
-                    item,
+                if (
+                    _experience_entries_are_mergeable(
+                        existing,
+                        item,
+                    )
                 )
             ),
             None,
@@ -797,14 +882,19 @@ def _reconcile_explicit_experience(
         )
     ]
 
-    for evidence_entry, block_lines in blocks:
+    for (
+        evidence_entry,
+        block_lines,
+    ) in blocks:
         matching_entry = next(
             (
                 item
                 for item in intelligence.experience
-                if _experience_entries_are_mergeable(
-                    item,
-                    evidence_entry,
+                if (
+                    _experience_entries_are_mergeable(
+                        item,
+                        evidence_entry,
+                    )
                 )
             ),
             None,
@@ -894,9 +984,11 @@ def _enrich_education(
             (
                 item
                 for item in intelligence.education
-                if _education_entries_are_mergeable(
-                    item,
-                    candidate,
+                if (
+                    _education_entries_are_mergeable(
+                        item,
+                        candidate,
+                    )
                 )
             ),
             None,
@@ -953,9 +1045,11 @@ def _enrich_experience(
             (
                 item
                 for item in intelligence.experience
-                if _experience_entries_are_mergeable(
-                    item,
-                    candidate,
+                if (
+                    _experience_entries_are_mergeable(
+                        item,
+                        candidate,
+                    )
                 )
             ),
             None,
@@ -982,6 +1076,7 @@ def enrich_resume_intelligence(
     baseline = analyze_resume(resume_text)
 
     baseline_name = baseline.get("extracted_name")
+
     baseline_email = baseline.get("extracted_email")
 
     if not enriched.candidate.name and baseline_name:
@@ -1064,5 +1159,18 @@ def enrich_resume_intelligence(
 
         if structured_projects:
             enriched.projects = structured_projects
+
+    certification_lines = sections.get(
+        "certifications",
+        [],
+    )
+
+    if certification_lines:
+        structured_certifications = _extract_structured_certifications(
+            certification_lines
+        )
+
+        if structured_certifications:
+            enriched.certifications = structured_certifications
 
     return enriched
