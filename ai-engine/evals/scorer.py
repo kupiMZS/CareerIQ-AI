@@ -20,6 +20,8 @@ from evals.schemas import (
     ExpectedResumeExtraction,
 )
 
+EXTENDED_SCORER_VERSION = "extended-v2"
+
 
 class ScalarMetric(BaseModel):
     score: float = Field(
@@ -317,6 +319,15 @@ def _actual_experience_date_signature(
     )
 
 
+def _has_experience_date(
+    start_date: str | None,
+    end_date: str | None,
+) -> bool:
+    return (
+        _normalize_date(start_date) is not None or _normalize_date(end_date) is not None
+    )
+
+
 def _expected_responsibility_signatures(
     items: Iterable[ExpectedExtendedExperience],
 ) -> list[
@@ -482,8 +493,22 @@ def score_extended_resume_extraction(
     )
 
     experience_dates = _score_collection(
-        (_expected_experience_date_signature(item) for item in expected.experience),
-        (_actual_experience_date_signature(item) for item in actual.experience),
+        (
+            _expected_experience_date_signature(item)
+            for item in expected.experience
+            if _has_experience_date(
+                item.start_date,
+                item.end_date,
+            )
+        ),
+        (
+            _actual_experience_date_signature(item)
+            for item in actual.experience
+            if _has_experience_date(
+                item.start_date,
+                item.end_date,
+            )
+        ),
     )
 
     responsibilities = _score_collection(

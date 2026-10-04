@@ -6,6 +6,7 @@ from evals.runner import (
     ExtendedBenchmarkSummary,
     ResumeBenchmarkSummary,
 )
+from evals.scorer import EXTENDED_SCORER_VERSION
 
 
 class MetricStatistics(BaseModel):
@@ -53,6 +54,8 @@ class ExtendedBenchmarkMetrics(BaseModel):
 
 
 class ExtendedBenchmarkReport(BaseModel):
+    scorer_version: str
+
     case_count: int = Field(
         ge=1,
     )
@@ -124,6 +127,7 @@ def _build_extended_report(
     )
 
     return ExtendedBenchmarkReport(
+        scorer_version=EXTENDED_SCORER_VERSION,
         case_count=case_count,
         metrics=metrics,
     )

@@ -247,3 +247,118 @@ def test_enricher_does_not_infer_headline_from_experience_section():
     )
 
     assert result.candidate.headline is None
+
+
+def test_enricher_uses_literal_experience_dates_from_section():
+    intelligence = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Backend Engineer",
+                start_date="2021-00-00",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        (
+            "Aisha Rahman\n"
+            "aisha.rahman@example.com\n"
+            "Senior Backend Engineer\n\n"
+            "Experience\n"
+            "Backend Engineer at Nova Systems\n"
+            "2021 - Present\n"
+            "Built REST APIs"
+        ),
+        intelligence,
+    )
+
+    assert len(result.experience) == 1
+    assert result.experience[0].company == "Nova Systems"
+    assert result.experience[0].start_date == "2021"
+    assert result.experience[0].end_date == "Present"
+
+
+def test_enricher_clears_unsupported_experience_dates_without_evidence():
+    intelligence = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Data Engineer",
+                start_date="2020-00-00",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        (
+            "Daniel Wong\n"
+            "daniel.wong@example.com\n"
+            "Data Engineer\n\n"
+            "Experience\n"
+            "Data Engineer at Signal Labs"
+        ),
+        intelligence,
+    )
+
+    assert len(result.experience) == 1
+    assert result.experience[0].company == "Signal Labs"
+    assert result.experience[0].start_date is None
+    assert result.experience[0].end_date is None
+
+
+def test_enricher_reconciles_multiple_jobs_without_false_positive_entries():
+    result = enrich_resume_intelligence(
+        (
+            "Victor Chen\n"
+            "victor.chen@example.com\n"
+            "Senior Software Engineer\n\n"
+            "Experience\n"
+            "Software Engineer at Alpha Systems\n"
+            "2019 - 2021\n"
+            "Built internal APIs\n\n"
+            "Senior Software Engineer at Beta Cloud\n"
+            "2021 - Present\n"
+            "Led backend architecture\n"
+            "Mentored junior engineers"
+        ),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.experience) == 2
+
+    assert result.experience[0].job_title == "Software Engineer"
+    assert result.experience[0].company == "Alpha Systems"
+    assert result.experience[0].start_date == "2019"
+    assert result.experience[0].end_date == "2021"
+
+    assert result.experience[1].job_title == "Senior Software Engineer"
+    assert result.experience[1].company == "Beta Cloud"
+    assert result.experience[1].start_date == "2021"
+    assert result.experience[1].end_date == "Present"
+
+
+def test_enricher_preserves_provider_dates_for_unparsed_date_evidence():
+    intelligence = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Backend Engineer",
+                company="Nova Systems",
+                start_date="2021-01-01",
+                end_date="Present",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        (
+            "Aisha Rahman\n"
+            "aisha.rahman@example.com\n\n"
+            "Experience\n"
+            "Backend Engineer at Nova Systems\n"
+            "January 2021 - Present"
+        ),
+        intelligence,
+    )
+
+    assert len(result.experience) == 1
+    assert result.experience[0].start_date == "2021-01-01"
+    assert result.experience[0].end_date == "Present"

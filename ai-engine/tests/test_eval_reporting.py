@@ -226,6 +226,9 @@ def test_report_aggregates_extended_metrics():
     )
 
     assert report.extended is not None
+
+    assert report.extended.scorer_version == "extended-v2"
+
     assert report.extended.case_count == 3
 
     assert report.extended.metrics.headline_accuracy.mean == pytest.approx(0.7)

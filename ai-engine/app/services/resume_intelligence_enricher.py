@@ -36,8 +36,21 @@ INSTITUTION_KEYWORDS = (
 
 LIST_PREFIX_PATTERN = re.compile(r"^\s*(?:[-*•▪◦‣]+|\d+[.)])\s*")
 
+EXPERIENCE_DATE_RANGE_PATTERN = re.compile(
+    r"^(?P<start>\d{4})\s*[-–—]\s*"
+    r"(?P<end>\d{4}|present|current)$",
+    re.IGNORECASE,
+)
 
-def _normalize(value: str) -> str:
+DATE_EVIDENCE_PATTERN = re.compile(
+    r"\b(?:19|20)\d{2}\b|\b(?:present|current)\b",
+    re.IGNORECASE,
+)
+
+
+def _normalize(
+    value: str,
+) -> str:
     return value.strip().casefold()
 
 
@@ -188,6 +201,35 @@ def _split_experience(
         cleaned or None,
         None,
     )
+
+
+def _parse_experience_date_range(
+    value: str,
+) -> tuple[str, str] | None:
+    match = EXPERIENCE_DATE_RANGE_PATTERN.fullmatch(value.strip())
+
+    if match is None:
+        return None
+
+    start_date = match.group("start")
+    end_date = match.group("end")
+
+    if end_date.casefold() in {
+        "present",
+        "current",
+    }:
+        end_date = "Present"
+
+    return (
+        start_date,
+        end_date,
+    )
+
+
+def _has_date_evidence(
+    lines: list[str],
+) -> bool:
+    return any(DATE_EVIDENCE_PATTERN.search(line) is not None for line in lines)
 
 
 def _normalize_education_entry(
@@ -495,6 +537,150 @@ def _deduplicate_experience(
     intelligence.experience = merged
 
 
+def _extract_structured_experience_blocks(
+    experience_lines: list[str],
+) -> list[
+    tuple[
+        Experience,
+        list[str],
+    ]
+]:
+    blocks: list[
+        tuple[
+            Experience,
+            list[str],
+        ]
+    ] = []
+
+    current_entry: Experience | None = None
+    current_lines: list[str] = []
+
+    for line in experience_lines:
+        job_title, company = _split_experience(line)
+
+        is_strong_entry = (
+            job_title is not None
+            and company is not None
+            and _looks_like_job_title(job_title)
+        )
+
+        if is_strong_entry:
+            if current_entry is not None:
+                blocks.append(
+                    (
+                        current_entry,
+                        current_lines,
+                    )
+                )
+
+            current_entry = Experience(
+                job_title=job_title,
+                company=company,
+            )
+
+            current_lines = []
+            continue
+
+        if current_entry is not None:
+            current_lines.append(line)
+
+    if current_entry is not None:
+        blocks.append(
+            (
+                current_entry,
+                current_lines,
+            )
+        )
+
+    return blocks
+
+
+def _reconcile_explicit_experience(
+    intelligence: ResumeIntelligence,
+    experience_lines: list[str],
+) -> None:
+    blocks = _extract_structured_experience_blocks(experience_lines)
+
+    if not blocks:
+        return
+
+    strong_signatures = {
+        (
+            _normalize_optional(entry.job_title),
+            _normalize_optional(entry.company),
+        )
+        for entry, _ in blocks
+    }
+
+    # When an explicit Experience section contains
+    # strong title + company records, discard
+    # title-only records that are not backed by one
+    # of those structured jobs. This prevents
+    # responsibility lines such as "Built internal
+    # APIs" or "Mentored junior engineers" from
+    # becoming fake Experience entries.
+    intelligence.experience = [
+        item
+        for item in intelligence.experience
+        if (
+            item.company is not None
+            or (
+                _normalize_optional(item.job_title),
+                _normalize_optional(item.company),
+            )
+            in strong_signatures
+        )
+    ]
+
+    for evidence_entry, block_lines in blocks:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.experience
+                if _experience_entries_are_mergeable(
+                    item,
+                    evidence_entry,
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            matching_entry = evidence_entry.model_copy(deep=True)
+
+            intelligence.experience.append(matching_entry)
+        else:
+            _merge_experience_values(
+                matching_entry,
+                evidence_entry,
+            )
+
+        parsed_dates = None
+
+        for line in block_lines:
+            parsed_dates = _parse_experience_date_range(line)
+
+            if parsed_dates is not None:
+                break
+
+        if parsed_dates is not None:
+            (
+                matching_entry.start_date,
+                matching_entry.end_date,
+            ) = parsed_dates
+
+        elif not _has_date_evidence(block_lines):
+            # The explicit job block contains no
+            # date evidence. Remove unsupported
+            # provider dates rather than preserving
+            # a hallucinated date from another
+            # section of the resume.
+            matching_entry.start_date = None
+            matching_entry.end_date = None
+
+    _deduplicate_experience(intelligence)
+
+
 def _enrich_skills(
     intelligence: ResumeIntelligence,
     baseline_skills: list[str],
@@ -559,12 +745,28 @@ def _enrich_experience(
     baseline_experience: list[str],
     *,
     has_explicit_experience_section: bool,
+    has_strong_experience_entries: bool,
 ) -> None:
     _deduplicate_experience(intelligence)
 
     for experience_value in baseline_experience:
         job_title, company = _split_experience(experience_value)
 
+        # If an explicit Experience section already
+        # gives us strong title + company records,
+        # do not let title-only rule-based matches
+        # become additional Experience entries.
+        if (
+            has_explicit_experience_section
+            and has_strong_experience_entries
+            and company is None
+        ):
+            continue
+
+        # Preserve the existing no-section guard:
+        # without an explicit Experience section,
+        # only accept a baseline candidate when it
+        # also contains company structure.
         if not has_explicit_experience_section and company is None:
             continue
 
@@ -648,6 +850,15 @@ def enrich_resume_intelligence(
 
     sections = detect_sections(resume_text)
 
+    experience_lines = sections.get(
+        "experience",
+        [],
+    )
+
+    structured_experience_blocks = _extract_structured_experience_blocks(
+        experience_lines
+    )
+
     _enrich_experience(
         enriched,
         baseline.get(
@@ -655,6 +866,13 @@ def enrich_resume_intelligence(
             [],
         ),
         has_explicit_experience_section=("experience" in sections),
+        has_strong_experience_entries=bool(structured_experience_blocks),
     )
+
+    if experience_lines:
+        _reconcile_explicit_experience(
+            enriched,
+            experience_lines,
+        )
 
     return enriched

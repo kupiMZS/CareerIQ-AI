@@ -437,6 +437,33 @@ def test_extended_scorer_keeps_date_matching_strict():
     assert score.experience_dates.f1 == 0.0
 
 
+def test_extended_scorer_ignores_undated_actual_experience_for_date_metric():
+    expected = ExpectedExtendedResumeExtraction()
+
+    actual = ResumeIntelligence(
+        experience=[
+            Experience(
+                job_title="Data Engineer",
+                company="Signal Labs",
+                start_date=None,
+                end_date=None,
+            )
+        ]
+    )
+
+    score = score_extended_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.experience_dates.precision == 1.0
+    assert score.experience_dates.recall == 1.0
+    assert score.experience_dates.f1 == 1.0
+    assert score.experience_dates.expected_count == 0
+    assert score.experience_dates.actual_count == 0
+    assert score.experience_dates.matched_count == 0
+
+
 def test_extended_scorer_attributes_responsibilities_to_experience():
     expected = ExpectedExtendedResumeExtraction(
         experience=[
