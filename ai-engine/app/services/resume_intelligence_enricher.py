@@ -4,6 +4,7 @@ from app.analyzer import analyze_resume, detect_sections
 from app.schemas.resume import (
     Education,
     Experience,
+    Project,
     ResumeIntelligence,
     Skill,
 )
@@ -50,6 +51,11 @@ DATE_EVIDENCE_PATTERN = re.compile(
 EXPERIENCE_DATE_LINE_PATTERN = re.compile(
     r"^(?:[A-Za-z]{3,9}\s+)?(?:19|20)\d{2}\s*[-–—]\s*"
     r"(?:(?:[A-Za-z]{3,9}\s+)?(?:19|20)\d{2}|present|current)$",
+    re.IGNORECASE,
+)
+
+PROJECT_TECHNOLOGIES_PATTERN = re.compile(
+    r"^technologies?\s*:\s*(?P<values>.+)$",
     re.IGNORECASE,
 )
 
@@ -263,6 +269,138 @@ def _extract_experience_responsibilities(
         responsibilities.append(value)
 
     return responsibilities
+
+
+def _parse_project_technologies(
+    value: str,
+) -> list[str] | None:
+    match = PROJECT_TECHNOLOGIES_PATTERN.fullmatch(value.strip())
+
+    if match is None:
+        return None
+
+    technologies: list[str] = []
+    seen: set[str] = set()
+
+    for raw_value in match.group("values").split(","):
+        technology = raw_value.strip()
+
+        if not technology:
+            continue
+
+        normalized = _normalize(technology)
+
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        technologies.append(technology)
+
+    return technologies
+
+
+def _find_skill_mention(
+    description: str,
+    skill_name: str,
+) -> str | None:
+    match = re.search(
+        rf"(?<!\w){re.escape(skill_name)}(?!\w)",
+        description,
+        re.IGNORECASE,
+    )
+
+    if match is None:
+        return None
+
+    return match.group(0)
+
+
+def _infer_project_technologies(
+    description: str | None,
+    known_skills: list[str],
+) -> list[str]:
+    if not description:
+        return []
+
+    technologies: list[str] = []
+    seen: set[str] = set()
+
+    for skill_name in known_skills:
+        literal_value = _find_skill_mention(
+            description,
+            skill_name,
+        )
+
+        if literal_value is None:
+            continue
+
+        normalized = _normalize(literal_value)
+
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        technologies.append(literal_value)
+
+    return technologies
+
+
+def _extract_structured_projects(
+    project_lines: list[str],
+    known_skills: list[str],
+) -> list[Project]:
+    lines = [
+        _strip_list_prefix(line) for line in project_lines if _strip_list_prefix(line)
+    ]
+
+    projects: list[Project] = []
+    index = 0
+
+    while index < len(lines):
+        name = lines[index]
+
+        # A technologies line cannot start a project.
+        if _parse_project_technologies(name) is not None:
+            index += 1
+            continue
+
+        index += 1
+
+        description: str | None = None
+        technologies: list[str] = []
+
+        if index < len(lines):
+            explicit_technologies = _parse_project_technologies(lines[index])
+
+            if explicit_technologies is not None:
+                technologies = explicit_technologies
+                index += 1
+            else:
+                description = lines[index]
+                index += 1
+
+        if index < len(lines):
+            explicit_technologies = _parse_project_technologies(lines[index])
+
+            if explicit_technologies is not None:
+                technologies = explicit_technologies
+                index += 1
+
+        if not technologies:
+            technologies = _infer_project_technologies(
+                description,
+                known_skills,
+            )
+
+        projects.append(
+            Project(
+                name=name,
+                description=description,
+                technologies=technologies,
+            )
+        )
+
+    return projects
 
 
 def _normalize_education_entry(
@@ -909,5 +1047,22 @@ def enrich_resume_intelligence(
             enriched,
             experience_lines,
         )
+
+    project_lines = sections.get(
+        "projects",
+        [],
+    )
+
+    if project_lines:
+        structured_projects = _extract_structured_projects(
+            project_lines,
+            baseline.get(
+                "skills",
+                [],
+            ),
+        )
+
+        if structured_projects:
+            enriched.projects = structured_projects
 
     return enriched

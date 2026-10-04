@@ -2,6 +2,7 @@ from app.schemas.resume import (
     Candidate,
     Education,
     Experience,
+    Project,
     ResumeIntelligence,
     Skill,
 )
@@ -467,4 +468,150 @@ Built REST APIs
     assert experience.end_date == "Present"
     assert experience.responsibilities == [
         "Built REST APIs",
+    ]
+
+
+def test_enricher_extracts_project_with_explicit_technologies():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Lina Ahmed
+lina.ahmed@example.com
+Software Developer
+
+Skills
+Python
+Django
+Redis
+
+Projects
+TaskFlow
+Task management application with background processing
+Technologies: Python, Django, Redis
+""",
+        intelligence,
+    )
+
+    assert len(enriched.projects) == 1
+
+    project = enriched.projects[0]
+
+    assert project.name == "TaskFlow"
+    assert (
+        project.description == "Task management application with background processing"
+    )
+    assert project.technologies == [
+        "Python",
+        "Django",
+        "Redis",
+    ]
+
+
+def test_enricher_extracts_multiple_projects():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Lucas Meyer
+lucas.meyer@example.com
+Full Stack Developer
+
+Projects
+ShopAPI
+E-commerce API
+Technologies: Python, FastAPI
+
+DashboardUI
+Administrative dashboard
+Technologies: TypeScript, React
+""",
+        intelligence,
+    )
+
+    assert len(enriched.projects) == 2
+
+    assert enriched.projects[0].name == "ShopAPI"
+    assert enriched.projects[0].description == "E-commerce API"
+    assert enriched.projects[0].technologies == [
+        "Python",
+        "FastAPI",
+    ]
+
+    assert enriched.projects[1].name == "DashboardUI"
+    assert enriched.projects[1].description == "Administrative dashboard"
+    assert enriched.projects[1].technologies == [
+        "TypeScript",
+        "React",
+    ]
+
+
+def test_enricher_infers_project_technologies_from_literal_skill_evidence():
+    intelligence = ResumeIntelligence()
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+Senior Backend Engineer
+
+Skills
+Python
+FastAPI
+PostgreSQL
+Docker
+
+Projects
+CareerHub
+Career platform built with Python, FastAPI, and PostgreSQL
+""",
+        intelligence,
+    )
+
+    assert len(enriched.projects) == 1
+
+    project = enriched.projects[0]
+
+    assert project.name == "CareerHub"
+    assert (
+        project.description
+        == "Career platform built with Python, FastAPI, and PostgreSQL"
+    )
+    assert project.technologies == [
+        "Python",
+        "FastAPI",
+        "PostgreSQL",
+    ]
+
+
+def test_enricher_preserves_provider_projects_without_projects_section():
+    intelligence = ResumeIntelligence(
+        projects=[
+            Project(
+                name="Existing Project",
+                description="Provider supplied project",
+                technologies=[
+                    "Python",
+                ],
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Jane Doe
+jane@example.com
+Software Engineer
+
+Skills
+Python
+""",
+        intelligence,
+    )
+
+    assert len(enriched.projects) == 1
+    assert enriched.projects[0].name == "Existing Project"
+    assert enriched.projects[0].description == "Provider supplied project"
+    assert enriched.projects[0].technologies == [
+        "Python",
     ]
