@@ -159,3 +159,40 @@ def test_enricher_normalizes_rule_based_experience_without_duplicate():
     assert result.experience[0].job_title == "Software Engineer"
 
     assert result.experience[0].company == "ABC Technologies"
+
+
+def test_enricher_does_not_add_headline_as_experience_without_section():
+    result = enrich_resume_intelligence(
+        (
+            "Nora Ibrahim\n"
+            "nora.ibrahim@example.com\n"
+            "Cloud Engineer\n\n"
+            "Certifications\n"
+            "AWS Developer Associate\n"
+            "Amazon Web Services\n"
+            "2025"
+        ),
+        ResumeIntelligence(),
+    )
+
+    assert result.experience == []
+
+
+def test_enricher_keeps_structured_experience_without_section_heading():
+    result = enrich_resume_intelligence(
+        (
+            "Lucas Martin\n"
+            "lucas.martin@example.com\n"
+            "Software Developer at Bright Apps\n"
+            "Python\n"
+            "Git\n"
+            "Docker"
+        ),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.experience) == 1
+
+    assert result.experience[0].job_title == "Software Developer"
+
+    assert result.experience[0].company == "Bright Apps"

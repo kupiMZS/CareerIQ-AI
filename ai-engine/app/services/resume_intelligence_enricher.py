@@ -522,11 +522,16 @@ def _enrich_education(
 def _enrich_experience(
     intelligence: ResumeIntelligence,
     baseline_experience: list[str],
+    *,
+    has_explicit_experience_section: bool,
 ) -> None:
     _deduplicate_experience(intelligence)
 
     for experience_value in baseline_experience:
         job_title, company = _split_experience(experience_value)
+
+        if not has_explicit_experience_section and company is None:
+            continue
 
         candidate = Experience(
             job_title=job_title,
@@ -599,12 +604,15 @@ def enrich_resume_intelligence(
         baseline_education,
     )
 
+    sections = detect_sections(resume_text)
+
     _enrich_experience(
         enriched,
         baseline.get(
             "experience",
             [],
         ),
+        has_explicit_experience_section=("experience" in sections),
     )
 
     return enriched
