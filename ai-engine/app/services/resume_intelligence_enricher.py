@@ -60,6 +60,13 @@ PROJECT_TECHNOLOGIES_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+DEGREE_FIELD_PATTERN = re.compile(
+    r"^(?:"
+    r"BSc|MSc|BEng|MEng|BA|MA|BBA|MBA|PhD"
+    r")\s+(?P<field>.+)$",
+    re.IGNORECASE,
+)
+
 CERTIFICATION_INLINE_PATTERN = re.compile(
     r"^(?P<name>.+?)\s+[-–—]\s+"
     r"(?P<issuer>.+?)\s+[-–—]\s+"
@@ -471,6 +478,22 @@ def _extract_structured_projects(
         )
 
     return projects
+
+
+def _infer_field_of_study_from_degree(
+    degree: str | None,
+) -> str | None:
+    if not degree:
+        return None
+
+    match = DEGREE_FIELD_PATTERN.fullmatch(degree.strip())
+
+    if match is None:
+        return None
+
+    field_of_study = match.group("field").strip()
+
+    return field_of_study or None
 
 
 def _normalize_education_entry(
@@ -978,6 +1001,7 @@ def _enrich_education(
         candidate = Education(
             degree=degree,
             institution=institution,
+            field_of_study=(_infer_field_of_study_from_degree(degree)),
         )
 
         matching_entry = next(
@@ -995,6 +1019,9 @@ def _enrich_education(
         )
 
         if matching_entry is not None:
+            if candidate.field_of_study is not None:
+                matching_entry.field_of_study = candidate.field_of_study
+
             _merge_education_values(
                 matching_entry,
                 candidate,

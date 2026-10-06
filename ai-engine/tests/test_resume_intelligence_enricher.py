@@ -732,3 +732,97 @@ Python
     assert certification.name == "Existing Certification"
     assert certification.issuer == "Existing Issuer"
     assert certification.date == "2025"
+
+
+def test_enricher_infers_field_of_study_from_bsc_degree():
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+
+Education
+BSc Computer Science at Eastern University
+""",
+        ResumeIntelligence(),
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "BSc Computer Science"
+    assert education.institution == "Eastern University"
+    assert education.field_of_study == "Computer Science"
+
+
+def test_enricher_infers_field_of_study_from_msc_degree():
+    enriched = enrich_resume_intelligence(
+        """
+Daniel Wong
+daniel.wong@example.com
+
+Education
+MSc Data Science at Metro University
+""",
+        ResumeIntelligence(),
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "MSc Data Science"
+    assert education.institution == "Metro University"
+    assert education.field_of_study == "Data Science"
+
+
+def test_enricher_infers_field_of_study_without_institution():
+    enriched = enrich_resume_intelligence(
+        """
+Sara Ali
+sara.ali@example.com
+
+Education
+BSc Software Engineering
+""",
+        ResumeIntelligence(),
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "BSc Software Engineering"
+    assert education.institution is None
+    assert education.field_of_study == "Software Engineering"
+
+
+def test_enricher_reconciles_provider_field_with_literal_degree_evidence():
+    intelligence = ResumeIntelligence(
+        education=[
+            Education(
+                degree="BSc Computer Science",
+                institution="Eastern University",
+                field_of_study="Incorrect Field",
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+
+Education
+BSc Computer Science at Eastern University
+""",
+        intelligence,
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "BSc Computer Science"
+    assert education.institution == "Eastern University"
+    assert education.field_of_study == "Computer Science"
