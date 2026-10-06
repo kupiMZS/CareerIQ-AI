@@ -6,7 +6,12 @@ from app.schemas.analysis import (
     AnalyzeRequest,
     AnalyzeResponse,
 )
+from app.schemas.career import (
+    CareerRecommendationRequest,
+    CareerRecommendationResponse,
+)
 from app.services import (
+    CareerRecommendationEngine,
     build_analysis_response,
     enrich_resume_intelligence,
 )
@@ -47,3 +52,15 @@ async def analyze_resume_endpoint(
         request.resume_text,
         enriched_intelligence,
     )
+
+
+@app.post(
+    "/career/recommend",
+    response_model=CareerRecommendationResponse,
+)
+def recommend_career_endpoint(
+    request: CareerRecommendationRequest,
+):
+    engine = CareerRecommendationEngine()
+
+    return engine.recommend(request)
