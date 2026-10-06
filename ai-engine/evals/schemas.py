@@ -1,4 +1,8 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
+
+from app.schemas.career import CareerRecommendationRequest
 
 
 class ExpectedEducation(BaseModel):
@@ -138,3 +142,56 @@ class ResumeEvalCase(BaseModel):
     expected: ExpectedResumeExtraction
 
     extended_expected: ExpectedExtendedResumeExtraction | None = None
+
+
+class ExpectedCareerRecommendation(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    status: Literal[
+        "ok",
+        "needs_more_information",
+    ]
+
+    top_career: str | None = None
+
+    relevant_careers: list[str] = Field(
+        default_factory=list,
+    )
+
+    missing_skills: list[str] = Field(
+        default_factory=list,
+    )
+
+    roadmap_skills: list[str] = Field(
+        default_factory=list,
+    )
+
+    entry_level: bool | None = None
+
+    missing_information: list[str] = Field(
+        default_factory=list,
+    )
+
+
+class CareerEvalCase(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    case_id: str = Field(
+        min_length=1,
+    )
+
+    description: str = Field(
+        min_length=1,
+    )
+
+    tags: list[str] = Field(
+        default_factory=list,
+    )
+
+    request: CareerRecommendationRequest
+
+    expected: ExpectedCareerRecommendation
