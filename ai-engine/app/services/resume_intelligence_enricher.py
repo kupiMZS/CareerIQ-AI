@@ -44,6 +44,12 @@ EXPERIENCE_DATE_RANGE_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+EDUCATION_DATE_RANGE_PATTERN = re.compile(
+    r"^(?P<start>\d{4})\s*[-–—]\s*"
+    r"(?P<end>\d{4}|present|current)$",
+    re.IGNORECASE,
+)
+
 DATE_EVIDENCE_PATTERN = re.compile(
     r"\b(?:19|20)\d{2}\b|\b(?:present|current)\b",
     re.IGNORECASE,
@@ -234,6 +240,29 @@ def _parse_experience_date_range(
     value: str,
 ) -> tuple[str, str] | None:
     match = EXPERIENCE_DATE_RANGE_PATTERN.fullmatch(value.strip())
+
+    if match is None:
+        return None
+
+    start_date = match.group("start")
+    end_date = match.group("end")
+
+    if end_date.casefold() in {
+        "present",
+        "current",
+    }:
+        end_date = "Present"
+
+    return (
+        start_date,
+        end_date,
+    )
+
+
+def _parse_education_date_range(
+    value: str,
+) -> tuple[str, str] | None:
+    match = EDUCATION_DATE_RANGE_PATTERN.fullmatch(value.strip())
 
     if match is None:
         return None
@@ -686,6 +715,114 @@ def _enrich_multiline_education(
             continue
 
         intelligence.education.append(candidate)
+
+    _deduplicate_education(intelligence)
+
+
+def _extract_education_date_evidence(
+    education_lines: list[str],
+    baseline_education: list[str],
+) -> list[Education]:
+    baseline_degrees: set[str] = set()
+
+    for education_value in baseline_education:
+        degree, _ = _split_education(education_value)
+
+        if degree:
+            baseline_degrees.add(_normalize(degree))
+
+    evidence_entries: list[Education] = []
+    index = 0
+
+    while index < len(education_lines):
+        line = _strip_list_prefix(education_lines[index])
+
+        degree, institution = _split_education(line)
+
+        if not degree or _normalize(degree) not in baseline_degrees:
+            index += 1
+            continue
+
+        date_index = index + 1
+
+        if institution is None and date_index < len(education_lines):
+            possible_institution = _strip_list_prefix(education_lines[date_index])
+
+            if _looks_like_institution(possible_institution):
+                institution = possible_institution
+                date_index += 1
+
+        if date_index >= len(education_lines):
+            index += 1
+            continue
+
+        parsed_dates = _parse_education_date_range(
+            _strip_list_prefix(education_lines[date_index])
+        )
+
+        if parsed_dates is None:
+            index += 1
+            continue
+
+        start_date, end_date = parsed_dates
+
+        evidence_entries.append(
+            Education(
+                degree=degree,
+                institution=institution,
+                field_of_study=(_infer_field_of_study_from_degree(degree)),
+                start_date=start_date,
+                end_date=end_date,
+            )
+        )
+
+        index = date_index + 1
+
+    return evidence_entries
+
+
+def _reconcile_explicit_education_dates(
+    intelligence: ResumeIntelligence,
+    education_lines: list[str],
+    baseline_education: list[str],
+) -> None:
+    evidence_entries = _extract_education_date_evidence(
+        education_lines,
+        baseline_education,
+    )
+
+    for evidence_entry in evidence_entries:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.education
+                if (
+                    _education_entries_are_mergeable(
+                        item,
+                        evidence_entry,
+                    )
+                )
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.education.append(evidence_entry)
+            continue
+
+        # Literal dates in the Education section
+        # are authoritative over provider-generated
+        # dates.
+        matching_entry.start_date = evidence_entry.start_date
+        matching_entry.end_date = evidence_entry.end_date
+
+        if evidence_entry.field_of_study is not None:
+            matching_entry.field_of_study = evidence_entry.field_of_study
+
+        _merge_education_values(
+            matching_entry,
+            evidence_entry,
+        )
 
     _deduplicate_education(intelligence)
 
@@ -1144,6 +1281,18 @@ def enrich_resume_intelligence(
     )
 
     sections = detect_sections(resume_text)
+
+    education_lines = sections.get(
+        "education",
+        [],
+    )
+
+    if education_lines:
+        _reconcile_explicit_education_dates(
+            enriched,
+            education_lines,
+            baseline_education,
+        )
 
     experience_lines = sections.get(
         "experience",

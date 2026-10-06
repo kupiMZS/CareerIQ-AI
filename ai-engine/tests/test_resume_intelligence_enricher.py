@@ -826,3 +826,118 @@ BSc Computer Science at Eastern University
     assert education.degree == "BSc Computer Science"
     assert education.institution == "Eastern University"
     assert education.field_of_study == "Computer Science"
+
+
+def test_enricher_uses_literal_education_dates_from_section():
+    intelligence = ResumeIntelligence(
+        education=[
+            Education(
+                degree="BSc Computer Science",
+                institution="Eastern University",
+                start_date="2018",
+                end_date="2020",
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+
+Education
+BSc Computer Science at Eastern University
+2017 - 2021
+""",
+        intelligence,
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "BSc Computer Science"
+    assert education.institution == "Eastern University"
+    assert education.field_of_study == "Computer Science"
+    assert education.start_date == "2017"
+    assert education.end_date == "2021"
+
+
+def test_enricher_extracts_msc_education_dates():
+    enriched = enrich_resume_intelligence(
+        """
+Daniel Wong
+daniel.wong@example.com
+
+Education
+MSc Data Science at Metro University
+2020 - 2022
+""",
+        ResumeIntelligence(),
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "MSc Data Science"
+    assert education.institution == "Metro University"
+    assert education.field_of_study == "Data Science"
+    assert education.start_date == "2020"
+    assert education.end_date == "2022"
+
+
+def test_enricher_extracts_dates_from_multiline_education():
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+
+Education
+BSc Computer Science
+Eastern University
+2017 - 2021
+""",
+        ResumeIntelligence(),
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.degree == "BSc Computer Science"
+    assert education.institution == "Eastern University"
+    assert education.field_of_study == "Computer Science"
+    assert education.start_date == "2017"
+    assert education.end_date == "2021"
+
+
+def test_enricher_preserves_provider_education_dates_without_literal_evidence():
+    intelligence = ResumeIntelligence(
+        education=[
+            Education(
+                degree="BSc Computer Science",
+                institution="Eastern University",
+                start_date="2017",
+                end_date="2021",
+            )
+        ]
+    )
+
+    enriched = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha.rahman@example.com
+
+Education
+BSc Computer Science at Eastern University
+""",
+        intelligence,
+    )
+
+    assert len(enriched.education) == 1
+
+    education = enriched.education[0]
+
+    assert education.start_date == "2017"
+    assert education.end_date == "2021"
