@@ -182,3 +182,49 @@ def test_career_dataset_loader_rejects_missing_file(
         match="does not exist",
     ):
         load_career_eval_dataset(dataset_path)
+
+
+CAREER_V1_DATASET_PATH = (
+    Path(__file__).parents[1] / "evals" / "datasets" / "career_recommendation_v1.jsonl"
+)
+
+
+def test_career_v1_dataset_loads_ten_cases():
+    cases = load_career_eval_dataset(CAREER_V1_DATASET_PATH)
+
+    assert len(cases) == 10
+
+
+def test_career_v1_case_ids_are_unique():
+    cases = load_career_eval_dataset(CAREER_V1_DATASET_PATH)
+
+    case_ids = [case.case_id for case in cases]
+
+    assert len(case_ids) == len(set(case_ids))
+
+
+def test_career_v1_cases_have_descriptions_and_tags():
+    cases = load_career_eval_dataset(CAREER_V1_DATASET_PATH)
+
+    for case in cases:
+        assert case.description
+        assert case.tags
+
+
+def test_career_v1_contains_expected_cases():
+    cases = load_career_eval_dataset(CAREER_V1_DATASET_PATH)
+
+    case_ids = {case.case_id for case in cases}
+
+    assert case_ids == {
+        "backend_full_match",
+        "backend_skill_gap",
+        "goal_shift_backend",
+        "goal_shift_data",
+        "frontend_full_match",
+        "devops_full_match",
+        "machine_learning_full_match",
+        "entry_level_backend",
+        "empty_profile",
+        "unknown_goal_without_skills",
+    }
