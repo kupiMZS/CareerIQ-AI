@@ -186,6 +186,25 @@ def test_engine_requests_more_information_for_empty_input():
     ]
 
 
+def test_engine_requests_skills_for_unknown_goal_without_skills():
+    engine = CareerRecommendationEngine()
+
+    response = engine.recommend(
+        CareerRecommendationRequest(
+            profile=CareerProfile(
+                career_goal=("Quantum Computing Researcher"),
+            ),
+        )
+    )
+
+    assert response.status == "needs_more_information"
+    assert response.recommendations == []
+    assert response.roadmap == []
+    assert response.missing_information == [
+        "skills",
+    ]
+
+
 def test_engine_matches_skills_case_insensitively_without_duplicates():
     engine = CareerRecommendationEngine()
 

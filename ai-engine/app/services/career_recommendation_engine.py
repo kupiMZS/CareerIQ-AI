@@ -395,11 +395,13 @@ class CareerRecommendationEngine:
             )
 
         if not recommendations:
+            fallback_missing_information = (
+                ["skills"] if not skill_set else ["career_goal"]
+            )
+
             return CareerRecommendationResponse(
                 status="needs_more_information",
-                missing_information=[
-                    "career_goal",
-                ],
+                missing_information=(fallback_missing_information),
             )
 
         roadmap = _build_roadmap(recommendations[0])
