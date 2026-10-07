@@ -3,10 +3,14 @@ from statistics import fmean, pstdev
 from pydantic import BaseModel, Field
 
 from evals.runner import (
+    CareerBenchmarkSummary,
     ExtendedBenchmarkSummary,
     ResumeBenchmarkSummary,
 )
-from evals.scorer import EXTENDED_SCORER_VERSION
+from evals.scorer import (
+    CAREER_SCORER_VERSION,
+    EXTENDED_SCORER_VERSION,
+)
 
 
 class MetricStatistics(BaseModel):
@@ -29,6 +33,34 @@ class MetricStatistics(BaseModel):
         ge=0.0,
         le=1.0,
     )
+
+
+class CareerBenchmarkMetrics(BaseModel):
+    status_accuracy: MetricStatistics
+    top_career_accuracy: MetricStatistics
+    relevant_career_coverage: MetricStatistics
+    missing_skills_f1: MetricStatistics
+    roadmap_skills_f1: MetricStatistics
+    entry_level_accuracy: MetricStatistics
+    missing_information_f1: MetricStatistics
+    overall_mean: MetricStatistics
+
+
+class CareerBenchmarkReport(BaseModel):
+    engine: str
+    scorer_version: str
+    dataset: str
+
+    run_count: int = Field(
+        ge=1,
+    )
+
+    case_count: int = Field(
+        ge=1,
+    )
+
+    metrics: CareerBenchmarkMetrics
+    runs: list[CareerBenchmarkSummary]
 
 
 class BenchmarkMetrics(BaseModel):
@@ -186,5 +218,56 @@ def build_resume_benchmark_report(
         case_count=case_count,
         metrics=metrics,
         extended=extended_report,
+        runs=runs,
+    )
+
+
+def build_career_benchmark_report(
+    *,
+    engine: str,
+    dataset: str,
+    runs: list[CareerBenchmarkSummary],
+) -> CareerBenchmarkReport:
+    if not runs:
+        raise ValueError("Benchmark report requires at least one run.")
+
+    if any(run.engine != engine for run in runs):
+        raise ValueError("All benchmark runs must use the same engine.")
+
+    case_count = runs[0].case_count
+
+    if any(run.case_count != case_count for run in runs):
+        raise ValueError("All benchmark runs must use the same case count.")
+
+    metrics = CareerBenchmarkMetrics(
+        status_accuracy=_build_metric_statistics([run.status_accuracy for run in runs]),
+        top_career_accuracy=_build_metric_statistics(
+            [run.top_career_accuracy for run in runs]
+        ),
+        relevant_career_coverage=_build_metric_statistics(
+            [run.relevant_career_coverage for run in runs]
+        ),
+        missing_skills_f1=_build_metric_statistics(
+            [run.missing_skills_f1 for run in runs]
+        ),
+        roadmap_skills_f1=_build_metric_statistics(
+            [run.roadmap_skills_f1 for run in runs]
+        ),
+        entry_level_accuracy=_build_metric_statistics(
+            [run.entry_level_accuracy for run in runs]
+        ),
+        missing_information_f1=_build_metric_statistics(
+            [run.missing_information_f1 for run in runs]
+        ),
+        overall_mean=_build_metric_statistics([run.overall_mean for run in runs]),
+    )
+
+    return CareerBenchmarkReport(
+        engine=engine,
+        scorer_version=CAREER_SCORER_VERSION,
+        dataset=dataset,
+        run_count=len(runs),
+        case_count=case_count,
+        metrics=metrics,
         runs=runs,
     )
