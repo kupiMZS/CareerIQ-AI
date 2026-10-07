@@ -2,6 +2,7 @@ from collections.abc import Hashable, Iterable
 
 from pydantic import BaseModel, Field
 
+from app.schemas.career import CareerRecommendationResponse
 from app.schemas.resume import (
     Certification,
     Education,
@@ -10,6 +11,7 @@ from app.schemas.resume import (
     ResumeIntelligence,
 )
 from evals.schemas import (
+    ExpectedCareerRecommendation,
     ExpectedCertification,
     ExpectedEducation,
     ExpectedExperience,
@@ -20,6 +22,7 @@ from evals.schemas import (
     ExpectedResumeExtraction,
 )
 
+CAREER_SCORER_VERSION = "career-v1"
 EXTENDED_SCORER_VERSION = "extended-v2"
 
 
@@ -82,6 +85,23 @@ class ExtendedResumeExtractionScore(BaseModel):
     responsibilities: CollectionMetric
     projects: CollectionMetric
     certifications: CollectionMetric
+
+    overall: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class CareerRecommendationScore(BaseModel):
+    status: ScalarMetric
+    top_career: ScalarMetric
+
+    relevant_careers: CollectionMetric
+    missing_skills: CollectionMetric
+    roadmap_skills: CollectionMetric
+
+    entry_level: ScalarMetric
+    missing_information: CollectionMetric
 
     overall: float = Field(
         ge=0.0,
@@ -545,4 +565,97 @@ def score_extended_resume_extraction(
         projects=projects,
         certifications=certifications,
         overall=overall,
+    )
+
+
+def _score_optional_bool(
+    expected: bool | None,
+    actual: bool | None,
+) -> ScalarMetric:
+    if expected is None:
+        return ScalarMetric(
+            score=1.0,
+        )
+
+    return ScalarMetric(
+        score=float(expected == actual),
+    )
+
+
+def score_career_recommendation(
+    expected: ExpectedCareerRecommendation,
+    actual: CareerRecommendationResponse,
+) -> CareerRecommendationScore:
+    actual_titles = [
+        recommendation.career_title for recommendation in actual.recommendations
+    ]
+
+    actual_top_career = actual_titles[0] if actual_titles else None
+
+    top_recommendation = actual.recommendations[0] if actual.recommendations else None
+
+    actual_missing_skills = (
+        top_recommendation.missing_skills if top_recommendation is not None else []
+    )
+
+    actual_entry_level = (
+        top_recommendation.entry_level if top_recommendation is not None else None
+    )
+
+    actual_roadmap_skills = [skill for step in actual.roadmap for skill in step.skills]
+
+    status = _score_scalar(
+        expected.status,
+        actual.status,
+    )
+
+    top_career = _score_scalar(
+        expected.top_career,
+        actual_top_career,
+    )
+
+    relevant_careers = _score_collection(
+        _normalize_text_collection(expected.relevant_careers),
+        _normalize_text_collection(actual_titles),
+    )
+
+    missing_skills = _score_collection(
+        _normalize_text_collection(expected.missing_skills),
+        _normalize_text_collection(actual_missing_skills),
+    )
+
+    roadmap_skills = _score_collection(
+        _normalize_text_collection(expected.roadmap_skills),
+        _normalize_text_collection(actual_roadmap_skills),
+    )
+
+    entry_level = _score_optional_bool(
+        expected.entry_level,
+        actual_entry_level,
+    )
+
+    missing_information = _score_collection(
+        _normalize_text_collection(expected.missing_information),
+        _normalize_text_collection(actual.missing_information),
+    )
+
+    component_scores = [
+        status.score,
+        top_career.score,
+        relevant_careers.recall,
+        missing_skills.f1,
+        roadmap_skills.f1,
+        entry_level.score,
+        missing_information.f1,
+    ]
+
+    return CareerRecommendationScore(
+        status=status,
+        top_career=top_career,
+        relevant_careers=relevant_careers,
+        missing_skills=missing_skills,
+        roadmap_skills=roadmap_skills,
+        entry_level=entry_level,
+        missing_information=missing_information,
+        overall=(sum(component_scores) / len(component_scores)),
     )
