@@ -167,6 +167,17 @@ async def test_career_cli_runs_frozen_dataset(
     assert payload["run_count"] == 1
     assert payload["case_count"] == 10
 
+    metrics = payload["metrics"]
+
+    assert metrics["status_accuracy"]["mean"] == 1.0
+    assert metrics["top_career_accuracy"]["mean"] == 1.0
+    assert metrics["relevant_career_coverage"]["mean"] == 1.0
+    assert metrics["missing_skills_f1"]["mean"] == 1.0
+    assert metrics["roadmap_skills_f1"]["mean"] == 1.0
+    assert metrics["entry_level_accuracy"]["mean"] == 1.0
+    assert metrics["missing_information_f1"]["mean"] == 1.0
+    assert metrics["overall_mean"]["mean"] == 1.0
+
     assert output_path.exists()
 
     written_payload = json.loads(output_path.read_text(encoding="utf-8"))
