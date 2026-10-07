@@ -36,8 +36,7 @@ class ResumeAnalysisTest extends TestCase
         ], $overrides);
 
         Http::fake([
-            config('services.ai_engine.url').'/analyze'
-                => Http::response($response, 200),
+            config('services.ai_engine.url').'/analyze' => Http::response($response, 200),
         ]);
     }
 
@@ -196,8 +195,7 @@ class ResumeAnalysisTest extends TestCase
         );
 
         Http::fake([
-            config('services.ai_engine.url').'/analyze'
-                => Http::failedConnection(),
+            config('services.ai_engine.url').'/analyze' => Http::failedConnection(),
         ]);
 
         $response = $this->actingAs($user)
@@ -324,8 +322,7 @@ class ResumeAnalysisTest extends TestCase
                     'resume_id' => $resume->id,
                     'ats_score' => 90,
                     'extracted_name' => 'John Doe',
-                    'extracted_email' =>
-                        'john.doe@example.com',
+                    'extracted_email' => 'john.doe@example.com',
                     'status' => 'completed',
                 ]
             );
@@ -391,8 +388,7 @@ class ResumeAnalysisTest extends TestCase
                 'Laravel',
                 'Angular',
             ],
-            'summary' =>
-                'Strong software engineering resume.',
+            'summary' => 'Strong software engineering resume.',
             'status' => 'completed',
         ]);
 

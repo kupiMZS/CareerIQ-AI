@@ -1,32 +1,25 @@
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
 
-from app.analyzer import analyze_resume
-
+from app.core import get_settings
+from app.providers.factory import create_orchestrator
+from app.schemas.analysis import (
+    AnalyzeRequest,
+    AnalyzeResponse,
+)
+from app.schemas.career import (
+    CareerRecommendationRequest,
+    CareerRecommendationResponse,
+)
+from app.services import (
+    CareerRecommendationEngine,
+    build_analysis_response,
+    enrich_resume_intelligence,
+)
 
 app = FastAPI(
     title="CareerIQ AI Engine",
     version="1.0.0",
 )
-
-
-class AnalyzeRequest(BaseModel):
-    resume_text: str = Field(
-        ...,
-        min_length=1,
-        description="Extracted text from the user's resume",
-    )
-
-
-class AnalyzeResponse(BaseModel):
-    ats_score: int
-    extracted_name: str | None
-    extracted_email: str | None
-    skills: list[str]
-    education: list[str]
-    experience: list[str]
-    summary: str
-    status: str
 
 
 @app.get("/health")
@@ -37,8 +30,37 @@ def health_check():
     }
 
 
-@app.post("/analyze", response_model=AnalyzeResponse)
-def analyze_resume_endpoint(
+@app.post(
+    "/analyze",
+    response_model=AnalyzeResponse,
+)
+async def analyze_resume_endpoint(
     request: AnalyzeRequest,
 ):
-    return analyze_resume(request.resume_text)
+    settings = get_settings()
+
+    orchestrator = create_orchestrator(settings)
+
+    intelligence = await orchestrator.analyze_resume(request.resume_text)
+
+    enriched_intelligence = enrich_resume_intelligence(
+        request.resume_text,
+        intelligence,
+    )
+
+    return build_analysis_response(
+        request.resume_text,
+        enriched_intelligence,
+    )
+
+
+@app.post(
+    "/career/recommend",
+    response_model=CareerRecommendationResponse,
+)
+def recommend_career_endpoint(
+    request: CareerRecommendationRequest,
+):
+    engine = CareerRecommendationEngine()
+
+    return engine.recommend(request)

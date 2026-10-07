@@ -108,8 +108,22 @@ services:
     ports:
       - "8001:8000"
 
+    environment:
+      AI_PROVIDER: "${AI_PROVIDER:-rule_based}"
+      AI_MODEL: "${AI_MODEL:-rule-based-v1}"
+      AI_BASE_URL: "${AI_BASE_URL:-http://host.docker.internal:11434}"
+      AI_REQUEST_PATH: "${AI_REQUEST_PATH:-/api/chat}"
+      AI_TIMEOUT_SECONDS: "${AI_TIMEOUT_SECONDS:-60}"
+      AI_MAX_RETRIES: "${AI_MAX_RETRIES:-2}"
+      AI_RETRY_BACKOFF_SECONDS: "${AI_RETRY_BACKOFF_SECONDS:-0.5}"
+      AI_FALLBACK_ENABLED: "${AI_FALLBACK_ENABLED:-true}"
+      AI_FALLBACK_PROVIDER: "${AI_FALLBACK_PROVIDER:-rule_based}"
+
     networks:
       - careeriq-network
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 
 volumes:
