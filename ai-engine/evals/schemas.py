@@ -94,6 +94,22 @@ class ExpectedCertification(BaseModel):
     date: str | None = None
 
 
+class ExpectedPublication(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    title: str
+
+    authors: list[str] = Field(
+        default_factory=list,
+    )
+
+    venue: str | None = None
+    date: str | None = None
+    url: str | None = None
+
+
 class ExpectedExtendedResumeExtraction(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -114,6 +130,16 @@ class ExpectedExtendedResumeExtraction(BaseModel):
     )
 
     certifications: list[ExpectedCertification] = Field(
+        default_factory=list,
+    )
+
+
+class ExpectedPhase2ResumeExtraction(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    publications: list[ExpectedPublication] = Field(
         default_factory=list,
     )
 
@@ -142,6 +168,8 @@ class ResumeEvalCase(BaseModel):
     expected: ExpectedResumeExtraction
 
     extended_expected: ExpectedExtendedResumeExtraction | None = None
+
+    phase2_expected: ExpectedPhase2ResumeExtraction | None = None
 
 
 class ExpectedCareerRecommendation(BaseModel):

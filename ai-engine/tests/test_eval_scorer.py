@@ -6,6 +6,7 @@ from app.schemas.resume import (
     Education,
     Experience,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -16,11 +17,16 @@ from evals.schemas import (
     ExpectedExtendedEducation,
     ExpectedExtendedExperience,
     ExpectedExtendedResumeExtraction,
+    ExpectedPhase2ResumeExtraction,
     ExpectedProject,
+    ExpectedPublication,
     ExpectedResumeExtraction,
 )
 from evals.scorer import (
+    EXTENDED_SCORER_VERSION,
+    PHASE2_SCORER_VERSION,
     score_extended_resume_extraction,
+    score_phase2_resume_extraction,
     score_resume_extraction,
 )
 
@@ -591,3 +597,130 @@ def test_extended_scorer_does_not_change_core_overall_semantics():
     assert score.experience.f1 == 1.0
 
     assert score.overall == pytest.approx(0.6)
+
+
+def test_phase2_scorer_versions_are_independent():
+    assert EXTENDED_SCORER_VERSION == "extended-v2"
+    assert PHASE2_SCORER_VERSION == "phase2-v1"
+
+
+def test_phase2_publication_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Reliable Career Recommendation Systems",
+                authors=[
+                    "John Doe",
+                    "Jane Smith",
+                ],
+                venue="Example Computing Journal",
+                date="2025",
+                url="https://example.com/publication",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title=" reliable career recommendation systems ",
+                authors=[
+                    "JOHN DOE",
+                    "Jane Smith",
+                ],
+                venue="EXAMPLE COMPUTING JOURNAL",
+                date="2025",
+                url="https://example.com/publication",
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.precision == 1.0
+    assert score.publications.recall == 1.0
+    assert score.publications.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_publication_scorer_penalizes_wrong_metadata():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Reliable Career Recommendation Systems",
+                authors=["John Doe"],
+                venue="Example Computing Journal",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Reliable Career Recommendation Systems",
+                authors=["John Doe"],
+                venue="Wrong Journal",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.matched_count == 0
+    assert score.publications.precision == 0.0
+    assert score.publications.recall == 0.0
+    assert score.publications.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_publication_scorer_preserves_author_order():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Example Publication",
+                authors=[
+                    "First Author",
+                    "Second Author",
+                ],
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Example Publication",
+                authors=[
+                    "Second Author",
+                    "First Author",
+                ],
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.f1 == 0.0
+
+
+def test_phase2_publication_scorer_treats_empty_collections_as_perfect():
+    score = score_phase2_resume_extraction(
+        ExpectedPhase2ResumeExtraction(),
+        ResumeIntelligence(),
+    )
+
+    assert score.publications.precision == 1.0
+    assert score.publications.recall == 1.0
+    assert score.publications.f1 == 1.0
+    assert score.overall == 1.0

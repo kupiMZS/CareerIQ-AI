@@ -8,6 +8,7 @@ from app.schemas.resume import (
     Education,
     Experience,
     Project,
+    Publication,
     ResumeIntelligence,
 )
 from evals.schemas import (
@@ -18,12 +19,15 @@ from evals.schemas import (
     ExpectedExtendedEducation,
     ExpectedExtendedExperience,
     ExpectedExtendedResumeExtraction,
+    ExpectedPhase2ResumeExtraction,
     ExpectedProject,
+    ExpectedPublication,
     ExpectedResumeExtraction,
 )
 
 CAREER_SCORER_VERSION = "career-v1"
 EXTENDED_SCORER_VERSION = "extended-v2"
+PHASE2_SCORER_VERSION = "phase2-v1"
 
 
 class ScalarMetric(BaseModel):
@@ -85,6 +89,15 @@ class ExtendedResumeExtractionScore(BaseModel):
     responsibilities: CollectionMetric
     projects: CollectionMetric
     certifications: CollectionMetric
+
+    overall: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class Phase2ResumeExtractionScore(BaseModel):
+    publications: CollectionMetric
 
     overall: float = Field(
         ge=0.0,
@@ -452,6 +465,50 @@ def _actual_certification_signature(
     )
 
 
+def _normalize_ordered_text_collection(
+    values: Iterable[str],
+) -> tuple[str, ...]:
+    return tuple(
+        item for value in values if (item := _normalize_text(value)) is not None
+    )
+
+
+def _expected_publication_signature(
+    item: ExpectedPublication,
+) -> tuple[
+    str | None,
+    tuple[str, ...],
+    str | None,
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.title),
+        _normalize_ordered_text_collection(item.authors),
+        _normalize_text(item.venue),
+        _normalize_date(item.date),
+        _normalize_text(item.url),
+    )
+
+
+def _actual_publication_signature(
+    item: Publication,
+) -> tuple[
+    str | None,
+    tuple[str, ...],
+    str | None,
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.title),
+        _normalize_ordered_text_collection(item.authors),
+        _normalize_text(item.venue),
+        _normalize_date(item.date),
+        _normalize_text(item.url),
+    )
+
+
 def score_resume_extraction(
     expected: ExpectedResumeExtraction,
     actual: ResumeIntelligence,
@@ -565,6 +622,21 @@ def score_extended_resume_extraction(
         projects=projects,
         certifications=certifications,
         overall=overall,
+    )
+
+
+def score_phase2_resume_extraction(
+    expected: ExpectedPhase2ResumeExtraction,
+    actual: ResumeIntelligence,
+) -> Phase2ResumeExtractionScore:
+    publications = _score_collection(
+        (_expected_publication_signature(item) for item in expected.publications),
+        (_actual_publication_signature(item) for item in actual.publications),
+    )
+
+    return Phase2ResumeExtractionScore(
+        publications=publications,
+        overall=publications.f1,
     )
 
 

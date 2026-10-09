@@ -278,3 +278,43 @@ def test_extended_v1_contains_expected_cases():
     }
 
     assert case_ids == expected_case_ids
+
+
+def test_eval_case_accepts_phase2_publication_expectations():
+    case = ResumeEvalCase.model_validate(
+        {
+            "case_id": "phase2-publication-example",
+            "description": "Synthetic Phase 2 publication case",
+            "tags": [
+                "phase2",
+                "publications",
+            ],
+            "resume_text": ("Jane Smith\nPublications\nTitle: Example Publication"),
+            "expected": {
+                "name": "Jane Smith",
+            },
+            "phase2_expected": {
+                "publications": [
+                    {
+                        "title": "Example Publication",
+                        "authors": [
+                            "Jane Smith",
+                        ],
+                        "venue": "Example Journal",
+                        "date": "2025",
+                        "url": "https://example.com/publication",
+                    }
+                ]
+            },
+        }
+    )
+
+    assert case.phase2_expected is not None
+
+    publication = case.phase2_expected.publications[0]
+
+    assert publication.title == "Example Publication"
+    assert publication.authors == ["Jane Smith"]
+    assert publication.venue == "Example Journal"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/publication"
