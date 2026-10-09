@@ -54,6 +54,18 @@ class Certification(BaseModel):
     date: str | None = None
 
 
+class Publication(BaseModel):
+    title: str
+
+    authors: list[str] = Field(default_factory=list)
+
+    venue: str | None = None
+
+    date: str | None = None
+
+    url: str | None = None
+
+
 class ResumeIntelligence(BaseModel):
     analysis_version: str = "1.0"
 
@@ -70,3 +82,5 @@ class ResumeIntelligence(BaseModel):
     projects: list[Project] = Field(default_factory=list)
 
     certifications: list[Certification] = Field(default_factory=list)
+
+    publications: list[Publication] = Field(default_factory=list)

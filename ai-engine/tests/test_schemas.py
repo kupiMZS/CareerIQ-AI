@@ -7,6 +7,7 @@ from app.schemas.analysis import (
 )
 from app.schemas.resume import (
     Candidate,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -52,6 +53,18 @@ def test_resume_intelligence_schema():
                 confidence=0.90,
             ),
         ],
+        publications=[
+            Publication(
+                title="Reliable Career Recommendation Systems",
+                authors=[
+                    "John Doe",
+                    "Jane Smith",
+                ],
+                venue="Example Computing Journal",
+                date="2025",
+                url="https://example.com/publication",
+            )
+        ],
     )
 
     assert result.analysis_version == "1.0"
@@ -59,6 +72,34 @@ def test_resume_intelligence_schema():
     assert len(result.skills) == 2
     assert result.skills[0].name == "Python"
     assert result.skills[0].confidence == 0.98
+
+    assert len(result.publications) == 1
+    assert result.publications[0].title == "Reliable Career Recommendation Systems"
+    assert result.publications[0].authors == [
+        "John Doe",
+        "Jane Smith",
+    ]
+    assert result.publications[0].venue == "Example Computing Journal"
+    assert result.publications[0].date == "2025"
+    assert result.publications[0].url == "https://example.com/publication"
+
+
+def test_resume_intelligence_publications_default_to_empty_list():
+    result = ResumeIntelligence()
+
+    assert result.publications == []
+
+
+def test_publication_supports_partial_resume_data():
+    publication = Publication(
+        title="Career Intelligence with Language Models",
+    )
+
+    assert publication.title == "Career Intelligence with Language Models"
+    assert publication.authors == []
+    assert publication.venue is None
+    assert publication.date is None
+    assert publication.url is None
 
 
 def test_analyze_response_remains_backward_compatible():
