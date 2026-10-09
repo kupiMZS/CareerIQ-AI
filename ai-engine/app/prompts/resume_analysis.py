@@ -1,6 +1,6 @@
 from app.schemas.resume import ResumeIntelligence
 
-RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v2"
+RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v3"
 
 
 SYSTEM_PROMPT = """
@@ -27,6 +27,11 @@ Important rules:
   company = "ABC Technologies"
 - Preserve technology names such as Python, Laravel, Docker, MySQL,
   Angular, Git, AWS, and similar skills.
+- If publications are explicitly present, create one publication
+  object for each publication.
+- Preserve publication titles exactly when possible.
+- Copy publication authors, venue, date, and URL only when explicitly
+  present. Never infer missing publication metadata.
 - Use null for missing optional scalar values.
 - Use an empty list only when that category truly does not appear
   anywhere in the resume.
@@ -84,7 +89,8 @@ def build_resume_analysis_messages(
                 "- every education entry\n"
                 "- every experience entry\n"
                 "- projects\n"
-                "- certifications\n\n"
+                "- certifications\n"
+                "- publications\n\n"
                 f"Resume:\n{resume_text}"
             ),
         },

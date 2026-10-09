@@ -92,7 +92,7 @@ def test_local_benchmark_metadata_uses_model_and_prompt():
         == "qwen3:4b-instruct"
     )
 
-    assert get_benchmark_prompt_version("local_enriched") == "resume-analysis-v2"
+    assert get_benchmark_prompt_version("local_enriched") == "resume-analysis-v3"
 
 
 def test_rule_based_benchmark_has_no_llm_metadata():

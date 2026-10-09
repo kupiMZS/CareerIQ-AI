@@ -36,6 +36,18 @@ def build_success_response() -> dict:
         "experience": [],
         "projects": [],
         "certifications": [],
+        "publications": [
+            {
+                "title": "Reliable Career Recommendation Systems",
+                "authors": [
+                    "John Doe",
+                    "Jane Smith",
+                ],
+                "venue": "Example Computing Journal",
+                "date": "2025",
+                "url": "https://example.com/publication",
+            }
+        ],
     }
 
 
@@ -45,6 +57,15 @@ async def test_ollama_provider_returns_resume_intelligence():
         request: httpx.Request,
     ) -> httpx.Response:
         assert request.url.path == "/api/chat"
+
+        payload = json.loads(request.content)
+
+        assert "publications" in payload["format"]["properties"]
+
+        assert any(
+            "publications" in message["content"].casefold()
+            for message in payload["messages"]
+        )
 
         return httpx.Response(
             status_code=200,
@@ -70,6 +91,19 @@ async def test_ollama_provider_returns_resume_intelligence():
     assert result.candidate.name == "John Doe"
 
     assert result.skills[0].name == "Python"
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.title == "Reliable Career Recommendation Systems"
+    assert publication.authors == [
+        "John Doe",
+        "Jane Smith",
+    ]
+    assert publication.venue == "Example Computing Journal"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/publication"
 
 
 @pytest.mark.anyio
