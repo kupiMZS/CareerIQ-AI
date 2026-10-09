@@ -5,6 +5,7 @@ from app.schemas.resume import (
     Certification,
     Education,
     Experience,
+    Language,
     Project,
     Publication,
     ResumeIntelligence,
@@ -17,6 +18,7 @@ from evals.schemas import (
     ExpectedExtendedEducation,
     ExpectedExtendedExperience,
     ExpectedExtendedResumeExtraction,
+    ExpectedLanguage,
     ExpectedPhase2ResumeExtraction,
     ExpectedProject,
     ExpectedPublication,
@@ -25,8 +27,10 @@ from evals.schemas import (
 from evals.scorer import (
     EXTENDED_SCORER_VERSION,
     PHASE2_SCORER_VERSION,
+    PHASE2_V2_SCORER_VERSION,
     score_extended_resume_extraction,
     score_phase2_resume_extraction,
+    score_phase2_v2_resume_extraction,
     score_resume_extraction,
 )
 
@@ -602,6 +606,7 @@ def test_extended_scorer_does_not_change_core_overall_semantics():
 def test_phase2_scorer_versions_are_independent():
     assert EXTENDED_SCORER_VERSION == "extended-v2"
     assert PHASE2_SCORER_VERSION == "phase2-v1"
+    assert PHASE2_V2_SCORER_VERSION == "phase2-v2"
 
 
 def test_phase2_publication_scorer_gives_perfect_score():
@@ -724,3 +729,173 @@ def test_phase2_publication_scorer_treats_empty_collections_as_perfect():
     assert score.publications.recall == 1.0
     assert score.publications.f1 == 1.0
     assert score.overall == 1.0
+
+
+def test_phase2_v2_language_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Professional working proficiency",
+            ),
+            ExpectedLanguage(
+                name="German",
+                proficiency="B2",
+            ),
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name=" english ",
+                proficiency="PROFESSIONAL WORKING PROFICIENCY",
+            ),
+            Language(
+                name="GERMAN",
+                proficiency="b2",
+            ),
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.precision == 1.0
+    assert score.languages.recall == 1.0
+    assert score.languages.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v2_language_scorer_penalizes_wrong_proficiency():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Intermediate",
+            )
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.languages is not None
+    assert score.languages.matched_count == 0
+    assert score.languages.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_v2_language_scorer_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.precision == 1.0
+    assert score.languages.recall == 1.0
+    assert score.languages.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v2_publication_only_coverage_is_not_diluted():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.publications.f1 == 0.0
+    assert score.languages is None
+    assert score.overall == 0.0
+
+
+def test_phase2_v2_combined_score_means_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+
+    assert score.overall == pytest.approx(0.5)
+
+
+def test_phase2_v2_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v2_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )

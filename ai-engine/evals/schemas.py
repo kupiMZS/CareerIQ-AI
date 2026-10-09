@@ -134,14 +134,23 @@ class ExpectedExtendedResumeExtraction(BaseModel):
     )
 
 
+class ExpectedLanguage(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    name: str
+    proficiency: str | None = None
+
+
 class ExpectedPhase2ResumeExtraction(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
     )
 
-    publications: list[ExpectedPublication] = Field(
-        default_factory=list,
-    )
+    publications: list[ExpectedPublication] | None = None
+
+    languages: list[ExpectedLanguage] | None = None
 
 
 class ResumeEvalCase(BaseModel):

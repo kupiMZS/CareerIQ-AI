@@ -7,6 +7,7 @@ from app.schemas.resume import (
     Certification,
     Education,
     Experience,
+    Language,
     Project,
     Publication,
     ResumeIntelligence,
@@ -19,6 +20,7 @@ from evals.schemas import (
     ExpectedExtendedEducation,
     ExpectedExtendedExperience,
     ExpectedExtendedResumeExtraction,
+    ExpectedLanguage,
     ExpectedPhase2ResumeExtraction,
     ExpectedProject,
     ExpectedPublication,
@@ -28,6 +30,7 @@ from evals.schemas import (
 CAREER_SCORER_VERSION = "career-v1"
 EXTENDED_SCORER_VERSION = "extended-v2"
 PHASE2_SCORER_VERSION = "phase2-v1"
+PHASE2_V2_SCORER_VERSION = "phase2-v2"
 
 
 class ScalarMetric(BaseModel):
@@ -97,7 +100,8 @@ class ExtendedResumeExtractionScore(BaseModel):
 
 
 class Phase2ResumeExtractionScore(BaseModel):
-    publications: CollectionMetric
+    publications: CollectionMetric | None = None
+    languages: CollectionMetric | None = None
 
     overall: float = Field(
         ge=0.0,
@@ -509,6 +513,30 @@ def _actual_publication_signature(
     )
 
 
+def _expected_language_signature(
+    item: ExpectedLanguage,
+) -> tuple[
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.name),
+        _normalize_text(item.proficiency),
+    )
+
+
+def _actual_language_signature(
+    item: Language,
+) -> tuple[
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.name),
+        _normalize_text(item.proficiency),
+    )
+
+
 def score_resume_extraction(
     expected: ExpectedResumeExtraction,
     actual: ResumeIntelligence,
@@ -630,13 +658,53 @@ def score_phase2_resume_extraction(
     actual: ResumeIntelligence,
 ) -> Phase2ResumeExtractionScore:
     publications = _score_collection(
-        (_expected_publication_signature(item) for item in expected.publications),
+        (
+            _expected_publication_signature(item)
+            for item in (expected.publications or [])
+        ),
         (_actual_publication_signature(item) for item in actual.publications),
     )
 
     return Phase2ResumeExtractionScore(
         publications=publications,
         overall=publications.f1,
+    )
+
+
+def score_phase2_v2_resume_extraction(
+    expected: ExpectedPhase2ResumeExtraction,
+    actual: ResumeIntelligence,
+) -> Phase2ResumeExtractionScore:
+    publications = None
+    languages = None
+
+    covered_metrics: list[CollectionMetric] = []
+
+    if expected.publications is not None:
+        publications = _score_collection(
+            (_expected_publication_signature(item) for item in expected.publications),
+            (_actual_publication_signature(item) for item in actual.publications),
+        )
+
+        covered_metrics.append(publications)
+
+    if expected.languages is not None:
+        languages = _score_collection(
+            (_expected_language_signature(item) for item in expected.languages),
+            (_actual_language_signature(item) for item in actual.languages),
+        )
+
+        covered_metrics.append(languages)
+
+    if not covered_metrics:
+        raise ValueError("Phase 2 v2 scoring requires at least one covered field.")
+
+    overall = sum(metric.f1 for metric in covered_metrics) / len(covered_metrics)
+
+    return Phase2ResumeExtractionScore(
+        publications=publications,
+        languages=languages,
+        overall=overall,
     )
 
 

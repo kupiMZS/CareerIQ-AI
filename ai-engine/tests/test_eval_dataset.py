@@ -352,3 +352,39 @@ def test_phase2_publications_v1_contains_expected_cases():
         "phase2_publication_unstructured_not_inferred",
         "phase2_publication_absent",
     }
+
+
+def test_eval_case_accepts_phase2_language_expectations():
+    case = ResumeEvalCase.model_validate(
+        {
+            "case_id": "phase2-language-example",
+            "description": "Synthetic Phase 2 language case",
+            "tags": [
+                "phase2",
+                "languages",
+            ],
+            "resume_text": ("Jane Smith\nLanguages\nEnglish: Fluent"),
+            "expected": {
+                "name": "Jane Smith",
+            },
+            "phase2_expected": {
+                "languages": [
+                    {
+                        "name": "English",
+                        "proficiency": "Fluent",
+                    }
+                ]
+            },
+        }
+    )
+
+    assert case.phase2_expected is not None
+    assert case.phase2_expected.publications is None
+
+    assert case.phase2_expected.languages is not None
+    assert len(case.phase2_expected.languages) == 1
+
+    language = case.phase2_expected.languages[0]
+
+    assert language.name == "English"
+    assert language.proficiency == "Fluent"
