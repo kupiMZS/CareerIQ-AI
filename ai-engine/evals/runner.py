@@ -6,9 +6,11 @@ from evals.schemas import CareerEvalCase, ResumeEvalCase
 from evals.scorer import (
     CareerRecommendationScore,
     ExtendedResumeExtractionScore,
+    Phase2ResumeExtractionScore,
     ResumeExtractionScore,
     score_career_recommendation,
     score_extended_resume_extraction,
+    score_phase2_resume_extraction,
     score_resume_extraction,
 )
 
@@ -18,6 +20,8 @@ class ResumeBenchmarkCaseResult(BaseModel):
     score: ResumeExtractionScore
 
     extended_score: ExtendedResumeExtractionScore | None = None
+
+    phase2_score: Phase2ResumeExtractionScore | None = None
 
 
 class ExtendedBenchmarkSummary(BaseModel):
@@ -56,6 +60,22 @@ class ExtendedBenchmarkSummary(BaseModel):
     )
 
     certifications_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    overall_mean: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class Phase2BenchmarkSummary(BaseModel):
+    case_count: int = Field(
+        ge=1,
+    )
+
+    publications_f1: float = Field(
         ge=0.0,
         le=1.0,
     )
@@ -105,6 +125,8 @@ class ResumeBenchmarkSummary(BaseModel):
 
     extended: ExtendedBenchmarkSummary | None = None
 
+    phase2: Phase2BenchmarkSummary | None = None
+
     cases: list[ResumeBenchmarkCaseResult]
 
 
@@ -134,11 +156,20 @@ async def run_resume_benchmark(
                 actual,
             )
 
+        phase2_score = None
+
+        if case.phase2_expected is not None:
+            phase2_score = score_phase2_resume_extraction(
+                case.phase2_expected,
+                actual,
+            )
+
         results.append(
             ResumeBenchmarkCaseResult(
                 case_id=case.case_id,
                 score=score,
                 extended_score=extended_score,
+                phase2_score=phase2_score,
             )
         )
 
@@ -200,6 +231,26 @@ async def run_resume_benchmark(
             ),
         )
 
+    phase2_scores = [
+        result.phase2_score for result in results if result.phase2_score is not None
+    ]
+
+    phase2_summary = None
+
+    if phase2_scores:
+        phase2_case_count = len(phase2_scores)
+
+        phase2_summary = Phase2BenchmarkSummary(
+            case_count=phase2_case_count,
+            publications_f1=(
+                sum(score.publications.f1 for score in phase2_scores)
+                / phase2_case_count
+            ),
+            overall_mean=(
+                sum(score.overall for score in phase2_scores) / phase2_case_count
+            ),
+        )
+
     return ResumeBenchmarkSummary(
         provider=provider_name,
         case_count=case_count,
@@ -210,6 +261,7 @@ async def run_resume_benchmark(
         experience_f1=experience_f1,
         overall_mean=overall_mean,
         extended=extended_summary,
+        phase2=phase2_summary,
         cases=results,
     )
 

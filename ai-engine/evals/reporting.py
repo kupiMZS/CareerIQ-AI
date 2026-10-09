@@ -5,11 +5,13 @@ from pydantic import BaseModel, Field
 from evals.runner import (
     CareerBenchmarkSummary,
     ExtendedBenchmarkSummary,
+    Phase2BenchmarkSummary,
     ResumeBenchmarkSummary,
 )
 from evals.scorer import (
     CAREER_SCORER_VERSION,
     EXTENDED_SCORER_VERSION,
+    PHASE2_SCORER_VERSION,
 )
 
 
@@ -95,6 +97,21 @@ class ExtendedBenchmarkReport(BaseModel):
     metrics: ExtendedBenchmarkMetrics
 
 
+class Phase2BenchmarkMetrics(BaseModel):
+    publications_f1: MetricStatistics
+    overall_mean: MetricStatistics
+
+
+class Phase2BenchmarkReport(BaseModel):
+    scorer_version: str
+
+    case_count: int = Field(
+        ge=1,
+    )
+
+    metrics: Phase2BenchmarkMetrics
+
+
 class ResumeBenchmarkReport(BaseModel):
     provider: str
     model: str | None = None
@@ -112,6 +129,8 @@ class ResumeBenchmarkReport(BaseModel):
     metrics: BenchmarkMetrics
 
     extended: ExtendedBenchmarkReport | None = None
+
+    phase2: Phase2BenchmarkReport | None = None
 
     runs: list[ResumeBenchmarkSummary]
 
@@ -165,6 +184,28 @@ def _build_extended_report(
     )
 
 
+def _build_phase2_report(
+    runs: list[Phase2BenchmarkSummary],
+) -> Phase2BenchmarkReport:
+    case_count = runs[0].case_count
+
+    if any(run.case_count != case_count for run in runs):
+        raise ValueError("All benchmark runs must use the same Phase 2 case count.")
+
+    metrics = Phase2BenchmarkMetrics(
+        publications_f1=(
+            _build_metric_statistics([run.publications_f1 for run in runs])
+        ),
+        overall_mean=(_build_metric_statistics([run.overall_mean for run in runs])),
+    )
+
+    return Phase2BenchmarkReport(
+        scorer_version=PHASE2_SCORER_VERSION,
+        case_count=case_count,
+        metrics=metrics,
+    )
+
+
 def build_resume_benchmark_report(
     *,
     provider: str,
@@ -209,6 +250,22 @@ def build_resume_benchmark_report(
 
         extended_report = _build_extended_report(extended_runs)
 
+    phase2_values = [run.phase2 for run in runs]
+
+    has_phase2 = [value is not None for value in phase2_values]
+
+    if any(has_phase2) and not all(has_phase2):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 evaluation coverage."
+        )
+
+    phase2_report = None
+
+    if all(has_phase2):
+        phase2_runs = [value for value in phase2_values if value is not None]
+
+        phase2_report = _build_phase2_report(phase2_runs)
+
     return ResumeBenchmarkReport(
         provider=provider,
         model=model,
@@ -218,6 +275,7 @@ def build_resume_benchmark_report(
         case_count=case_count,
         metrics=metrics,
         extended=extended_report,
+        phase2=phase2_report,
         runs=runs,
     )
 

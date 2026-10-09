@@ -5,6 +5,7 @@ from evals.reporting import (
 )
 from evals.runner import (
     ExtendedBenchmarkSummary,
+    Phase2BenchmarkSummary,
     ResumeBenchmarkSummary,
 )
 
@@ -34,6 +35,19 @@ def build_extended_summary(
     )
 
 
+def build_phase2_summary(
+    *,
+    case_count: int = 3,
+    publications_f1: float = 1.0,
+    overall_mean: float = 1.0,
+) -> Phase2BenchmarkSummary:
+    return Phase2BenchmarkSummary(
+        case_count=case_count,
+        publications_f1=publications_f1,
+        overall_mean=overall_mean,
+    )
+
+
 def build_summary(
     *,
     provider: str = "local_enriched",
@@ -45,6 +59,7 @@ def build_summary(
     experience_f1: float = 1.0,
     overall_mean: float = 1.0,
     extended: ExtendedBenchmarkSummary | None = None,
+    phase2: Phase2BenchmarkSummary | None = None,
 ) -> ResumeBenchmarkSummary:
     return ResumeBenchmarkSummary(
         provider=provider,
@@ -56,6 +71,7 @@ def build_summary(
         experience_f1=experience_f1,
         overall_mean=overall_mean,
         extended=extended,
+        phase2=phase2,
         cases=[],
     )
 
@@ -278,6 +294,87 @@ def test_report_rejects_mixed_extended_case_counts():
                 build_summary(
                     provider="local",
                     extended=build_extended_summary(
+                        case_count=3,
+                    ),
+                ),
+            ],
+        )
+
+
+def test_report_aggregates_phase2_metrics():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v3",
+        dataset="phase2-publications.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    publications_f1=0.6,
+                    overall_mean=0.7,
+                ),
+            ),
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    publications_f1=0.8,
+                    overall_mean=0.9,
+                ),
+            ),
+        ],
+    )
+
+    assert report.phase2 is not None
+    assert report.phase2.scorer_version == "phase2-v1"
+    assert report.phase2.case_count == 3
+
+    assert report.phase2.metrics.publications_f1.mean == pytest.approx(0.7)
+    assert report.phase2.metrics.overall_mean.mean == pytest.approx(0.8)
+
+
+def test_report_rejects_mixed_phase2_coverage():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 evaluation coverage",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v3",
+            dataset="phase2-publications.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(),
+                ),
+                build_summary(
+                    provider="local",
+                ),
+            ],
+        )
+
+
+def test_report_rejects_mixed_phase2_case_counts():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 case count",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v3",
+            dataset="phase2-publications.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        case_count=2,
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
                         case_count=3,
                     ),
                 ),

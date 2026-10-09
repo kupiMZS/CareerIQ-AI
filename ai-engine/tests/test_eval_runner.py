@@ -3,12 +3,15 @@ import pytest
 from app.providers.base import ResumeAnalysisProvider
 from app.schemas.resume import (
     Candidate,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
 from evals.runner import run_resume_benchmark
 from evals.schemas import (
     ExpectedExtendedResumeExtraction,
+    ExpectedPhase2ResumeExtraction,
+    ExpectedPublication,
     ExpectedResumeExtraction,
     ResumeEvalCase,
 )
@@ -34,6 +37,7 @@ def build_case(
     case_id: str,
     expected: ExpectedResumeExtraction,
     extended_expected: ExpectedExtendedResumeExtraction | None = None,
+    phase2_expected: ExpectedPhase2ResumeExtraction | None = None,
 ) -> ResumeEvalCase:
     return ResumeEvalCase(
         case_id=case_id,
@@ -41,6 +45,7 @@ def build_case(
         resume_text="Synthetic resume",
         expected=expected,
         extended_expected=extended_expected,
+        phase2_expected=phase2_expected,
     )
 
 
@@ -92,6 +97,7 @@ async def test_runner_produces_perfect_aggregate_score():
     assert summary.experience_f1 == 1.0
     assert summary.overall_mean == 1.0
     assert summary.extended is None
+    assert summary.phase2 is None
 
 
 @pytest.mark.anyio
@@ -247,3 +253,105 @@ async def test_runner_averages_extended_scores_separately():
 
     # Core scoring remains independent.
     assert summary.overall_mean == 1.0
+
+
+@pytest.mark.anyio
+async def test_runner_scores_only_phase2_cases():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            publications=[
+                Publication(
+                    title="Example Publication",
+                    authors=["Jane Smith"],
+                    venue="Example Journal",
+                    date="2025",
+                )
+            ]
+        )
+    )
+
+    cases = [
+        build_case(
+            "phase2-case",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                publications=[
+                    ExpectedPublication(
+                        title="Example Publication",
+                        authors=["Jane Smith"],
+                        venue="Example Journal",
+                        date="2025",
+                    )
+                ]
+            ),
+        ),
+        build_case(
+            "core-only-case",
+            ExpectedResumeExtraction(),
+        ),
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.phase2 is not None
+    assert summary.phase2.case_count == 1
+    assert summary.phase2.publications_f1 == 1.0
+    assert summary.phase2.overall_mean == 1.0
+
+    assert summary.cases[0].phase2_score is not None
+    assert summary.cases[1].phase2_score is None
+
+    assert summary.overall_mean == 1.0
+
+
+@pytest.mark.anyio
+async def test_runner_averages_phase2_scores():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            publications=[
+                Publication(
+                    title="Matched Publication",
+                )
+            ]
+        )
+    )
+
+    cases = [
+        build_case(
+            "phase2-match",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                publications=[
+                    ExpectedPublication(
+                        title="Matched Publication",
+                    )
+                ]
+            ),
+        ),
+        build_case(
+            "phase2-mismatch",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                publications=[
+                    ExpectedPublication(
+                        title="Different Publication",
+                    )
+                ]
+            ),
+        ),
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.phase2 is not None
+    assert summary.phase2.case_count == 2
+    assert summary.phase2.publications_f1 == 0.5
+    assert summary.phase2.overall_mean == 0.5
