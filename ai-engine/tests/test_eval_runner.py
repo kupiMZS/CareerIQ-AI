@@ -3,6 +3,7 @@ import pytest
 from app.providers.base import ResumeAnalysisProvider
 from app.schemas.resume import (
     Candidate,
+    Language,
     Publication,
     ResumeIntelligence,
     Skill,
@@ -10,6 +11,7 @@ from app.schemas.resume import (
 from evals.runner import run_resume_benchmark
 from evals.schemas import (
     ExpectedExtendedResumeExtraction,
+    ExpectedLanguage,
     ExpectedPhase2ResumeExtraction,
     ExpectedPublication,
     ExpectedResumeExtraction,
@@ -298,8 +300,10 @@ async def test_runner_scores_only_phase2_cases():
     )
 
     assert summary.phase2 is not None
+    assert summary.phase2.scorer_version == "phase2-v1"
     assert summary.phase2.case_count == 1
     assert summary.phase2.publications_f1 == 1.0
+    assert summary.phase2.languages_f1 is None
     assert summary.phase2.overall_mean == 1.0
 
     assert summary.cases[0].phase2_score is not None
@@ -355,3 +359,77 @@ async def test_runner_averages_phase2_scores():
     assert summary.phase2.case_count == 2
     assert summary.phase2.publications_f1 == 0.5
     assert summary.phase2.overall_mean == 0.5
+
+
+@pytest.mark.anyio
+async def test_runner_routes_language_expectations_to_phase2_v2():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            languages=[
+                Language(
+                    name="English",
+                    proficiency="Fluent",
+                )
+            ]
+        )
+    )
+
+    cases = [
+        build_case(
+            "phase2-language-case",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                languages=[
+                    ExpectedLanguage(
+                        name="English",
+                        proficiency="Fluent",
+                    )
+                ]
+            ),
+        )
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.phase2 is not None
+    assert summary.phase2.scorer_version == "phase2-v2"
+    assert summary.phase2.case_count == 1
+    assert summary.phase2.publications_f1 is None
+    assert summary.phase2.languages_f1 == 1.0
+    assert summary.phase2.overall_mean == 1.0
+
+
+@pytest.mark.anyio
+async def test_runner_rejects_mixed_phase2_scorer_versions():
+    provider = StaticProvider(ResumeIntelligence())
+
+    cases = [
+        build_case(
+            "phase2-publication-v1",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                publications=[],
+            ),
+        ),
+        build_case(
+            "phase2-language-v2",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                languages=[],
+            ),
+        ),
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 scorer version",
+    ):
+        await run_resume_benchmark(
+            provider_name="test",
+            provider=provider,
+            cases=cases,
+        )

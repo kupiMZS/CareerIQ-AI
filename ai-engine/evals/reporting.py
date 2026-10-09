@@ -11,7 +11,6 @@ from evals.runner import (
 from evals.scorer import (
     CAREER_SCORER_VERSION,
     EXTENDED_SCORER_VERSION,
-    PHASE2_SCORER_VERSION,
 )
 
 
@@ -98,7 +97,8 @@ class ExtendedBenchmarkReport(BaseModel):
 
 
 class Phase2BenchmarkMetrics(BaseModel):
-    publications_f1: MetricStatistics
+    publications_f1: MetricStatistics | None = None
+    languages_f1: MetricStatistics | None = None
     overall_mean: MetricStatistics
 
 
@@ -188,19 +188,54 @@ def _build_phase2_report(
     runs: list[Phase2BenchmarkSummary],
 ) -> Phase2BenchmarkReport:
     case_count = runs[0].case_count
+    scorer_version = runs[0].scorer_version
 
     if any(run.case_count != case_count for run in runs):
         raise ValueError("All benchmark runs must use the same Phase 2 case count.")
 
+    if any(run.scorer_version != scorer_version for run in runs):
+        raise ValueError("All benchmark runs must use the same Phase 2 scorer version.")
+
+    publication_values = [run.publications_f1 for run in runs]
+
+    has_publications = [value is not None for value in publication_values]
+
+    if any(has_publications) and not all(has_publications):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 publication metric coverage."
+        )
+
+    language_values = [run.languages_f1 for run in runs]
+
+    has_languages = [value is not None for value in language_values]
+
+    if any(has_languages) and not all(has_languages):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 language metric coverage."
+        )
+
+    publications_f1 = None
+
+    if all(has_publications):
+        publications_f1 = _build_metric_statistics(
+            [value for value in publication_values if value is not None]
+        )
+
+    languages_f1 = None
+
+    if all(has_languages):
+        languages_f1 = _build_metric_statistics(
+            [value for value in language_values if value is not None]
+        )
+
     metrics = Phase2BenchmarkMetrics(
-        publications_f1=(
-            _build_metric_statistics([run.publications_f1 for run in runs])
-        ),
+        publications_f1=publications_f1,
+        languages_f1=languages_f1,
         overall_mean=(_build_metric_statistics([run.overall_mean for run in runs])),
     )
 
     return Phase2BenchmarkReport(
-        scorer_version=PHASE2_SCORER_VERSION,
+        scorer_version=scorer_version,
         case_count=case_count,
         metrics=metrics,
     )

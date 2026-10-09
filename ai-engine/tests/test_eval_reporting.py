@@ -37,13 +37,17 @@ def build_extended_summary(
 
 def build_phase2_summary(
     *,
+    scorer_version: str = "phase2-v1",
     case_count: int = 3,
-    publications_f1: float = 1.0,
+    publications_f1: float | None = 1.0,
+    languages_f1: float | None = None,
     overall_mean: float = 1.0,
 ) -> Phase2BenchmarkSummary:
     return Phase2BenchmarkSummary(
+        scorer_version=scorer_version,
         case_count=case_count,
         publications_f1=publications_f1,
+        languages_f1=languages_f1,
         overall_mean=overall_mean,
     )
 
@@ -328,6 +332,7 @@ def test_report_aggregates_phase2_metrics():
     assert report.phase2 is not None
     assert report.phase2.scorer_version == "phase2-v1"
     assert report.phase2.case_count == 3
+    assert report.phase2.metrics.languages_f1 is None
 
     assert report.phase2.metrics.publications_f1.mean == pytest.approx(0.7)
     assert report.phase2.metrics.overall_mean.mean == pytest.approx(0.8)
@@ -376,6 +381,73 @@ def test_report_rejects_mixed_phase2_case_counts():
                     provider="local",
                     phase2=build_phase2_summary(
                         case_count=3,
+                    ),
+                ),
+            ],
+        )
+
+
+def test_report_aggregates_phase2_v2_language_metrics():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v4",
+        dataset="phase2-languages.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v2",
+                    publications_f1=None,
+                    languages_f1=0.6,
+                    overall_mean=0.6,
+                ),
+            ),
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v2",
+                    publications_f1=None,
+                    languages_f1=0.8,
+                    overall_mean=0.8,
+                ),
+            ),
+        ],
+    )
+
+    assert report.phase2 is not None
+    assert report.phase2.scorer_version == "phase2-v2"
+    assert report.phase2.metrics.publications_f1 is None
+
+    assert report.phase2.metrics.languages_f1 is not None
+    assert report.phase2.metrics.languages_f1.mean == pytest.approx(0.7)
+
+    assert report.phase2.metrics.overall_mean.mean == pytest.approx(0.7)
+
+
+def test_report_rejects_mixed_phase2_scorer_versions():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 scorer version",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v4",
+            dataset="phase2-mixed.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v1",
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v2",
+                        publications_f1=None,
+                        languages_f1=1.0,
                     ),
                 ),
             ],

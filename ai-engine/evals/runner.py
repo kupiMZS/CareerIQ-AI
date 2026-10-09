@@ -4,6 +4,8 @@ from app.providers.base import ResumeAnalysisProvider
 from app.services.career_recommendation_engine import CareerRecommendationEngine
 from evals.schemas import CareerEvalCase, ResumeEvalCase
 from evals.scorer import (
+    PHASE2_SCORER_VERSION,
+    PHASE2_V2_SCORER_VERSION,
     CareerRecommendationScore,
     ExtendedResumeExtractionScore,
     Phase2ResumeExtractionScore,
@@ -11,6 +13,7 @@ from evals.scorer import (
     score_career_recommendation,
     score_extended_resume_extraction,
     score_phase2_resume_extraction,
+    score_phase2_v2_resume_extraction,
     score_resume_extraction,
 )
 
@@ -71,11 +74,20 @@ class ExtendedBenchmarkSummary(BaseModel):
 
 
 class Phase2BenchmarkSummary(BaseModel):
+    scorer_version: str
+
     case_count: int = Field(
         ge=1,
     )
 
-    publications_f1: float = Field(
+    publications_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    languages_f1: float | None = Field(
+        default=None,
         ge=0.0,
         le=1.0,
     )
@@ -130,6 +142,20 @@ class ResumeBenchmarkSummary(BaseModel):
     cases: list[ResumeBenchmarkCaseResult]
 
 
+def _phase2_scorer_version_for_case(
+    case: ResumeEvalCase,
+) -> str | None:
+    if case.phase2_expected is None:
+        return None
+
+    if case.phase2_expected.languages is not None:
+        return PHASE2_V2_SCORER_VERSION
+
+    # Publication-only expectations, including the historical
+    # empty Phase 2 expectation, retain the frozen v1 semantics.
+    return PHASE2_SCORER_VERSION
+
+
 async def run_resume_benchmark(
     provider_name: str,
     provider: ResumeAnalysisProvider,
@@ -139,6 +165,8 @@ async def run_resume_benchmark(
         raise ValueError("Benchmark requires at least one evaluation case.")
 
     results: list[ResumeBenchmarkCaseResult] = []
+
+    phase2_scorer_versions: set[str] = set()
 
     for case in cases:
         actual = await provider.analyze_resume(case.resume_text)
@@ -158,11 +186,27 @@ async def run_resume_benchmark(
 
         phase2_score = None
 
-        if case.phase2_expected is not None:
-            phase2_score = score_phase2_resume_extraction(
-                case.phase2_expected,
-                actual,
-            )
+        case_phase2_scorer_version = _phase2_scorer_version_for_case(case)
+
+        if case_phase2_scorer_version is not None:
+            phase2_scorer_versions.add(case_phase2_scorer_version)
+
+            if len(phase2_scorer_versions) > 1:
+                raise ValueError(
+                    "All Phase 2 cases in one benchmark run "
+                    "must use the same Phase 2 scorer version."
+                )
+
+            if case_phase2_scorer_version == PHASE2_V2_SCORER_VERSION:
+                phase2_score = score_phase2_v2_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+            else:
+                phase2_score = score_phase2_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
 
         results.append(
             ResumeBenchmarkCaseResult(
@@ -238,13 +282,35 @@ async def run_resume_benchmark(
     phase2_summary = None
 
     if phase2_scores:
+        if len(phase2_scorer_versions) != 1:
+            raise ValueError(
+                "Phase 2 benchmark results require exactly one scorer version."
+            )
+
         phase2_case_count = len(phase2_scores)
 
+        publication_f1_values = [
+            score.publications.f1
+            for score in phase2_scores
+            if score.publications is not None
+        ]
+
+        language_f1_values = [
+            score.languages.f1 for score in phase2_scores if score.languages is not None
+        ]
+
         phase2_summary = Phase2BenchmarkSummary(
+            scorer_version=next(iter(phase2_scorer_versions)),
             case_count=phase2_case_count,
             publications_f1=(
-                sum(score.publications.f1 for score in phase2_scores)
-                / phase2_case_count
+                sum(publication_f1_values) / len(publication_f1_values)
+                if publication_f1_values
+                else None
+            ),
+            languages_f1=(
+                sum(language_f1_values) / len(language_f1_values)
+                if language_f1_values
+                else None
             ),
             overall_mean=(
                 sum(score.overall for score in phase2_scores) / phase2_case_count
