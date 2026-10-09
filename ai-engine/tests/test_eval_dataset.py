@@ -388,3 +388,56 @@ def test_eval_case_accepts_phase2_language_expectations():
 
     assert language.name == "English"
     assert language.proficiency == "Fluent"
+
+
+PHASE2_LANGUAGES_V1_DATASET_PATH = (
+    EVALS_DIR / "resume_extraction_phase2_languages_v1.jsonl"
+)
+
+
+def test_phase2_languages_v1_dataset_loads_seven_cases():
+    cases = load_resume_eval_dataset(PHASE2_LANGUAGES_V1_DATASET_PATH)
+
+    assert len(cases) == 7
+
+
+def test_phase2_languages_v1_cases_have_language_coverage():
+    cases = load_resume_eval_dataset(PHASE2_LANGUAGES_V1_DATASET_PATH)
+
+    assert all(case.phase2_expected is not None for case in cases)
+
+    assert all(
+        case.phase2_expected.languages is not None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(
+        case.phase2_expected.publications is None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(case.extended_expected is None for case in cases)
+
+
+def test_phase2_languages_v1_contains_expected_cases():
+    case_ids = get_case_ids(PHASE2_LANGUAGES_V1_DATASET_PATH)
+
+    assert case_ids == {
+        "phase2_language_complete",
+        "phase2_language_multiple_formats",
+        "phase2_language_missing_proficiency",
+        "phase2_language_section_alias",
+        "phase2_language_labeled_records",
+        "phase2_language_no_inference",
+        "phase2_language_absent",
+    }
+
+
+def test_phase2_languages_v1_has_descriptions_and_tags():
+    cases = load_resume_eval_dataset(PHASE2_LANGUAGES_V1_DATASET_PATH)
+
+    assert all(case.description.strip() for case in cases)
+
+    assert all(case.tags for case in cases)
