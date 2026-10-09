@@ -6,6 +6,7 @@ from app.schemas.resume import (
     Education,
     Experience,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -80,6 +81,28 @@ CERTIFICATION_INLINE_PATTERN = re.compile(
 )
 
 CERTIFICATION_DATE_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
+
+PUBLICATION_FIELD_PATTERN = re.compile(
+    r"^(?P<field>"
+    r"publication|title|author|authors|venue|journal|conference|"
+    r"date|year|url|link"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+PUBLICATION_FIELD_ALIASES = {
+    "publication": "title",
+    "title": "title",
+    "author": "authors",
+    "authors": "authors",
+    "venue": "venue",
+    "journal": "venue",
+    "conference": "venue",
+    "date": "date",
+    "year": "date",
+    "url": "url",
+    "link": "url",
+}
 
 
 def _normalize(
@@ -340,6 +363,136 @@ def _extract_structured_certifications(
         index += 3
 
     return certifications
+
+
+def _parse_publication_authors(
+    value: str,
+) -> list[str]:
+    authors = re.split(
+        r"\s*(?:;|,|\band\b|&)\s*",
+        value,
+        flags=re.IGNORECASE,
+    )
+
+    return [author.strip() for author in authors if author.strip()]
+
+
+def _extract_structured_publications(
+    publication_lines: list[str],
+) -> list[Publication]:
+    lines = [
+        _strip_list_prefix(line)
+        for line in publication_lines
+        if _strip_list_prefix(line)
+    ]
+
+    publications: list[Publication] = []
+
+    current_title: str | None = None
+    current_authors: list[str] = []
+    current_venue: str | None = None
+    current_date: str | None = None
+    current_url: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_title
+        nonlocal current_authors
+        nonlocal current_venue
+        nonlocal current_date
+        nonlocal current_url
+
+        if current_title:
+            publications.append(
+                Publication(
+                    title=current_title,
+                    authors=current_authors,
+                    venue=current_venue,
+                    date=current_date,
+                    url=current_url,
+                )
+            )
+
+        current_title = None
+        current_authors = []
+        current_venue = None
+        current_date = None
+        current_url = None
+
+    for line in lines:
+        match = PUBLICATION_FIELD_PATTERN.fullmatch(line)
+
+        if match is None:
+            continue
+
+        field = PUBLICATION_FIELD_ALIASES[match.group("field").casefold()]
+
+        value = match.group("value").strip()
+
+        if field == "title":
+            flush_current()
+            current_title = value
+            continue
+
+        if current_title is None:
+            # Metadata without an explicit title is not strong enough
+            # evidence to create a publication record.
+            continue
+
+        if field == "authors":
+            current_authors = _parse_publication_authors(value)
+        elif field == "venue":
+            current_venue = value
+        elif field == "date":
+            current_date = value
+        elif field == "url":
+            current_url = value
+
+    flush_current()
+
+    return publications
+
+
+def _merge_publication_values(
+    existing: Publication,
+    evidence: Publication,
+) -> None:
+    if evidence.authors:
+        existing.authors = list(evidence.authors)
+
+    if evidence.venue is not None:
+        existing.venue = evidence.venue
+
+    if evidence.date is not None:
+        existing.date = evidence.date
+
+    if evidence.url is not None:
+        existing.url = evidence.url
+
+
+def _reconcile_explicit_publications(
+    intelligence: ResumeIntelligence,
+    publication_lines: list[str],
+) -> None:
+    evidence_publications = _extract_structured_publications(publication_lines)
+
+    for evidence in evidence_publications:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.publications
+                if _normalize(item.title) == _normalize(evidence.title)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.publications.append(evidence)
+            continue
+
+        _merge_publication_values(
+            matching_entry,
+            evidence,
+        )
 
 
 def _has_date_evidence(
@@ -1348,5 +1501,16 @@ def enrich_resume_intelligence(
 
         if structured_certifications:
             enriched.certifications = structured_certifications
+
+    publication_lines = sections.get(
+        "publications",
+        [],
+    )
+
+    if publication_lines:
+        _reconcile_explicit_publications(
+            enriched,
+            publication_lines,
+        )
 
     return enriched

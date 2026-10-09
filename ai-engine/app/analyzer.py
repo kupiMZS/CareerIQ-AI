@@ -79,6 +79,14 @@ SECTION_ALIASES = {
     "certifications": "certifications",
     "certificates": "certifications",
     "professional certifications": "certifications",
+    # Publications
+    "publication": "publications",
+    "publications": "publications",
+    "research publications": "publications",
+    "selected publications": "publications",
+    "academic publications": "publications",
+    "published work": "publications",
+    "research papers": "publications",
 }
 
 

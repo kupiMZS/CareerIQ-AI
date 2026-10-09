@@ -4,6 +4,7 @@ from app.schemas.resume import (
     Education,
     Experience,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -941,3 +942,145 @@ BSc Computer Science at Eastern University
 
     assert education.start_date == "2017"
     assert education.end_date == "2021"
+
+
+def test_enricher_extracts_labeled_publication_from_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha@example.com
+
+Publications
+Title: Reliable Career Recommendation Systems
+Authors: Aisha Rahman; Omar Hassan
+Journal: Journal of Career Intelligence
+Year: 2025
+URL: https://example.com/career-intelligence
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.title == "Reliable Career Recommendation Systems"
+    assert publication.authors == [
+        "Aisha Rahman",
+        "Omar Hassan",
+    ]
+    assert publication.venue == "Journal of Career Intelligence"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/career-intelligence"
+
+
+def test_enricher_recognizes_research_publications_section_alias():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Research Publications
+Title: Explainable Resume Intelligence
+Authors: John Doe
+Conference: Career AI Conference
+Year: 2024
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 1
+    assert result.publications[0].title == "Explainable Resume Intelligence"
+    assert result.publications[0].venue == "Career AI Conference"
+    assert result.publications[0].date == "2024"
+
+
+def test_enricher_extracts_multiple_labeled_publications():
+    result = enrich_resume_intelligence(
+        """
+Jane Smith
+jane@example.com
+
+Selected Publications
+Title: Resume Parsing with Structured Language Models
+Authors: Jane Smith; Alex Chen
+Venue: Example AI Journal
+Year: 2024
+
+Title: Evidence-Based Career Recommendations
+Authors: Jane Smith
+Venue: Career Systems Conference
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 2
+
+    assert (
+        result.publications[0].title == "Resume Parsing with Structured Language Models"
+    )
+    assert result.publications[1].title == "Evidence-Based Career Recommendations"
+
+
+def test_enricher_reconciles_explicit_publication_metadata():
+    intelligence = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Reliable Career Recommendation Systems",
+                authors=["Incorrect Author"],
+                venue=None,
+                date=None,
+                url=None,
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Publications
+Title: Reliable Career Recommendation Systems
+Authors: John Doe; Jane Smith
+Journal: Example Computing Journal
+Year: 2025
+URL: https://example.com/publication
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.authors == [
+        "John Doe",
+        "Jane Smith",
+    ]
+    assert publication.venue == "Example Computing Journal"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/publication"
+
+
+def test_enricher_preserves_provider_publication_when_section_is_unstructured():
+    intelligence = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Existing Provider Publication",
+                authors=["John Doe"],
+                date="2025",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Publications
+Doe, John. Existing Provider Publication. Example Journal, 2025.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.publications) == 1
+    assert result.publications[0].title == "Existing Provider Publication"
+    assert result.publications[0].authors == ["John Doe"]
+    assert result.publications[0].date == "2025"
