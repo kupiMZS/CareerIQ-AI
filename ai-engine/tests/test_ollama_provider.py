@@ -48,6 +48,16 @@ def build_success_response() -> dict:
                 "url": "https://example.com/publication",
             }
         ],
+        "languages": [
+            {
+                "name": "English",
+                "proficiency": "Professional working proficiency",
+            },
+            {
+                "name": "German",
+                "proficiency": "B2",
+            },
+        ],
     }
 
 
@@ -61,9 +71,15 @@ async def test_ollama_provider_returns_resume_intelligence():
         payload = json.loads(request.content)
 
         assert "publications" in payload["format"]["properties"]
+        assert "languages" in payload["format"]["properties"]
 
         assert any(
             "publications" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "languages" in message["content"].casefold()
             for message in payload["messages"]
         )
 
@@ -104,6 +120,14 @@ async def test_ollama_provider_returns_resume_intelligence():
     assert publication.venue == "Example Computing Journal"
     assert publication.date == "2025"
     assert publication.url == "https://example.com/publication"
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Professional working proficiency"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
 
 
 @pytest.mark.anyio

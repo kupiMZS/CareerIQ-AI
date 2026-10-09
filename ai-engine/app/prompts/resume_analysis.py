@@ -1,6 +1,6 @@
 from app.schemas.resume import ResumeIntelligence
 
-RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v3"
+RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v4"
 
 
 SYSTEM_PROMPT = """
@@ -32,6 +32,15 @@ Important rules:
 - Preserve publication titles exactly when possible.
 - Copy publication authors, venue, date, and URL only when explicitly
   present. Never infer missing publication metadata.
+- If languages are explicitly present, create one language object for
+  each language.
+- Preserve each language name exactly when possible.
+- Copy language proficiency only when it is explicitly stated.
+- Preserve explicit proficiency text such as Native, Fluent,
+  Professional working proficiency, B2, or IELTS 7.5 exactly when
+  possible.
+- Never infer language ability or proficiency from nationality,
+  location, name, education, or other indirect context.
 - Use null for missing optional scalar values.
 - Use an empty list only when that category truly does not appear
   anywhere in the resume.
@@ -90,7 +99,8 @@ def build_resume_analysis_messages(
                 "- every experience entry\n"
                 "- projects\n"
                 "- certifications\n"
-                "- publications\n\n"
+                "- publications\n"
+                "- languages and explicit proficiency levels\n\n"
                 f"Resume:\n{resume_text}"
             ),
         },
