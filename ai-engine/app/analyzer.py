@@ -87,6 +87,12 @@ SECTION_ALIASES = {
     "academic publications": "publications",
     "published work": "publications",
     "research papers": "publications",
+    # Languages
+    "language": "languages",
+    "languages": "languages",
+    "language skills": "languages",
+    "language proficiency": "languages",
+    "spoken languages": "languages",
 }
 
 

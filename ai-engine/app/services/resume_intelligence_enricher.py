@@ -5,6 +5,7 @@ from app.schemas.resume import (
     Certification,
     Education,
     Experience,
+    Language,
     Project,
     Publication,
     ResumeIntelligence,
@@ -103,6 +104,19 @@ PUBLICATION_FIELD_ALIASES = {
     "url": "url",
     "link": "url",
 }
+
+LANGUAGE_FIELD_PATTERN = re.compile(
+    r"^(?P<field>language|name|proficiency|level)\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+LANGUAGE_INLINE_PATTERN = re.compile(
+    r"^(?P<name>.+?)(?:\s*:\s*|\s+[-–—]\s+)(?P<proficiency>.+)$"
+)
+
+LANGUAGE_PARENTHETICAL_PATTERN = re.compile(
+    r"^(?P<name>[^()]+?)\s*\((?P<proficiency>[^()]+)\)$"
+)
 
 
 def _normalize(
@@ -490,6 +504,126 @@ def _reconcile_explicit_publications(
             continue
 
         _merge_publication_values(
+            matching_entry,
+            evidence,
+        )
+
+
+def _extract_structured_languages(
+    language_lines: list[str],
+) -> list[Language]:
+    lines = [
+        _strip_list_prefix(line) for line in language_lines if _strip_list_prefix(line)
+    ]
+
+    languages: list[Language] = []
+
+    current_name: str | None = None
+    current_proficiency: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_name
+        nonlocal current_proficiency
+
+        if current_name:
+            languages.append(
+                Language(
+                    name=current_name,
+                    proficiency=current_proficiency,
+                )
+            )
+
+        current_name = None
+        current_proficiency = None
+
+    for line in lines:
+        field_match = LANGUAGE_FIELD_PATTERN.fullmatch(line)
+
+        if field_match is not None:
+            field = field_match.group("field").casefold()
+            value = field_match.group("value").strip()
+
+            if field in {"language", "name"}:
+                flush_current()
+                current_name = value
+                continue
+
+            if field in {"proficiency", "level"}:
+                if current_name is not None:
+                    current_proficiency = value
+
+                continue
+
+        parenthetical_match = LANGUAGE_PARENTHETICAL_PATTERN.fullmatch(line)
+
+        if parenthetical_match is not None:
+            flush_current()
+
+            languages.append(
+                Language(
+                    name=parenthetical_match.group("name").strip(),
+                    proficiency=parenthetical_match.group("proficiency").strip(),
+                )
+            )
+
+            continue
+
+        inline_match = LANGUAGE_INLINE_PATTERN.fullmatch(line)
+
+        if inline_match is not None:
+            flush_current()
+
+            languages.append(
+                Language(
+                    name=inline_match.group("name").strip(),
+                    proficiency=inline_match.group("proficiency").strip(),
+                )
+            )
+
+            continue
+
+        flush_current()
+
+        languages.append(
+            Language(
+                name=line,
+            )
+        )
+
+    flush_current()
+
+    return languages
+
+
+def _merge_language_values(
+    existing: Language,
+    evidence: Language,
+) -> None:
+    if evidence.proficiency is not None:
+        existing.proficiency = evidence.proficiency
+
+
+def _reconcile_explicit_languages(
+    intelligence: ResumeIntelligence,
+    language_lines: list[str],
+) -> None:
+    evidence_languages = _extract_structured_languages(language_lines)
+
+    for evidence in evidence_languages:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.languages
+                if _normalize(item.name) == _normalize(evidence.name)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.languages.append(evidence)
+            continue
+
+        _merge_language_values(
             matching_entry,
             evidence,
         )
@@ -1511,6 +1645,17 @@ def enrich_resume_intelligence(
         _reconcile_explicit_publications(
             enriched,
             publication_lines,
+        )
+
+    language_lines = sections.get(
+        "languages",
+        [],
+    )
+
+    if language_lines:
+        _reconcile_explicit_languages(
+            enriched,
+            language_lines,
         )
 
     return enriched

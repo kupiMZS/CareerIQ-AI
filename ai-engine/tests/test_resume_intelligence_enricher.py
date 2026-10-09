@@ -3,6 +3,7 @@ from app.schemas.resume import (
     Certification,
     Education,
     Experience,
+    Language,
     Project,
     Publication,
     ResumeIntelligence,
@@ -1084,3 +1085,188 @@ Doe, John. Existing Provider Publication. Example Journal, 2025.
     assert result.publications[0].title == "Existing Provider Publication"
     assert result.publications[0].authors == ["John Doe"]
     assert result.publications[0].date == "2025"
+
+
+def test_enricher_extracts_explicit_languages_and_proficiencies():
+    result = enrich_resume_intelligence(
+        """
+Nadia Rahman
+nadia@example.com
+
+Languages
+English: Professional working proficiency
+German - B2
+Bangla
+French (Conversational)
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 4
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Professional working proficiency"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
+
+    assert result.languages[2].name == "Bangla"
+    assert result.languages[2].proficiency is None
+
+    assert result.languages[3].name == "French"
+    assert result.languages[3].proficiency == "Conversational"
+
+
+def test_enricher_recognizes_language_skills_section_alias():
+    result = enrich_resume_intelligence(
+        """
+Amina Karim
+amina@example.com
+
+Language Skills
+English: Fluent
+Spanish: B1
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
+
+    assert result.languages[1].name == "Spanish"
+    assert result.languages[1].proficiency == "B1"
+
+
+def test_enricher_extracts_labeled_language_records():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Languages
+Language: English
+Proficiency: Native
+Language: German
+Level: B2
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Native"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
+
+
+def test_enricher_reconciles_explicit_language_with_provider():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Intermediate",
+            ),
+            Language(
+                name="Bangla",
+                proficiency="Native",
+            ),
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Languages
+English: Fluent
+German: B2
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 3
+
+    english = next(
+        language for language in result.languages if language.name == "English"
+    )
+
+    bangla = next(
+        language for language in result.languages if language.name == "Bangla"
+    )
+
+    german = next(
+        language for language in result.languages if language.name == "German"
+    )
+
+    assert english.proficiency == "Fluent"
+    assert bangla.proficiency == "Native"
+    assert german.proficiency == "B2"
+
+
+def test_enricher_bare_language_does_not_erase_provider_proficiency():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Languages
+English
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 1
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
+
+
+def test_enricher_does_not_infer_languages_without_language_section():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Professional Summary
+Based in Germany and experienced with international teams.
+
+Education
+BA English Literature
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.languages == []
+
+
+def test_enricher_preserves_provider_languages_without_explicit_section():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Professional Summary
+International software engineer.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 1
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
