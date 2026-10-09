@@ -7,6 +7,7 @@ from app.schemas.analysis import (
 )
 from app.schemas.resume import (
     Candidate,
+    Language,
     Publication,
     ResumeIntelligence,
     Skill,
@@ -128,3 +129,52 @@ def test_analyze_response_remains_backward_compatible():
         "docker",
     ]
     assert response.status == "completed"
+
+
+def test_language_schema_supports_explicit_proficiency():
+    language = Language(
+        name="English",
+        proficiency="Professional working proficiency",
+    )
+
+    assert language.name == "English"
+    assert language.proficiency == "Professional working proficiency"
+
+
+def test_language_schema_allows_missing_proficiency():
+    language = Language(
+        name="Bangla",
+    )
+
+    assert language.name == "Bangla"
+    assert language.proficiency is None
+
+
+def test_resume_intelligence_supports_multiple_languages():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="IELTS 7.5",
+            ),
+            Language(
+                name="German",
+                proficiency="B2",
+            ),
+        ]
+    )
+
+    assert len(intelligence.languages) == 2
+
+    assert intelligence.languages[0].name == "English"
+    assert intelligence.languages[0].proficiency == "IELTS 7.5"
+
+    assert intelligence.languages[1].name == "German"
+    assert intelligence.languages[1].proficiency == "B2"
+
+
+def test_resume_intelligence_defaults_languages_to_empty_list():
+    intelligence = ResumeIntelligence()
+
+    assert intelligence.languages == []
+    assert intelligence.analysis_version == "1.0"

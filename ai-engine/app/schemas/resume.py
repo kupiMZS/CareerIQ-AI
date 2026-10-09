@@ -66,6 +66,12 @@ class Publication(BaseModel):
     url: str | None = None
 
 
+class Language(BaseModel):
+    name: str
+
+    proficiency: str | None = None
+
+
 class ResumeIntelligence(BaseModel):
     analysis_version: str = "1.0"
 
@@ -84,3 +90,5 @@ class ResumeIntelligence(BaseModel):
     certifications: list[Certification] = Field(default_factory=list)
 
     publications: list[Publication] = Field(default_factory=list)
+
+    languages: list[Language] = Field(default_factory=list)
