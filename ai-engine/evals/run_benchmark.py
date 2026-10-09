@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
         "--provider",
         choices=[
             "rule_based",
+            "rule_based_enriched",
             "local",
             "local_enriched",
         ],
@@ -82,6 +83,14 @@ def build_benchmark_provider(
         return EnrichedResumeProvider(
             create_provider(
                 "local",
+                settings,
+            )
+        )
+
+    if provider_name == "rule_based_enriched":
+        return EnrichedResumeProvider(
+            create_provider(
+                "rule_based",
                 settings,
             )
         )

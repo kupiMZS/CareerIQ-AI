@@ -15,6 +15,10 @@ V3_DATASET_PATH = EVALS_DIR / "resume_extraction_v3.jsonl"
 
 EXTENDED_V1_DATASET_PATH = EVALS_DIR / "resume_extraction_extended_v1.jsonl"
 
+PHASE2_PUBLICATIONS_V1_DATASET_PATH = (
+    EVALS_DIR / "resume_extraction_phase2_publications_v1.jsonl"
+)
+
 
 def get_case_ids(
     dataset_path: Path,
@@ -47,6 +51,7 @@ def test_v3_dataset_loads_twenty_five_cases():
         V2_DATASET_PATH,
         V3_DATASET_PATH,
         EXTENDED_V1_DATASET_PATH,
+        PHASE2_PUBLICATIONS_V1_DATASET_PATH,
     ],
 )
 def test_dataset_case_ids_are_unique(
@@ -119,6 +124,7 @@ def test_v3_contains_expected_hard_cases():
         V2_DATASET_PATH,
         V3_DATASET_PATH,
         EXTENDED_V1_DATASET_PATH,
+        PHASE2_PUBLICATIONS_V1_DATASET_PATH,
     ],
 )
 def test_dataset_cases_have_descriptions_and_tags(
@@ -318,3 +324,31 @@ def test_eval_case_accepts_phase2_publication_expectations():
     assert publication.venue == "Example Journal"
     assert publication.date == "2025"
     assert publication.url == "https://example.com/publication"
+
+
+def test_phase2_publications_v1_dataset_loads_seven_cases():
+    cases = load_resume_eval_dataset(PHASE2_PUBLICATIONS_V1_DATASET_PATH)
+
+    assert len(cases) == 7
+
+
+def test_phase2_publications_v1_cases_have_phase2_expectations():
+    cases = load_resume_eval_dataset(PHASE2_PUBLICATIONS_V1_DATASET_PATH)
+
+    assert all(case.phase2_expected is not None for case in cases)
+
+    assert all(case.extended_expected is None for case in cases)
+
+
+def test_phase2_publications_v1_contains_expected_cases():
+    case_ids = get_case_ids(PHASE2_PUBLICATIONS_V1_DATASET_PATH)
+
+    assert case_ids == {
+        "phase2_publication_complete",
+        "phase2_publication_multiple",
+        "phase2_publication_missing_optional_metadata",
+        "phase2_publication_section_alias",
+        "phase2_publication_field_aliases",
+        "phase2_publication_unstructured_not_inferred",
+        "phase2_publication_absent",
+    }
