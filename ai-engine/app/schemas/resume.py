@@ -72,6 +72,16 @@ class Language(BaseModel):
     proficiency: str | None = None
 
 
+class Achievement(BaseModel):
+    title: str
+
+    description: str | None = None
+
+    organization: str | None = None
+
+    date: str | None = None
+
+
 class ResumeIntelligence(BaseModel):
     analysis_version: str = "1.0"
 
@@ -92,3 +102,5 @@ class ResumeIntelligence(BaseModel):
     publications: list[Publication] = Field(default_factory=list)
 
     languages: list[Language] = Field(default_factory=list)
+
+    achievements: list[Achievement] = Field(default_factory=list)

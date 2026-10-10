@@ -6,6 +6,7 @@ from app.schemas.analysis import (
     AnalyzeResponse,
 )
 from app.schemas.resume import (
+    Achievement,
     Candidate,
     Language,
     Publication,
@@ -177,4 +178,61 @@ def test_resume_intelligence_defaults_languages_to_empty_list():
     intelligence = ResumeIntelligence()
 
     assert intelligence.languages == []
+    assert intelligence.analysis_version == "1.0"
+
+
+def test_achievement_schema_supports_explicit_metadata():
+    achievement = Achievement(
+        title="Best Capstone Project",
+        description=("Selected as the top project from 42 teams."),
+        organization="Example University",
+        date="2025",
+    )
+
+    assert achievement.title == "Best Capstone Project"
+    assert achievement.description == "Selected as the top project from 42 teams."
+    assert achievement.organization == "Example University"
+    assert achievement.date == "2025"
+
+
+def test_achievement_schema_allows_partial_resume_data():
+    achievement = Achievement(
+        title="Employee of the Month",
+    )
+
+    assert achievement.title == "Employee of the Month"
+    assert achievement.description is None
+    assert achievement.organization is None
+    assert achievement.date is None
+
+
+def test_resume_intelligence_supports_multiple_achievements():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Winner, AI Hackathon",
+                organization="Example Tech",
+                date="2025",
+            ),
+            Achievement(
+                title="Dean's List",
+                organization="Example University",
+            ),
+        ]
+    )
+
+    assert len(intelligence.achievements) == 2
+
+    assert intelligence.achievements[0].title == "Winner, AI Hackathon"
+    assert intelligence.achievements[0].organization == "Example Tech"
+    assert intelligence.achievements[0].date == "2025"
+
+    assert intelligence.achievements[1].title == "Dean's List"
+    assert intelligence.achievements[1].organization == "Example University"
+
+
+def test_resume_intelligence_defaults_achievements_to_empty_list():
+    intelligence = ResumeIntelligence()
+
+    assert intelligence.achievements == []
     assert intelligence.analysis_version == "1.0"
