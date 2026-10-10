@@ -58,6 +58,14 @@ def build_success_response() -> dict:
                 "proficiency": "B2",
             },
         ],
+        "achievements": [
+            {
+                "title": "Winner, AI Hackathon",
+                "description": ("Won first place among 30 participating teams."),
+                "organization": "Example Tech",
+                "date": "2025",
+            }
+        ],
     }
 
 
@@ -72,6 +80,7 @@ async def test_ollama_provider_returns_resume_intelligence():
 
         assert "publications" in payload["format"]["properties"]
         assert "languages" in payload["format"]["properties"]
+        assert "achievements" in payload["format"]["properties"]
 
         assert any(
             "publications" in message["content"].casefold()
@@ -80,6 +89,11 @@ async def test_ollama_provider_returns_resume_intelligence():
 
         assert any(
             "languages" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "achievement" in message["content"].casefold()
             for message in payload["messages"]
         )
 
@@ -128,6 +142,15 @@ async def test_ollama_provider_returns_resume_intelligence():
 
     assert result.languages[1].name == "German"
     assert result.languages[1].proficiency == "B2"
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.title == "Winner, AI Hackathon"
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
 
 
 @pytest.mark.anyio

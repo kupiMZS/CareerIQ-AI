@@ -1,6 +1,6 @@
 from app.schemas.resume import ResumeIntelligence
 
-RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v4"
+RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v5"
 
 
 SYSTEM_PROMPT = """
@@ -41,6 +41,15 @@ Important rules:
   possible.
 - Never infer language ability or proficiency from nationality,
   location, name, education, or other indirect context.
+- If achievements, awards, honors, scholarships, competition results,
+  or explicit recognition are present, create one achievement object
+  for each distinct achievement.
+- Preserve each achievement title exactly when possible.
+- Copy an achievement description, organization, and date only when
+  explicitly stated in the resume.
+- Never infer an achievement from job performance, responsibilities,
+  education, grades, project quality, seniority, or other indirect
+  context.
 - Use null for missing optional scalar values.
 - Use an empty list only when that category truly does not appear
   anywhere in the resume.
@@ -100,7 +109,9 @@ def build_resume_analysis_messages(
                 "- projects\n"
                 "- certifications\n"
                 "- publications\n"
-                "- languages and explicit proficiency levels\n\n"
+                "- languages and explicit proficiency levels\n"
+                "- achievements, awards, honors, scholarships, "
+                "and explicit recognition\n\n"
                 f"Resume:\n{resume_text}"
             ),
         },
