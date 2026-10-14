@@ -36,7 +36,32 @@ _REQUIREMENT_WORDING = re.compile(
     r"requirements?|required\s+skills?)\s*:"
 )
 
-_CONTRAST_WORDING = re.compile(r"(?i)\b(?:but|however)\b")
+
+def _marker_targets_skill(
+    excerpt: str,
+    marker_pattern: re.Pattern[str],
+    skill_name: str,
+) -> bool:
+    """Require the named skill directly after a context marker."""
+    target_pattern = re.compile(rf"\s*{re.escape(skill_name)}(?!\w)")
+
+    return any(
+        target_pattern.match(excerpt, marker.end()) is not None
+        for marker in marker_pattern.finditer(excerpt)
+    )
+
+
+def _rejection_has_local_contrast(
+    record: EvidenceRecord,
+) -> bool:
+    """Recognize contrast immediately following a skill mention."""
+    pattern = re.compile(
+        rf"(?<!\w){re.escape(record.extracted_value)}(?!\w)"
+        r"\s*[,;]?\s*(?:but|however)\b",
+        flags=re.IGNORECASE,
+    )
+
+    return pattern.search(record.evidence_text) is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,18 +84,32 @@ def _detect_context_review_flags(
         ...,
     ],
 ) -> tuple[SkillEvidenceReviewFlag, ...]:
-    """Flag narrow contextual wording for review, not judgment."""
+    """Identify narrow, skill-scoped wording for manual review."""
     flags: list[SkillEvidenceReviewFlag] = []
 
-    if any(_ASPIRATIONAL_WORDING.search(record.evidence_text) for record, _ in entries):
+    if any(
+        _marker_targets_skill(
+            record.evidence_text,
+            _ASPIRATIONAL_WORDING,
+            record.extracted_value,
+        )
+        for record, _ in entries
+    ):
         flags.append("aspirational_wording")
 
-    if any(_REQUIREMENT_WORDING.search(record.evidence_text) for record, _ in entries):
+    if any(
+        _marker_targets_skill(
+            record.evidence_text,
+            _REQUIREMENT_WORDING,
+            record.extracted_value,
+        )
+        for record, _ in entries
+    ):
         flags.append("requirement_wording")
 
     if any(
         result.status == "explicitly_unsupported"
-        and _CONTRAST_WORDING.search(record.evidence_text)
+        and _rejection_has_local_contrast(record)
         for record, result in entries
     ):
         flags.append("rejection_with_contrast")
