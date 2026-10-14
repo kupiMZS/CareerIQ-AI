@@ -1,6 +1,7 @@
 from app.schemas.resume import (
     Achievement,
     Candidate,
+    CareerProfile,
     Certification,
     Education,
     Experience,
@@ -1458,3 +1459,182 @@ Backend software engineer.
     assert result.achievements[0].title == "Dean's List"
     assert result.achievements[0].organization == "Example University"
     assert result.achievements[0].date == "2024"
+
+
+def test_enricher_extracts_explicit_career_interests():
+    result = enrich_resume_intelligence(
+        """
+Nadia Rahman
+nadia@example.com
+
+Career Interests
+- Distributed systems
+- Platform engineering
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == [
+        "Distributed systems",
+        "Platform engineering",
+    ]
+
+    assert result.career_profile.career_goals == []
+
+
+def test_enricher_extracts_explicit_career_goals():
+    result = enrich_resume_intelligence(
+        """
+Amina Karim
+amina@example.com
+
+Career Goals
+Transition into platform engineering
+Lead a cloud infrastructure team
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == []
+
+    assert result.career_profile.career_goals == [
+        "Transition into platform engineering",
+        "Lead a cloud infrastructure team",
+    ]
+
+
+def test_enricher_recognizes_career_objective_as_explicit_goal():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Career Objective
+Move into a senior backend engineering role
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_goals == [
+        "Move into a senior backend engineering role",
+    ]
+
+
+def test_enricher_extracts_inline_career_profile_evidence():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Career Interests: Cloud infrastructure; Distributed systems
+Career Goal: Transition into platform engineering
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == [
+        "Cloud infrastructure",
+        "Distributed systems",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Transition into platform engineering",
+    ]
+
+
+def test_enricher_merges_explicit_career_profile_without_duplicates():
+    intelligence = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed Systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        )
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Career Interests
+distributed systems
+Cloud infrastructure
+
+Career Goals
+Become a platform engineer
+Lead a platform engineering team
+""".strip(),
+        intelligence,
+    )
+
+    assert result.career_profile.career_interests == [
+        "Distributed Systems",
+        "Cloud infrastructure",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Become a platform engineer",
+        "Lead a platform engineering team",
+    ]
+
+
+def test_enricher_preserves_provider_career_profile_without_explicit_evidence():
+    intelligence = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Machine learning",
+            ],
+            career_goals=[
+                "Become an ML engineer",
+            ],
+        )
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Farah Islam
+farah@example.com
+
+Professional Summary
+Backend engineer with five years of experience.
+""".strip(),
+        intelligence,
+    )
+
+    assert result.career_profile.career_interests == [
+        "Machine learning",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Become an ML engineer",
+    ]
+
+
+def test_enricher_does_not_infer_career_profile_from_other_resume_fields():
+    result = enrich_resume_intelligence(
+        """
+Hasan Karim
+hasan@example.com
+Senior Backend Engineer
+
+Skills
+Python
+Docker
+Kubernetes
+
+Experience
+Senior Backend Engineer at Example Labs
+Led cloud platform modernization.
+
+Projects
+Distributed Systems Platform
+Built a Kubernetes-based internal platform.
+
+Achievements
+Employee of the Year
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == []
+    assert result.career_profile.career_goals == []

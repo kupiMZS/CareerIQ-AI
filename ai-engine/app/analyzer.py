@@ -111,7 +111,16 @@ SECTION_ALIASES = {
     "recognition": "achievements",
     "recognitions": "achievements",
     "accomplishment": "achievements",
-    "accomplishments": "achievements",
+    "accomplishments": "achievements",  # Career profile
+    "career profile": "career_profile",
+    "career interests": "career_interests",
+    "professional interests": "career_interests",
+    "areas of interest": "career_interests",
+    "career goals": "career_goals",
+    "professional goals": "career_goals",
+    "career aspirations": "career_goals",
+    "professional aspirations": "career_goals",
+    "professional objective": "career_goals",
 }
 
 

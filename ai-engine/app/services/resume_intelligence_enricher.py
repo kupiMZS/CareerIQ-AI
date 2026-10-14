@@ -1,6 +1,6 @@
 import re
 
-from app.analyzer import analyze_resume, detect_sections
+from app.analyzer import SECTION_ALIASES, analyze_resume, detect_sections
 from app.schemas.resume import (
     Achievement,
     Certification,
@@ -146,6 +146,47 @@ ACHIEVEMENT_FIELD_ALIASES = {
     "date": "date",
     "year": "date",
 }
+
+CAREER_PROFILE_SECTION_ALIASES = {
+    "career profile": "career_profile",
+    "career interests": "career_interests",
+    "professional interests": "career_interests",
+    "areas of interest": "career_interests",
+    "career goals": "career_goals",
+    "professional goals": "career_goals",
+    "career aspirations": "career_goals",
+    "professional aspirations": "career_goals",
+    "professional objective": "career_goals",
+    # Keep these mapped to summary in SECTION_ALIASES.
+    # Career-profile enrichment recognizes them independently so
+    # existing analyzer behavior remains backward compatible.
+    "career objective": "career_goals",
+    "objective": "career_goals",
+}
+
+CAREER_INTEREST_INLINE_PATTERN = re.compile(
+    r"^(?:"
+    r"career interests?|professional interests?|areas? of interest"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+CAREER_GOAL_INLINE_PATTERN = re.compile(
+    r"^(?:"
+    r"career goals?|professional goals?|"
+    r"career objectives?|professional objectives?|objectives?|"
+    r"career aspirations?|professional aspirations?"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+CAREER_PROFILE_LOCAL_LABEL_PATTERN = re.compile(
+    r"^(?:"
+    r"interest|interests|goal|goals|"
+    r"objective|objectives|aspiration|aspirations"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
 
 
 def _normalize(
@@ -776,6 +817,159 @@ def _reconcile_explicit_achievements(
             matching_entry,
             evidence,
         )
+
+
+def _normalize_section_heading(
+    value: str,
+) -> str:
+    normalized = value.strip()
+
+    normalized = re.sub(
+        r"[:：]\s*$",
+        "",
+        normalized,
+    )
+
+    normalized = re.sub(
+        r"\s+",
+        " ",
+        normalized,
+    )
+
+    return normalized.casefold()
+
+
+def _split_explicit_career_profile_values(
+    value: str,
+) -> list[str]:
+    values: list[str] = []
+
+    for part in re.split(
+        r"\s*(?:;|\|)\s*",
+        value,
+    ):
+        cleaned = " ".join(_strip_list_prefix(part).split())
+
+        if cleaned:
+            values.append(cleaned)
+
+    return values
+
+
+def _append_unique_career_profile_values(
+    target: list[str],
+    evidence: list[str],
+) -> None:
+    seen = {_normalize(value) for value in target}
+
+    for value in evidence:
+        normalized = _normalize(value)
+
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        target.append(value)
+
+
+def _extract_explicit_career_profile(
+    resume_text: str,
+) -> tuple[list[str], list[str]]:
+    interests: list[str] = []
+    goals: list[str] = []
+
+    current_section: str | None = None
+
+    for raw_line in resume_text.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        heading = _normalize_section_heading(line)
+
+        profile_section = CAREER_PROFILE_SECTION_ALIASES.get(heading)
+
+        if profile_section is not None:
+            current_section = profile_section
+            continue
+
+        # Any other recognized resume heading ends the current
+        # career-profile section.
+        if heading in SECTION_ALIASES:
+            current_section = None
+            continue
+
+        interest_match = CAREER_INTEREST_INLINE_PATTERN.fullmatch(line)
+
+        if interest_match is not None:
+            _append_unique_career_profile_values(
+                interests,
+                _split_explicit_career_profile_values(interest_match.group("value")),
+            )
+            continue
+
+        goal_match = CAREER_GOAL_INLINE_PATTERN.fullmatch(line)
+
+        if goal_match is not None:
+            _append_unique_career_profile_values(
+                goals,
+                _split_explicit_career_profile_values(goal_match.group("value")),
+            )
+            continue
+
+        if current_section is None:
+            continue
+
+        value = " ".join(_strip_list_prefix(line).split())
+
+        if not value:
+            continue
+
+        local_match = CAREER_PROFILE_LOCAL_LABEL_PATTERN.fullmatch(value)
+
+        if local_match is not None:
+            value = local_match.group("value").strip()
+
+        values = _split_explicit_career_profile_values(value)
+
+        if current_section == "career_interests":
+            _append_unique_career_profile_values(
+                interests,
+                values,
+            )
+
+        elif current_section == "career_goals":
+            _append_unique_career_profile_values(
+                goals,
+                values,
+            )
+
+        # A generic "Career Profile" section is intentionally
+        # not converted from bare prose. Only explicitly labeled
+        # interest/goal lines above are accepted.
+
+    return interests, goals
+
+
+def _reconcile_explicit_career_profile(
+    intelligence: ResumeIntelligence,
+    resume_text: str,
+) -> None:
+    (
+        explicit_interests,
+        explicit_goals,
+    ) = _extract_explicit_career_profile(resume_text)
+
+    _append_unique_career_profile_values(
+        intelligence.career_profile.career_interests,
+        explicit_interests,
+    )
+
+    _append_unique_career_profile_values(
+        intelligence.career_profile.career_goals,
+        explicit_goals,
+    )
 
 
 def _has_date_evidence(
@@ -1817,5 +2011,10 @@ def enrich_resume_intelligence(
             enriched,
             achievement_lines,
         )
+
+    _reconcile_explicit_career_profile(
+        enriched,
+        resume_text,
+    )
 
     return enriched
