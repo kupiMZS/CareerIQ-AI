@@ -441,3 +441,46 @@ def test_phase2_languages_v1_has_descriptions_and_tags():
     assert all(case.description.strip() for case in cases)
 
     assert all(case.tags for case in cases)
+
+
+def test_eval_case_accepts_phase2_achievement_expectations():
+    case = ResumeEvalCase.model_validate(
+        {
+            "case_id": "phase2-achievement-example",
+            "description": ("Synthetic Phase 2 achievement case"),
+            "tags": [
+                "phase2",
+                "achievements",
+            ],
+            "resume_text": (
+                "Jane Smith\nAchievements\nAchievement: Winner, AI Hackathon"
+            ),
+            "expected": {
+                "name": "Jane Smith",
+            },
+            "phase2_expected": {
+                "achievements": [
+                    {
+                        "title": "Winner, AI Hackathon",
+                        "description": ("Won first place."),
+                        "organization": "Example Tech",
+                        "date": "2025",
+                    }
+                ]
+            },
+        }
+    )
+
+    assert case.phase2_expected is not None
+    assert case.phase2_expected.publications is None
+    assert case.phase2_expected.languages is None
+
+    assert case.phase2_expected.achievements is not None
+    assert len(case.phase2_expected.achievements) == 1
+
+    achievement = case.phase2_expected.achievements[0]
+
+    assert achievement.title == "Winner, AI Hackathon"
+    assert achievement.description == "Won first place."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"

@@ -143,6 +143,17 @@ class ExpectedLanguage(BaseModel):
     proficiency: str | None = None
 
 
+class ExpectedAchievement(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    title: str
+    description: str | None = None
+    organization: str | None = None
+    date: str | None = None
+
+
 class ExpectedPhase2ResumeExtraction(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -151,6 +162,7 @@ class ExpectedPhase2ResumeExtraction(BaseModel):
     publications: list[ExpectedPublication] | None = None
 
     languages: list[ExpectedLanguage] | None = None
+    achievements: list[ExpectedAchievement] | None = None
 
 
 class ResumeEvalCase(BaseModel):

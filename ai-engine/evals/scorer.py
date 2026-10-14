@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from app.schemas.career import CareerRecommendationResponse
 from app.schemas.resume import (
+    Achievement,
     Certification,
     Education,
     Experience,
@@ -13,6 +14,7 @@ from app.schemas.resume import (
     ResumeIntelligence,
 )
 from evals.schemas import (
+    ExpectedAchievement,
     ExpectedCareerRecommendation,
     ExpectedCertification,
     ExpectedEducation,
@@ -31,6 +33,7 @@ CAREER_SCORER_VERSION = "career-v1"
 EXTENDED_SCORER_VERSION = "extended-v2"
 PHASE2_SCORER_VERSION = "phase2-v1"
 PHASE2_V2_SCORER_VERSION = "phase2-v2"
+PHASE2_V3_SCORER_VERSION = "phase2-v3"
 
 
 class ScalarMetric(BaseModel):
@@ -102,6 +105,7 @@ class ExtendedResumeExtractionScore(BaseModel):
 class Phase2ResumeExtractionScore(BaseModel):
     publications: CollectionMetric | None = None
     languages: CollectionMetric | None = None
+    achievements: CollectionMetric | None = None
 
     overall: float = Field(
         ge=0.0,
@@ -537,6 +541,38 @@ def _actual_language_signature(
     )
 
 
+def _expected_achievement_signature(
+    item: ExpectedAchievement,
+) -> tuple[
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.title),
+        _normalize_text(item.description),
+        _normalize_text(item.organization),
+        _normalize_date(item.date),
+    )
+
+
+def _actual_achievement_signature(
+    item: Achievement,
+) -> tuple[
+    str | None,
+    str | None,
+    str | None,
+    str | None,
+]:
+    return (
+        _normalize_text(item.title),
+        _normalize_text(item.description),
+        _normalize_text(item.organization),
+        _normalize_date(item.date),
+    )
+
+
 def score_resume_extraction(
     expected: ExpectedResumeExtraction,
     actual: ResumeIntelligence,
@@ -704,6 +740,53 @@ def score_phase2_v2_resume_extraction(
     return Phase2ResumeExtractionScore(
         publications=publications,
         languages=languages,
+        overall=overall,
+    )
+
+
+def score_phase2_v3_resume_extraction(
+    expected: ExpectedPhase2ResumeExtraction,
+    actual: ResumeIntelligence,
+) -> Phase2ResumeExtractionScore:
+    publications = None
+    languages = None
+    achievements = None
+
+    covered_metrics: list[CollectionMetric] = []
+
+    if expected.publications is not None:
+        publications = _score_collection(
+            (_expected_publication_signature(item) for item in expected.publications),
+            (_actual_publication_signature(item) for item in actual.publications),
+        )
+
+        covered_metrics.append(publications)
+
+    if expected.languages is not None:
+        languages = _score_collection(
+            (_expected_language_signature(item) for item in expected.languages),
+            (_actual_language_signature(item) for item in actual.languages),
+        )
+
+        covered_metrics.append(languages)
+
+    if expected.achievements is not None:
+        achievements = _score_collection(
+            (_expected_achievement_signature(item) for item in expected.achievements),
+            (_actual_achievement_signature(item) for item in actual.achievements),
+        )
+
+        covered_metrics.append(achievements)
+
+    if not covered_metrics:
+        raise ValueError("Phase 2 v3 scoring requires at least one covered field.")
+
+    overall = sum(metric.f1 for metric in covered_metrics) / len(covered_metrics)
+
+    return Phase2ResumeExtractionScore(
+        publications=publications,
+        languages=languages,
+        achievements=achievements,
         overall=overall,
     )
 

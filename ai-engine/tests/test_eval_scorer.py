@@ -1,6 +1,7 @@
 import pytest
 
 from app.schemas.resume import (
+    Achievement,
     Candidate,
     Certification,
     Education,
@@ -12,6 +13,7 @@ from app.schemas.resume import (
     Skill,
 )
 from evals.schemas import (
+    ExpectedAchievement,
     ExpectedCertification,
     ExpectedEducation,
     ExpectedExperience,
@@ -28,9 +30,11 @@ from evals.scorer import (
     EXTENDED_SCORER_VERSION,
     PHASE2_SCORER_VERSION,
     PHASE2_V2_SCORER_VERSION,
+    PHASE2_V3_SCORER_VERSION,
     score_extended_resume_extraction,
     score_phase2_resume_extraction,
     score_phase2_v2_resume_extraction,
+    score_phase2_v3_resume_extraction,
     score_resume_extraction,
 )
 
@@ -607,6 +611,7 @@ def test_phase2_scorer_versions_are_independent():
     assert EXTENDED_SCORER_VERSION == "extended-v2"
     assert PHASE2_SCORER_VERSION == "phase2-v1"
     assert PHASE2_V2_SCORER_VERSION == "phase2-v2"
+    assert PHASE2_V3_SCORER_VERSION == "phase2-v3"
 
 
 def test_phase2_publication_scorer_gives_perfect_score():
@@ -899,3 +904,198 @@ def test_phase2_v2_scorer_requires_explicit_coverage():
             ExpectedPhase2ResumeExtraction(),
             ResumeIntelligence(),
         )
+
+
+def test_phase2_v3_achievement_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Winner, AI Hackathon",
+                description=("Won first place among 30 participating teams."),
+                organization="Example Tech",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title=" winner, ai hackathon ",
+                description=("WON FIRST PLACE AMONG 30 PARTICIPATING TEAMS."),
+                organization="EXAMPLE TECH",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is not None
+    assert score.achievements.precision == 1.0
+    assert score.achievements.recall == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v3_achievement_scorer_penalizes_wrong_metadata():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+                organization="Example University",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+                organization="Different University",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.achievements is not None
+    assert score.achievements.matched_count == 0
+    assert score.achievements.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_v3_achievement_scorer_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[],
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is not None
+    assert score.achievements.precision == 1.0
+    assert score.achievements.recall == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v3_combined_score_means_all_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+    assert score.achievements is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+    assert score.achievements.f1 == 1.0
+
+    assert score.overall == pytest.approx(2 / 3)
+
+
+def test_phase2_v3_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v3_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )
+
+
+def test_phase2_v2_remains_frozen_when_achievements_are_present():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Expected Achievement",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Different Achievement",
+            )
+        ],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.f1 == 1.0
+    assert score.achievements is None
+    assert score.overall == 1.0
