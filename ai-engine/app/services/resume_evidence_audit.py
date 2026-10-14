@@ -7,6 +7,7 @@ from app.schemas.evidence import (
 )
 from app.schemas.resume import ResumeIntelligence
 from app.services.evidence_verifier import verify_evidence_record
+from app.services.skill_evidence_collector import collect_literal_skill_evidence
 
 _SKILL_NAME_PATH = re.compile(r"skills\[(\d+)\]\.name")
 
@@ -50,3 +51,24 @@ def audit_resume_skill_evidence(
         audited.append((record, result))
 
     return audited
+
+
+def collect_and_audit_resume_skill_evidence(
+    resume_text: str,
+    intelligence: ResumeIntelligence,
+) -> list[tuple[EvidenceRecord, EvidenceVerificationResult]]:
+    """Collect and audit literal skill evidence without mutating inputs.
+
+    Each matching resume line produces an independent verification result.
+    No skill, evidence, or confidence values are changed.
+    """
+    records = collect_literal_skill_evidence(
+        resume_text,
+        intelligence,
+    )
+
+    return audit_resume_skill_evidence(
+        resume_text,
+        intelligence,
+        records,
+    )
