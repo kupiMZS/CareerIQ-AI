@@ -543,3 +543,52 @@ def test_phase2_achievements_v1_has_descriptions_and_tags():
     assert all(case.description.strip() for case in cases)
 
     assert all(case.tags for case in cases)
+
+
+def test_eval_case_accepts_phase2_career_profile_expectations():
+    case = ResumeEvalCase.model_validate(
+        {
+            "case_id": "phase2-career-profile-example",
+            "description": ("Synthetic Phase 2 career profile case"),
+            "tags": [
+                "phase2",
+                "career-profile",
+            ],
+            "resume_text": (
+                "Jane Smith\n"
+                "Career Interests\n"
+                "Distributed systems\n\n"
+                "Career Goals\n"
+                "Transition into platform engineering"
+            ),
+            "expected": {
+                "name": "Jane Smith",
+            },
+            "phase2_expected": {
+                "career_profile": {
+                    "career_interests": [
+                        "Distributed systems",
+                    ],
+                    "career_goals": [
+                        "Transition into platform engineering",
+                    ],
+                }
+            },
+        }
+    )
+
+    assert case.phase2_expected is not None
+
+    assert case.phase2_expected.publications is None
+    assert case.phase2_expected.languages is None
+    assert case.phase2_expected.achievements is None
+
+    profile = case.phase2_expected.career_profile
+
+    assert profile is not None
+    assert profile.career_interests == [
+        "Distributed systems",
+    ]
+    assert profile.career_goals == [
+        "Transition into platform engineering",
+    ]

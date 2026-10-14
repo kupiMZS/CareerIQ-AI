@@ -3,6 +3,7 @@ import pytest
 from app.schemas.resume import (
     Achievement,
     Candidate,
+    CareerProfile,
     Certification,
     Education,
     Experience,
@@ -14,6 +15,7 @@ from app.schemas.resume import (
 )
 from evals.schemas import (
     ExpectedAchievement,
+    ExpectedCareerProfile,
     ExpectedCertification,
     ExpectedEducation,
     ExpectedExperience,
@@ -31,10 +33,12 @@ from evals.scorer import (
     PHASE2_SCORER_VERSION,
     PHASE2_V2_SCORER_VERSION,
     PHASE2_V3_SCORER_VERSION,
+    PHASE2_V4_SCORER_VERSION,
     score_extended_resume_extraction,
     score_phase2_resume_extraction,
     score_phase2_v2_resume_extraction,
     score_phase2_v3_resume_extraction,
+    score_phase2_v4_resume_extraction,
     score_resume_extraction,
 )
 
@@ -612,6 +616,7 @@ def test_phase2_scorer_versions_are_independent():
     assert PHASE2_SCORER_VERSION == "phase2-v1"
     assert PHASE2_V2_SCORER_VERSION == "phase2-v2"
     assert PHASE2_V3_SCORER_VERSION == "phase2-v3"
+    assert PHASE2_V4_SCORER_VERSION == "phase2-v4"
 
 
 def test_phase2_publication_scorer_gives_perfect_score():
@@ -1098,4 +1103,267 @@ def test_phase2_v2_remains_frozen_when_achievements_are_present():
     assert score.languages is not None
     assert score.languages.f1 == 1.0
     assert score.achievements is None
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Distributed systems",
+                "Platform engineering",
+            ],
+            career_goals=[
+                "Transition into platform engineering",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                " PLATFORM ENGINEERING ",
+                "distributed systems",
+            ],
+            career_goals=[
+                " transition into platform engineering ",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is None
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.precision == 1.0
+    assert score.career_interests.recall == 1.0
+    assert score.career_interests.f1 == 1.0
+
+    assert score.career_goals.precision == 1.0
+    assert score.career_goals.recall == 1.0
+    assert score.career_goals.f1 == 1.0
+
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_scores_fields_independently():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Cloud infrastructure",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Cloud infrastructure",
+            ],
+            career_goals=[
+                "Become a data engineer",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 0.0
+    assert score.overall == pytest.approx(0.5)
+
+
+def test_phase2_v4_career_profile_supports_partial_coverage():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_goals=[
+                "Lead a platform engineering team",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Lead a platform engineering team",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.career_interests is None
+    assert score.career_goals is not None
+    assert score.career_goals.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[],
+            career_goals=[],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_combined_score_means_all_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+    assert score.achievements is not None
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 1.0
+
+    assert score.overall == pytest.approx(0.8)
+
+
+def test_phase2_v4_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v4_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )
+
+
+def test_phase2_v3_remains_frozen_when_career_profile_is_present():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=ExpectedCareerProfile(
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=CareerProfile(
+            career_goals=[
+                "Become a data engineer",
+            ],
+        ),
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.achievements is not None
+    assert score.achievements.f1 == 1.0
+
+    assert score.career_interests is None
+    assert score.career_goals is None
+
     assert score.overall == 1.0

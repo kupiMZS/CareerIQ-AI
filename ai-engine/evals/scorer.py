@@ -34,6 +34,7 @@ EXTENDED_SCORER_VERSION = "extended-v2"
 PHASE2_SCORER_VERSION = "phase2-v1"
 PHASE2_V2_SCORER_VERSION = "phase2-v2"
 PHASE2_V3_SCORER_VERSION = "phase2-v3"
+PHASE2_V4_SCORER_VERSION = "phase2-v4"
 
 
 class ScalarMetric(BaseModel):
@@ -106,6 +107,8 @@ class Phase2ResumeExtractionScore(BaseModel):
     publications: CollectionMetric | None = None
     languages: CollectionMetric | None = None
     achievements: CollectionMetric | None = None
+    career_interests: CollectionMetric | None = None
+    career_goals: CollectionMetric | None = None
 
     overall: float = Field(
         ge=0.0,
@@ -787,6 +790,74 @@ def score_phase2_v3_resume_extraction(
         publications=publications,
         languages=languages,
         achievements=achievements,
+        overall=overall,
+    )
+
+
+def score_phase2_v4_resume_extraction(
+    expected: ExpectedPhase2ResumeExtraction,
+    actual: ResumeIntelligence,
+) -> Phase2ResumeExtractionScore:
+    publications = None
+    languages = None
+    achievements = None
+    career_interests = None
+    career_goals = None
+
+    covered_metrics: list[CollectionMetric] = []
+
+    if expected.publications is not None:
+        publications = _score_collection(
+            (_expected_publication_signature(item) for item in expected.publications),
+            (_actual_publication_signature(item) for item in actual.publications),
+        )
+
+        covered_metrics.append(publications)
+
+    if expected.languages is not None:
+        languages = _score_collection(
+            (_expected_language_signature(item) for item in expected.languages),
+            (_actual_language_signature(item) for item in actual.languages),
+        )
+
+        covered_metrics.append(languages)
+
+    if expected.achievements is not None:
+        achievements = _score_collection(
+            (_expected_achievement_signature(item) for item in expected.achievements),
+            (_actual_achievement_signature(item) for item in actual.achievements),
+        )
+
+        covered_metrics.append(achievements)
+
+    if expected.career_profile is not None:
+        if expected.career_profile.career_interests is not None:
+            career_interests = _score_collection(
+                _normalize_text_collection(expected.career_profile.career_interests),
+                _normalize_text_collection(actual.career_profile.career_interests),
+            )
+
+            covered_metrics.append(career_interests)
+
+        if expected.career_profile.career_goals is not None:
+            career_goals = _score_collection(
+                _normalize_text_collection(expected.career_profile.career_goals),
+                _normalize_text_collection(actual.career_profile.career_goals),
+            )
+
+            covered_metrics.append(career_goals)
+
+    if not covered_metrics:
+        raise ValueError("Phase 2 v4 scoring requires at least one covered field.")
+
+    overall = sum(metric.f1 for metric in covered_metrics) / len(covered_metrics)
+
+    return Phase2ResumeExtractionScore(
+        publications=publications,
+        languages=languages,
+        achievements=achievements,
+        career_interests=career_interests,
+        career_goals=career_goals,
         overall=overall,
     )
 

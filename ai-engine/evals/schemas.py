@@ -154,6 +154,15 @@ class ExpectedAchievement(BaseModel):
     date: str | None = None
 
 
+class ExpectedCareerProfile(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
+
+    career_interests: list[str] | None = None
+    career_goals: list[str] | None = None
+
+
 class ExpectedPhase2ResumeExtraction(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
@@ -163,6 +172,8 @@ class ExpectedPhase2ResumeExtraction(BaseModel):
 
     languages: list[ExpectedLanguage] | None = None
     achievements: list[ExpectedAchievement] | None = None
+
+    career_profile: ExpectedCareerProfile | None = None
 
 
 class ResumeEvalCase(BaseModel):
