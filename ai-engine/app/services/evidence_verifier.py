@@ -22,7 +22,9 @@ def verify_evidence_claim(
     if not verify_evidence_excerpt(resume_text, record):
         return False
 
-    pattern = re.compile(rf"(?<![\w+#]){re.escape(record.extracted_value)}(?![\w+#])")
+    pattern = re.compile(
+        rf"(?<![\w+#.\-]){re.escape(record.extracted_value)}(?![\w+#]|\.[\w]|-[\w])"
+    )
     return pattern.search(record.evidence_text) is not None
 
 
@@ -49,7 +51,7 @@ def is_explicitly_unsupported_skill_claim(
     for prefix in _UNSUPPORTED_SKILL_PREFIXES:
         pattern = re.compile(
             rf"(?i)(?<!\w){re.escape(prefix)}\s+"
-            rf"{value}(?![\w+#])"
+            rf"{value}(?![\w+#]|\.[\w]|-[\w])"
         )
         if pattern.search(record.evidence_text):
             return True
