@@ -1,0 +1,1342 @@
+{
+  "provider": "rule_based_enriched",
+  "model": null,
+  "prompt_version": null,
+  "dataset": "evals/datasets/resume_extraction_phase2_career_profile_v1.jsonl",
+  "run_count": 3,
+  "case_count": 7,
+  "metrics": {
+    "name_accuracy": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "email_accuracy": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "skills_f1": {
+      "mean": 0.7142857142857143,
+      "minimum": 0.7142857142857143,
+      "maximum": 0.7142857142857143,
+      "standard_deviation": 0.0
+    },
+    "education_f1": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "experience_f1": {
+      "mean": 0.0,
+      "minimum": 0.0,
+      "maximum": 0.0,
+      "standard_deviation": 0.0
+    },
+    "overall_mean": {
+      "mean": 0.7428571428571429,
+      "minimum": 0.7428571428571429,
+      "maximum": 0.7428571428571429,
+      "standard_deviation": 0.0
+    }
+  },
+  "extended": null,
+  "phase2": {
+    "scorer_version": "phase2-v4",
+    "case_count": 7,
+    "metrics": {
+      "publications_f1": null,
+      "languages_f1": null,
+      "achievements_f1": null,
+      "career_interests_f1": {
+        "mean": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "standard_deviation": 0.0
+      },
+      "career_goals_f1": {
+        "mean": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "standard_deviation": 0.0
+      },
+      "overall_mean": {
+        "mean": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "standard_deviation": 0.0
+      }
+    }
+  },
+  "runs": [
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 0.7142857142857143,
+      "education_f1": 1.0,
+      "experience_f1": 0.0,
+      "overall_mean": 0.7428571428571429,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v4",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": null,
+        "career_interests_f1": 1.0,
+        "career_goals_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_career_profile_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 2
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_inline_formats",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_section_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_career_objective",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": null,
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_interests_only",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": null,
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 0.7142857142857143,
+      "education_f1": 1.0,
+      "experience_f1": 0.0,
+      "overall_mean": 0.7428571428571429,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v4",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": null,
+        "career_interests_f1": 1.0,
+        "career_goals_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_career_profile_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 2
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_inline_formats",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_section_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_career_objective",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": null,
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_interests_only",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": null,
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 0.7142857142857143,
+      "education_f1": 1.0,
+      "experience_f1": 0.0,
+      "overall_mean": 0.7428571428571429,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v4",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": null,
+        "career_interests_f1": 1.0,
+        "career_goals_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_career_profile_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 2
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_inline_formats",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_section_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_career_objective",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": null,
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_interests_only",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "career_goals": null,
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 3
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_career_profile_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": null,
+            "career_interests": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "career_goals": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}

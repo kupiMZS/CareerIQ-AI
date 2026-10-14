@@ -592,3 +592,80 @@ def test_eval_case_accepts_phase2_career_profile_expectations():
     assert profile.career_goals == [
         "Transition into platform engineering",
     ]
+
+
+PHASE2_CAREER_PROFILE_V1_DATASET_PATH = (
+    EVALS_DIR / "resume_extraction_phase2_career_profile_v1.jsonl"
+)
+
+
+def test_phase2_career_profile_v1_dataset_loads_seven_cases():
+    cases = load_resume_eval_dataset(PHASE2_CAREER_PROFILE_V1_DATASET_PATH)
+
+    assert len(cases) == 7
+
+
+def test_phase2_career_profile_v1_cases_have_profile_coverage():
+    cases = load_resume_eval_dataset(PHASE2_CAREER_PROFILE_V1_DATASET_PATH)
+
+    assert all(case.phase2_expected is not None for case in cases)
+
+    assert all(
+        case.phase2_expected.career_profile is not None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(
+        (
+            case.phase2_expected.career_profile.career_interests is not None
+            or case.phase2_expected.career_profile.career_goals is not None
+        )
+        for case in cases
+        if (
+            case.phase2_expected is not None
+            and case.phase2_expected.career_profile is not None
+        )
+    )
+
+    assert all(
+        case.phase2_expected.publications is None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(
+        case.phase2_expected.languages is None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(
+        case.phase2_expected.achievements is None
+        for case in cases
+        if case.phase2_expected is not None
+    )
+
+    assert all(case.extended_expected is None for case in cases)
+
+
+def test_phase2_career_profile_v1_contains_expected_cases():
+    case_ids = get_case_ids(PHASE2_CAREER_PROFILE_V1_DATASET_PATH)
+
+    assert case_ids == {
+        "phase2_career_profile_complete",
+        "phase2_career_profile_inline_formats",
+        "phase2_career_profile_section_aliases",
+        "phase2_career_profile_career_objective",
+        "phase2_career_profile_interests_only",
+        "phase2_career_profile_no_inference",
+        "phase2_career_profile_absent",
+    }
+
+
+def test_phase2_career_profile_v1_has_descriptions_and_tags():
+    cases = load_resume_eval_dataset(PHASE2_CAREER_PROFILE_V1_DATASET_PATH)
+
+    assert all(case.description.strip() for case in cases)
+
+    assert all(case.tags for case in cases)
