@@ -8,6 +8,7 @@ from app.schemas.analysis import (
 from app.schemas.resume import (
     Achievement,
     Candidate,
+    CareerProfile,
     Language,
     Publication,
     ResumeIntelligence,
@@ -235,4 +236,63 @@ def test_resume_intelligence_defaults_achievements_to_empty_list():
     intelligence = ResumeIntelligence()
 
     assert intelligence.achievements == []
+    assert intelligence.analysis_version == "1.0"
+
+
+def test_career_profile_schema_supports_explicit_interests_and_goals():
+    profile = CareerProfile(
+        career_interests=[
+            "Backend engineering",
+            "Distributed systems",
+        ],
+        career_goals=[
+            "Move into a senior backend engineering role",
+        ],
+    )
+
+    assert profile.career_interests == [
+        "Backend engineering",
+        "Distributed systems",
+    ]
+
+    assert profile.career_goals == [
+        "Move into a senior backend engineering role",
+    ]
+
+
+def test_career_profile_defaults_to_empty_explicit_evidence():
+    profile = CareerProfile()
+
+    assert profile.career_interests == []
+    assert profile.career_goals == []
+
+
+def test_resume_intelligence_supports_career_profile():
+    intelligence = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Cloud infrastructure",
+            ],
+            career_goals=[
+                "Transition into platform engineering",
+            ],
+        )
+    )
+
+    assert intelligence.career_profile.career_interests == [
+        "Cloud infrastructure",
+    ]
+
+    assert intelligence.career_profile.career_goals == [
+        "Transition into platform engineering",
+    ]
+
+
+def test_resume_intelligence_defaults_career_profile():
+    intelligence = ResumeIntelligence()
+
+    assert intelligence.career_profile == CareerProfile()
+    assert intelligence.career_profile.career_interests == []
+    assert intelligence.career_profile.career_goals == []
+
     assert intelligence.analysis_version == "1.0"

@@ -82,6 +82,16 @@ class Achievement(BaseModel):
     date: str | None = None
 
 
+class CareerProfile(BaseModel):
+    career_interests: list[str] = Field(
+        default_factory=list,
+    )
+
+    career_goals: list[str] = Field(
+        default_factory=list,
+    )
+
+
 class ResumeIntelligence(BaseModel):
     analysis_version: str = "1.0"
 
@@ -104,3 +114,7 @@ class ResumeIntelligence(BaseModel):
     languages: list[Language] = Field(default_factory=list)
 
     achievements: list[Achievement] = Field(default_factory=list)
+
+    career_profile: CareerProfile = Field(
+        default_factory=CareerProfile,
+    )
