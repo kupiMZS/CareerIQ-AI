@@ -66,6 +66,15 @@ def build_success_response() -> dict:
                 "date": "2025",
             }
         ],
+        "career_profile": {
+            "career_interests": [
+                "Distributed systems",
+                "Platform engineering",
+            ],
+            "career_goals": [
+                "Transition into a senior platform engineering role",
+            ],
+        },
     }
 
 
@@ -81,6 +90,7 @@ async def test_ollama_provider_returns_resume_intelligence():
         assert "publications" in payload["format"]["properties"]
         assert "languages" in payload["format"]["properties"]
         assert "achievements" in payload["format"]["properties"]
+        assert "career_profile" in payload["format"]["properties"]
 
         assert any(
             "publications" in message["content"].casefold()
@@ -94,6 +104,16 @@ async def test_ollama_provider_returns_resume_intelligence():
 
         assert any(
             "achievement" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "career interests" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "career goals" in message["content"].casefold()
             for message in payload["messages"]
         )
 
@@ -151,6 +171,15 @@ async def test_ollama_provider_returns_resume_intelligence():
     assert achievement.description == "Won first place among 30 participating teams."
     assert achievement.organization == "Example Tech"
     assert achievement.date == "2025"
+
+    assert result.career_profile.career_interests == [
+        "Distributed systems",
+        "Platform engineering",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Transition into a senior platform engineering role",
+    ]
 
 
 @pytest.mark.anyio

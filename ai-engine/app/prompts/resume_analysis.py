@@ -1,6 +1,6 @@
 from app.schemas.resume import ResumeIntelligence
 
-RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v5"
+RESUME_ANALYSIS_PROMPT_VERSION = "resume-analysis-v6"
 
 
 SYSTEM_PROMPT = """
@@ -50,6 +50,21 @@ Important rules:
 - Never infer an achievement from job performance, responsibilities,
   education, grades, project quality, seniority, or other indirect
   context.
+- If the resume explicitly states career interests, professional
+  interests, areas of interest, or domains the candidate wants to
+  pursue, copy each distinct item into
+  career_profile.career_interests.
+- If the resume explicitly states career goals, career objectives,
+  professional goals, aspirations, or a desired career transition,
+  copy each distinct item into career_profile.career_goals.
+- Preserve explicit career interest and career goal wording exactly
+  when possible.
+- Never infer career interests or career goals from skills,
+  education, experience, projects, certifications, achievements,
+  candidate headline, job titles, responsibilities, or other indirect
+  context.
+- Do not treat a general professional summary as a career interest or
+  goal unless it explicitly expresses future career intent.
 - Use null for missing optional scalar values.
 - Use an empty list only when that category truly does not appear
   anywhere in the resume.
@@ -111,7 +126,9 @@ def build_resume_analysis_messages(
                 "- publications\n"
                 "- languages and explicit proficiency levels\n"
                 "- achievements, awards, honors, scholarships, "
-                "and explicit recognition\n\n"
+                "and explicit recognition\n"
+                "- explicit career interests\n"
+                "- explicit career goals\n\n"
                 f"Resume:\n{resume_text}"
             ),
         },
