@@ -41,6 +41,7 @@ def build_phase2_summary(
     case_count: int = 3,
     publications_f1: float | None = 1.0,
     languages_f1: float | None = None,
+    achievements_f1: float | None = None,
     overall_mean: float = 1.0,
 ) -> Phase2BenchmarkSummary:
     return Phase2BenchmarkSummary(
@@ -48,6 +49,7 @@ def build_phase2_summary(
         case_count=case_count,
         publications_f1=publications_f1,
         languages_f1=languages_f1,
+        achievements_f1=achievements_f1,
         overall_mean=overall_mean,
     )
 
@@ -448,6 +450,81 @@ def test_report_rejects_mixed_phase2_scorer_versions():
                         scorer_version="phase2-v2",
                         publications_f1=None,
                         languages_f1=1.0,
+                    ),
+                ),
+            ],
+        )
+
+
+def test_report_aggregates_phase2_v3_achievement_metrics():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v5",
+        dataset="phase2-achievements.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v3",
+                    publications_f1=None,
+                    languages_f1=None,
+                    achievements_f1=0.6,
+                    overall_mean=0.6,
+                ),
+            ),
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v3",
+                    publications_f1=None,
+                    languages_f1=None,
+                    achievements_f1=0.8,
+                    overall_mean=0.8,
+                ),
+            ),
+        ],
+    )
+
+    assert report.phase2 is not None
+    assert report.phase2.scorer_version == "phase2-v3"
+
+    assert report.phase2.metrics.publications_f1 is None
+    assert report.phase2.metrics.languages_f1 is None
+
+    assert report.phase2.metrics.achievements_f1 is not None
+    assert report.phase2.metrics.achievements_f1.mean == pytest.approx(0.7)
+
+    assert report.phase2.metrics.overall_mean.mean == pytest.approx(0.7)
+
+
+def test_report_rejects_mixed_phase2_achievement_metric_coverage():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 achievement metric coverage",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v5",
+            dataset="phase2-achievements.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v3",
+                        publications_f1=None,
+                        languages_f1=None,
+                        achievements_f1=1.0,
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v3",
+                        publications_f1=None,
+                        languages_f1=None,
+                        achievements_f1=None,
                     ),
                 ),
             ],
