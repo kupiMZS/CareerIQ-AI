@@ -93,6 +93,25 @@ SECTION_ALIASES = {
     "language skills": "languages",
     "language proficiency": "languages",
     "spoken languages": "languages",
+    # Achievements
+    "achievement": "achievements",
+    "achievements": "achievements",
+    "key achievements": "achievements",
+    "award": "achievements",
+    "awards": "achievements",
+    "honor": "achievements",
+    "honors": "achievements",
+    "honour": "achievements",
+    "honours": "achievements",
+    "awards and honors": "achievements",
+    "awards & honors": "achievements",
+    "honors and awards": "achievements",
+    "scholarship": "achievements",
+    "scholarships": "achievements",
+    "recognition": "achievements",
+    "recognitions": "achievements",
+    "accomplishment": "achievements",
+    "accomplishments": "achievements",
 }
 
 

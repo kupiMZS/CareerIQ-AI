@@ -2,6 +2,7 @@ import re
 
 from app.analyzer import analyze_resume, detect_sections
 from app.schemas.resume import (
+    Achievement,
     Certification,
     Education,
     Experience,
@@ -117,6 +118,34 @@ LANGUAGE_INLINE_PATTERN = re.compile(
 LANGUAGE_PARENTHETICAL_PATTERN = re.compile(
     r"^(?P<name>[^()]+?)\s*\((?P<proficiency>[^()]+)\)$"
 )
+
+
+ACHIEVEMENT_FIELD_PATTERN = re.compile(
+    r"^(?P<field>"
+    r"achievement|award|honor|honour|title|name|"
+    r"description|details|organization|organisation|issuer|"
+    r"awarded by|presented by|date|year"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+ACHIEVEMENT_FIELD_ALIASES = {
+    "achievement": "title",
+    "award": "title",
+    "honor": "title",
+    "honour": "title",
+    "title": "title",
+    "name": "title",
+    "description": "description",
+    "details": "description",
+    "organization": "organization",
+    "organisation": "organization",
+    "issuer": "organization",
+    "awarded by": "organization",
+    "presented by": "organization",
+    "date": "date",
+    "year": "date",
+}
 
 
 def _normalize(
@@ -624,6 +653,126 @@ def _reconcile_explicit_languages(
             continue
 
         _merge_language_values(
+            matching_entry,
+            evidence,
+        )
+
+
+def _extract_structured_achievements(
+    achievement_lines: list[str],
+) -> list[Achievement]:
+    lines = [
+        _strip_list_prefix(line)
+        for line in achievement_lines
+        if _strip_list_prefix(line)
+    ]
+
+    achievements: list[Achievement] = []
+
+    current_title: str | None = None
+    current_description: str | None = None
+    current_organization: str | None = None
+    current_date: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_title
+        nonlocal current_description
+        nonlocal current_organization
+        nonlocal current_date
+
+        if current_title:
+            achievements.append(
+                Achievement(
+                    title=current_title,
+                    description=current_description,
+                    organization=current_organization,
+                    date=current_date,
+                )
+            )
+
+        current_title = None
+        current_description = None
+        current_organization = None
+        current_date = None
+
+    for line in lines:
+        match = ACHIEVEMENT_FIELD_PATTERN.fullmatch(line)
+
+        if match is not None:
+            field = ACHIEVEMENT_FIELD_ALIASES[match.group("field").casefold()]
+
+            value = match.group("value").strip()
+
+            if field == "title":
+                flush_current()
+                current_title = value
+                continue
+
+            if current_title is None:
+                # Metadata without an explicit achievement title is
+                # not sufficient evidence to create a record.
+                continue
+
+            if field == "description":
+                current_description = value
+            elif field == "organization":
+                current_organization = value
+            elif field == "date":
+                current_date = value
+
+            continue
+
+        # A non-labeled line inside an explicit achievement section
+        # is treated as a complete achievement title. Optional
+        # metadata remains unset rather than being inferred.
+        flush_current()
+
+        achievements.append(
+            Achievement(
+                title=line,
+            )
+        )
+
+    flush_current()
+
+    return achievements
+
+
+def _merge_achievement_values(
+    existing: Achievement,
+    evidence: Achievement,
+) -> None:
+    if evidence.description is not None:
+        existing.description = evidence.description
+
+    if evidence.organization is not None:
+        existing.organization = evidence.organization
+
+    if evidence.date is not None:
+        existing.date = evidence.date
+
+
+def _reconcile_explicit_achievements(
+    intelligence: ResumeIntelligence,
+    achievement_lines: list[str],
+) -> None:
+    evidence_achievements = _extract_structured_achievements(achievement_lines)
+
+    for evidence in evidence_achievements:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.achievements
+                if _normalize(item.title) == _normalize(evidence.title)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.achievements.append(evidence)
+            continue
+
+        _merge_achievement_values(
             matching_entry,
             evidence,
         )
@@ -1656,6 +1805,17 @@ def enrich_resume_intelligence(
         _reconcile_explicit_languages(
             enriched,
             language_lines,
+        )
+
+    achievement_lines = sections.get(
+        "achievements",
+        [],
+    )
+
+    if achievement_lines:
+        _reconcile_explicit_achievements(
+            enriched,
+            achievement_lines,
         )
 
     return enriched

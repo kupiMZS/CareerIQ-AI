@@ -1,4 +1,5 @@
 from app.schemas.resume import (
+    Achievement,
     Candidate,
     Certification,
     Education,
@@ -1270,3 +1271,190 @@ International software engineer.
     assert len(result.languages) == 1
     assert result.languages[0].name == "English"
     assert result.languages[0].proficiency == "Fluent"
+
+
+def test_enricher_extracts_labeled_achievement_from_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Amina Rahman
+amina@example.com
+
+Achievements
+Achievement: Winner, AI Hackathon
+Description: Won first place among 30 participating teams.
+Organization: Example Tech
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.title == "Winner, AI Hackathon"
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
+
+
+def test_enricher_recognizes_awards_and_honors_section_alias():
+    result = enrich_resume_intelligence(
+        """
+Nadia Karim
+nadia@example.com
+
+Awards & Honors
+Dean's List
+Winner, Inter-University Programming Contest
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 2
+
+    assert result.achievements[0].title == "Dean's List"
+    assert (
+        result.achievements[1].title == "Winner, Inter-University Programming Contest"
+    )
+
+
+def test_enricher_extracts_multiple_labeled_achievements():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Achievements
+Title: Employee of the Year
+Organization: Example Labs
+Date: 2024
+
+Award: Best Capstone Project
+Issuer: Example University
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 2
+
+    assert result.achievements[0].title == "Employee of the Year"
+    assert result.achievements[0].organization == "Example Labs"
+    assert result.achievements[0].date == "2024"
+
+    assert result.achievements[1].title == "Best Capstone Project"
+    assert result.achievements[1].organization == "Example University"
+    assert result.achievements[1].date == "2025"
+
+
+def test_enricher_reconciles_explicit_achievement_metadata():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Winner, AI Hackathon",
+                description="Incorrect description",
+                organization="Incorrect Organization",
+                date="2023",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Achievements
+Achievement: Winner, AI Hackathon
+Description: Won first place among 30 participating teams.
+Organization: Example Tech
+Date: 2025
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
+
+
+def test_enricher_bare_achievement_does_not_erase_provider_metadata():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Employee of the Month",
+                description="Recognized for service reliability.",
+                organization="Example Labs",
+                date="2025",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Achievements
+Employee of the Month
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.description == "Recognized for service reliability."
+    assert achievement.organization == "Example Labs"
+    assert achievement.date == "2025"
+
+
+def test_enricher_does_not_infer_achievements_without_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Professional Summary
+Improved system reliability and increased throughput by 40%.
+
+Experience
+Software Engineer at Example Labs
+Led a successful platform migration.
+
+Education
+BSc Computer Science
+Graduated with GPA 4.0.
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.achievements == []
+
+
+def test_enricher_preserves_provider_achievements_without_explicit_section():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+                organization="Example University",
+                date="2024",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Professional Summary
+Backend software engineer.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+    assert result.achievements[0].title == "Dean's List"
+    assert result.achievements[0].organization == "Example University"
+    assert result.achievements[0].date == "2024"
