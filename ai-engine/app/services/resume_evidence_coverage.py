@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Literal
 
@@ -17,6 +18,26 @@ SkillEvidenceCoverageStatus = Literal[
     "mixed_mentions",
 ]
 
+SkillEvidenceReviewFlag = Literal[
+    "aspirational_wording",
+    "requirement_wording",
+    "rejection_with_contrast",
+]
+
+_ASPIRATIONAL_WORDING = re.compile(
+    r"(?i)(?<!\w)(?:career\s+(?:goal|objective)\s*:\s*learn|"
+    r"(?:want|plan|hope)\s+to\s+learn|"
+    r"planning\s+to\s+learn|"
+    r"interested\s+in\s+learning)\b"
+)
+
+_REQUIREMENT_WORDING = re.compile(
+    r"(?i)(?<!\w)(?:(?:job|role)\s+requirements?|"
+    r"requirements?|required\s+skills?)\s*:"
+)
+
+_CONTRAST_WORDING = re.compile(r"(?i)\b(?:but|however)\b")
+
 
 @dataclass(frozen=True, slots=True)
 class SkillEvidenceCoverage:
@@ -29,6 +50,32 @@ class SkillEvidenceCoverage:
         tuple[EvidenceRecord, EvidenceVerificationResult],
         ...,
     ]
+    review_flags: tuple[SkillEvidenceReviewFlag, ...] = ()
+
+
+def _detect_context_review_flags(
+    entries: tuple[
+        tuple[EvidenceRecord, EvidenceVerificationResult],
+        ...,
+    ],
+) -> tuple[SkillEvidenceReviewFlag, ...]:
+    """Flag narrow contextual wording for review, not judgment."""
+    flags: list[SkillEvidenceReviewFlag] = []
+
+    if any(_ASPIRATIONAL_WORDING.search(record.evidence_text) for record, _ in entries):
+        flags.append("aspirational_wording")
+
+    if any(_REQUIREMENT_WORDING.search(record.evidence_text) for record, _ in entries):
+        flags.append("requirement_wording")
+
+    if any(
+        result.status == "explicitly_unsupported"
+        and _CONTRAST_WORDING.search(record.evidence_text)
+        for record, result in entries
+    ):
+        flags.append("rejection_with_contrast")
+
+    return tuple(flags)
 
 
 def summarize_resume_skill_evidence(
@@ -82,6 +129,7 @@ def summarize_resume_skill_evidence(
                 skill_name=skill.name,
                 status=status,
                 audited_records=entries,
+                review_flags=_detect_context_review_flags(entries),
             )
         )
 
