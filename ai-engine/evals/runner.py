@@ -7,6 +7,7 @@ from evals.scorer import (
     PHASE2_SCORER_VERSION,
     PHASE2_V2_SCORER_VERSION,
     PHASE2_V3_SCORER_VERSION,
+    PHASE2_V4_SCORER_VERSION,
     CareerRecommendationScore,
     ExtendedResumeExtractionScore,
     Phase2ResumeExtractionScore,
@@ -16,6 +17,7 @@ from evals.scorer import (
     score_phase2_resume_extraction,
     score_phase2_v2_resume_extraction,
     score_phase2_v3_resume_extraction,
+    score_phase2_v4_resume_extraction,
     score_resume_extraction,
 )
 
@@ -100,6 +102,18 @@ class Phase2BenchmarkSummary(BaseModel):
         le=1.0,
     )
 
+    career_interests_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    career_goals_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
     overall_mean: float = Field(
         ge=0.0,
         le=1.0,
@@ -156,6 +170,9 @@ def _phase2_scorer_version_for_case(
     if case.phase2_expected is None:
         return None
 
+    if case.phase2_expected.career_profile is not None:
+        return PHASE2_V4_SCORER_VERSION
+
     if case.phase2_expected.achievements is not None:
         return PHASE2_V3_SCORER_VERSION
 
@@ -208,7 +225,12 @@ async def run_resume_benchmark(
                     "must use the same Phase 2 scorer version."
                 )
 
-            if case_phase2_scorer_version == PHASE2_V3_SCORER_VERSION:
+            if case_phase2_scorer_version == PHASE2_V4_SCORER_VERSION:
+                phase2_score = score_phase2_v4_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+            elif case_phase2_scorer_version == PHASE2_V3_SCORER_VERSION:
                 phase2_score = score_phase2_v3_resume_extraction(
                     case.phase2_expected,
                     actual,
@@ -321,6 +343,18 @@ async def run_resume_benchmark(
             if score.achievements is not None
         ]
 
+        career_interest_f1_values = [
+            score.career_interests.f1
+            for score in phase2_scores
+            if score.career_interests is not None
+        ]
+
+        career_goal_f1_values = [
+            score.career_goals.f1
+            for score in phase2_scores
+            if score.career_goals is not None
+        ]
+
         phase2_summary = Phase2BenchmarkSummary(
             scorer_version=next(iter(phase2_scorer_versions)),
             case_count=phase2_case_count,
@@ -337,6 +371,16 @@ async def run_resume_benchmark(
             achievements_f1=(
                 sum(achievement_f1_values) / len(achievement_f1_values)
                 if achievement_f1_values
+                else None
+            ),
+            career_interests_f1=(
+                sum(career_interest_f1_values) / len(career_interest_f1_values)
+                if career_interest_f1_values
+                else None
+            ),
+            career_goals_f1=(
+                sum(career_goal_f1_values) / len(career_goal_f1_values)
+                if career_goal_f1_values
                 else None
             ),
             overall_mean=(

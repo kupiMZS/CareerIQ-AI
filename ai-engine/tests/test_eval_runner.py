@@ -4,6 +4,7 @@ from app.providers.base import ResumeAnalysisProvider
 from app.schemas.resume import (
     Achievement,
     Candidate,
+    CareerProfile,
     Language,
     Publication,
     ResumeIntelligence,
@@ -12,6 +13,7 @@ from app.schemas.resume import (
 from evals.runner import run_resume_benchmark
 from evals.schemas import (
     ExpectedAchievement,
+    ExpectedCareerProfile,
     ExpectedExtendedResumeExtraction,
     ExpectedLanguage,
     ExpectedPhase2ResumeExtraction,
@@ -506,6 +508,143 @@ async def test_runner_rejects_mixed_phase2_v2_and_v3_scorers():
             ExpectedResumeExtraction(),
             phase2_expected=ExpectedPhase2ResumeExtraction(
                 achievements=[],
+            ),
+        ),
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 scorer version",
+    ):
+        await run_resume_benchmark(
+            provider_name="test",
+            provider=provider,
+            cases=cases,
+        )
+
+
+@pytest.mark.anyio
+async def test_runner_routes_career_profile_coverage_to_phase2_v4():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            career_profile=CareerProfile(
+                career_interests=[
+                    "Distributed systems",
+                ],
+                career_goals=[
+                    "Become a platform engineer",
+                ],
+            )
+        )
+    )
+
+    cases = [
+        build_case(
+            "phase2-career-profile-v4",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                career_profile=ExpectedCareerProfile(
+                    career_interests=[
+                        "Distributed systems",
+                    ],
+                    career_goals=[
+                        "Become a platform engineer",
+                    ],
+                )
+            ),
+        )
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.phase2 is not None
+    assert summary.phase2.scorer_version == "phase2-v4"
+    assert summary.phase2.case_count == 1
+
+    assert summary.phase2.publications_f1 is None
+    assert summary.phase2.languages_f1 is None
+    assert summary.phase2.achievements_f1 is None
+
+    assert summary.phase2.career_interests_f1 == 1.0
+    assert summary.phase2.career_goals_f1 == 1.0
+    assert summary.phase2.overall_mean == 1.0
+
+    case_score = summary.cases[0].phase2_score
+
+    assert case_score is not None
+    assert case_score.career_interests is not None
+    assert case_score.career_goals is not None
+
+    assert case_score.career_interests.f1 == 1.0
+    assert case_score.career_goals.f1 == 1.0
+
+
+@pytest.mark.anyio
+async def test_runner_preserves_partial_career_profile_coverage():
+    provider = StaticProvider(
+        ResumeIntelligence(
+            career_profile=CareerProfile(
+                career_interests=[
+                    "Distributed systems",
+                ],
+                career_goals=[
+                    "Become a platform engineer",
+                ],
+            )
+        )
+    )
+
+    cases = [
+        build_case(
+            "phase2-career-goal-only-v4",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                career_profile=ExpectedCareerProfile(
+                    career_goals=[
+                        "Become a platform engineer",
+                    ],
+                )
+            ),
+        )
+    ]
+
+    summary = await run_resume_benchmark(
+        provider_name="test",
+        provider=provider,
+        cases=cases,
+    )
+
+    assert summary.phase2 is not None
+    assert summary.phase2.scorer_version == "phase2-v4"
+
+    assert summary.phase2.career_interests_f1 is None
+    assert summary.phase2.career_goals_f1 == 1.0
+    assert summary.phase2.overall_mean == 1.0
+
+
+@pytest.mark.anyio
+async def test_runner_rejects_mixed_phase2_v3_and_v4_scorers():
+    provider = StaticProvider(ResumeIntelligence())
+
+    cases = [
+        build_case(
+            "phase2-achievement-v3",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                achievements=[],
+            ),
+        ),
+        build_case(
+            "phase2-career-profile-v4",
+            ExpectedResumeExtraction(),
+            phase2_expected=ExpectedPhase2ResumeExtraction(
+                career_profile=ExpectedCareerProfile(
+                    career_goals=[],
+                ),
             ),
         ),
     ]

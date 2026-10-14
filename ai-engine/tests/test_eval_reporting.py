@@ -42,6 +42,8 @@ def build_phase2_summary(
     publications_f1: float | None = 1.0,
     languages_f1: float | None = None,
     achievements_f1: float | None = None,
+    career_interests_f1: float | None = None,
+    career_goals_f1: float | None = None,
     overall_mean: float = 1.0,
 ) -> Phase2BenchmarkSummary:
     return Phase2BenchmarkSummary(
@@ -50,6 +52,8 @@ def build_phase2_summary(
         publications_f1=publications_f1,
         languages_f1=languages_f1,
         achievements_f1=achievements_f1,
+        career_interests_f1=career_interests_f1,
+        career_goals_f1=career_goals_f1,
         overall_mean=overall_mean,
     )
 
@@ -525,6 +529,123 @@ def test_report_rejects_mixed_phase2_achievement_metric_coverage():
                         publications_f1=None,
                         languages_f1=None,
                         achievements_f1=None,
+                    ),
+                ),
+            ],
+        )
+
+
+def test_report_aggregates_phase2_v4_career_profile_metrics():
+    report = build_resume_benchmark_report(
+        provider="local",
+        model="qwen3:4b-instruct",
+        prompt_version="resume-analysis-v6",
+        dataset="phase2-career-profile.jsonl",
+        runs=[
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v4",
+                    publications_f1=None,
+                    languages_f1=None,
+                    achievements_f1=None,
+                    career_interests_f1=0.6,
+                    career_goals_f1=0.5,
+                    overall_mean=0.55,
+                ),
+            ),
+            build_summary(
+                provider="local",
+                phase2=build_phase2_summary(
+                    scorer_version="phase2-v4",
+                    publications_f1=None,
+                    languages_f1=None,
+                    achievements_f1=None,
+                    career_interests_f1=0.8,
+                    career_goals_f1=1.0,
+                    overall_mean=0.9,
+                ),
+            ),
+        ],
+    )
+
+    assert report.phase2 is not None
+    assert report.phase2.scorer_version == "phase2-v4"
+
+    assert report.phase2.metrics.publications_f1 is None
+    assert report.phase2.metrics.languages_f1 is None
+    assert report.phase2.metrics.achievements_f1 is None
+
+    assert report.phase2.metrics.career_interests_f1 is not None
+    assert report.phase2.metrics.career_goals_f1 is not None
+
+    assert report.phase2.metrics.career_interests_f1.mean == pytest.approx(0.7)
+
+    assert report.phase2.metrics.career_goals_f1.mean == pytest.approx(0.75)
+
+    assert report.phase2.metrics.overall_mean.mean == pytest.approx(0.725)
+
+
+def test_report_rejects_mixed_phase2_career_interest_metric_coverage():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 career interest metric coverage",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v6",
+            dataset="phase2-career-profile.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v4",
+                        publications_f1=None,
+                        career_interests_f1=1.0,
+                        career_goals_f1=1.0,
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v4",
+                        publications_f1=None,
+                        career_interests_f1=None,
+                        career_goals_f1=1.0,
+                    ),
+                ),
+            ],
+        )
+
+
+def test_report_rejects_mixed_phase2_career_goal_metric_coverage():
+    with pytest.raises(
+        ValueError,
+        match="same Phase 2 career goal metric coverage",
+    ):
+        build_resume_benchmark_report(
+            provider="local",
+            model="qwen3:4b-instruct",
+            prompt_version="resume-analysis-v6",
+            dataset="phase2-career-profile.jsonl",
+            runs=[
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v4",
+                        publications_f1=None,
+                        career_interests_f1=1.0,
+                        career_goals_f1=1.0,
+                    ),
+                ),
+                build_summary(
+                    provider="local",
+                    phase2=build_phase2_summary(
+                        scorer_version="phase2-v4",
+                        publications_f1=None,
+                        career_interests_f1=1.0,
+                        career_goals_f1=None,
                     ),
                 ),
             ],

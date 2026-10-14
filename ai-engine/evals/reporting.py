@@ -100,6 +100,8 @@ class Phase2BenchmarkMetrics(BaseModel):
     publications_f1: MetricStatistics | None = None
     languages_f1: MetricStatistics | None = None
     achievements_f1: MetricStatistics | None = None
+    career_interests_f1: MetricStatistics | None = None
+    career_goals_f1: MetricStatistics | None = None
     overall_mean: MetricStatistics
 
 
@@ -224,6 +226,25 @@ def _build_phase2_report(
             "All benchmark runs must use the same Phase 2 achievement metric coverage."
         )
 
+    career_interest_values = [run.career_interests_f1 for run in runs]
+
+    has_career_interests = [value is not None for value in career_interest_values]
+
+    if any(has_career_interests) and not all(has_career_interests):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 "
+            "career interest metric coverage."
+        )
+
+    career_goal_values = [run.career_goals_f1 for run in runs]
+
+    has_career_goals = [value is not None for value in career_goal_values]
+
+    if any(has_career_goals) and not all(has_career_goals):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 career goal metric coverage."
+        )
+
     publications_f1 = None
 
     if all(has_publications):
@@ -245,11 +266,27 @@ def _build_phase2_report(
             [value for value in achievement_values if value is not None]
         )
 
+    career_interests_f1 = None
+
+    if all(has_career_interests):
+        career_interests_f1 = _build_metric_statistics(
+            [value for value in career_interest_values if value is not None]
+        )
+
+    career_goals_f1 = None
+
+    if all(has_career_goals):
+        career_goals_f1 = _build_metric_statistics(
+            [value for value in career_goal_values if value is not None]
+        )
+
     metrics = Phase2BenchmarkMetrics(
         publications_f1=publications_f1,
         languages_f1=languages_f1,
         achievements_f1=achievements_f1,
-        overall_mean=(_build_metric_statistics([run.overall_mean for run in runs])),
+        career_interests_f1=career_interests_f1,
+        career_goals_f1=career_goals_f1,
+        overall_mean=_build_metric_statistics([run.overall_mean for run in runs]),
     )
 
     return Phase2BenchmarkReport(
