@@ -26,7 +26,7 @@ def collect_literal_skill_evidence(
         if not name or name != name.strip():
             continue
 
-        pattern = re.compile(rf"(?<!\w){re.escape(name)}(?!\w)")
+        pattern = re.compile(rf"(?<![\w+#]){re.escape(name)}(?![\w+#])")
 
         patterns.append((index, name, pattern))
 

@@ -43,7 +43,7 @@ def _marker_targets_skill(
     skill_name: str,
 ) -> bool:
     """Require the named skill directly after a context marker."""
-    target_pattern = re.compile(rf"\s*{re.escape(skill_name)}(?!\w)")
+    target_pattern = re.compile(rf"\s*{re.escape(skill_name)}(?![\w+#])")
 
     return any(
         target_pattern.match(excerpt, marker.end()) is not None
@@ -56,7 +56,7 @@ def _rejection_has_local_contrast(
 ) -> bool:
     """Recognize contrast immediately following a skill mention."""
     pattern = re.compile(
-        rf"(?<!\w){re.escape(record.extracted_value)}(?!\w)"
+        rf"(?<![\w+#]){re.escape(record.extracted_value)}(?![\w+#])"
         r"\s*[,;]?\s*(?:but|however)\b",
         flags=re.IGNORECASE,
     )
