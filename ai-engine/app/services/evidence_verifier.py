@@ -21,3 +21,34 @@ def verify_evidence_claim(
 
     pattern = re.compile(rf"(?<!\w){re.escape(record.extracted_value)}(?!\w)")
     return pattern.search(record.evidence_text) is not None
+
+
+_SKILL_PATH_PATTERN = re.compile(r"^skills\[\d+\]\.name$")
+
+_UNSUPPORTED_SKILL_PREFIXES = (
+    "no experience with",
+    "never used",
+    "not familiar with",
+    "currently learning",
+    "learning",
+)
+
+
+def is_explicitly_unsupported_skill_claim(
+    record: EvidenceRecord,
+) -> bool:
+    """Detect a narrow set of explicit skill-negation statements."""
+    if _SKILL_PATH_PATTERN.fullmatch(record.field_path) is None:
+        return False
+
+    value = re.escape(record.extracted_value)
+
+    for prefix in _UNSUPPORTED_SKILL_PREFIXES:
+        pattern = re.compile(
+            rf"(?i)(?<!\w){re.escape(prefix)}\s+"
+            rf"{value}(?!\w)"
+        )
+        if pattern.search(record.evidence_text):
+            return True
+
+    return False
