@@ -19,3 +19,20 @@ class EvidenceRecord(BaseModel):
         ge=0.0,
         le=1.0,
     )
+
+
+EvidenceVerificationStatus = Literal[
+    "excerpt_not_found",
+    "claim_not_found",
+    "explicitly_unsupported",
+    "lexically_supported",
+]
+
+
+class EvidenceVerificationResult(BaseModel):
+    """Outcome of conservative internal evidence verification."""
+
+    status: EvidenceVerificationStatus
+    excerpt_found: bool
+    claim_found: bool
+    explicitly_unsupported: bool = False

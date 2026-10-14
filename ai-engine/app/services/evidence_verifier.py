@@ -1,6 +1,9 @@
 import re
 
-from app.schemas.evidence import EvidenceRecord
+from app.schemas.evidence import (
+    EvidenceRecord,
+    EvidenceVerificationResult,
+)
 
 
 def verify_evidence_excerpt(
@@ -52,3 +55,37 @@ def is_explicitly_unsupported_skill_claim(
             return True
 
     return False
+
+
+def verify_evidence_record(
+    resume_text: str,
+    record: EvidenceRecord,
+) -> EvidenceVerificationResult:
+    """Combine literal, lexical, and explicit rejection checks."""
+    if not verify_evidence_excerpt(resume_text, record):
+        return EvidenceVerificationResult(
+            status="excerpt_not_found",
+            excerpt_found=False,
+            claim_found=False,
+        )
+
+    if not verify_evidence_claim(resume_text, record):
+        return EvidenceVerificationResult(
+            status="claim_not_found",
+            excerpt_found=True,
+            claim_found=False,
+        )
+
+    if is_explicitly_unsupported_skill_claim(record):
+        return EvidenceVerificationResult(
+            status="explicitly_unsupported",
+            excerpt_found=True,
+            claim_found=True,
+            explicitly_unsupported=True,
+        )
+
+    return EvidenceVerificationResult(
+        status="lexically_supported",
+        excerpt_found=True,
+        claim_found=True,
+    )
