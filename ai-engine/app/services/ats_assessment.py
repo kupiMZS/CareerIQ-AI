@@ -135,3 +135,141 @@ def assess_resume_structure(resume_text: str) -> ATSReport:
         findings=findings,
         limitations=list(_LIMITATIONS),
     )
+
+
+_CONTENT_PLACEHOLDERS = {
+    "n/a",
+    "none",
+    "not applicable",
+    "pending",
+    "tbd",
+    "to be added",
+    "",
+}
+
+
+def assess_resume_section_content(resume_text: str) -> ATSReport:
+    """Check for text beneath recognized section headings.
+
+    This does not verify qualifications, experience, or
+    the truth of any statement in the supplied resume.
+    """
+
+    text = resume_text.strip()
+
+    section_codes = {
+        section: f"section_{section}_content" for section in _SECTION_LABELS
+    }
+
+    limitations = [
+        *_LIMITATIONS,
+        (
+            "Section content checks establish only the presence "
+            "of non-placeholder text under recognized headings; "
+            "they do not validate qualifications or experience."
+        ),
+    ]
+
+    if not text:
+        return ATSReport(
+            findings=[
+                ATSFinding(
+                    code=code,
+                    status="not_assessed",
+                    explanation="No resume text was provided.",
+                )
+                for code in section_codes.values()
+            ],
+            limitations=limitations,
+        )
+
+    observed: set[str] = set()
+
+    bodies: dict[str, list[str]] = {section: [] for section in _SECTION_LABELS}
+
+    current_section: str | None = None
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        heading = line.casefold().removesuffix(":").strip()
+
+        recognized = SECTION_ALIASES.get(heading) if len(line) <= 80 else None
+
+        if recognized is not None:
+            if recognized in bodies:
+                current_section = recognized
+                observed.add(recognized)
+            else:
+                current_section = None
+
+            continue
+
+        if current_section is None:
+            continue
+
+        normalized = line.casefold().strip(" .:-—–")
+
+        if normalized in _CONTENT_PLACEHOLDERS:
+            continue
+
+        bodies[current_section].append(line)
+
+    findings: list[ATSFinding] = []
+
+    for section, label in _SECTION_LABELS.items():
+        code = section_codes[section]
+
+        if section not in observed:
+            findings.append(
+                ATSFinding(
+                    code=code,
+                    status="not_assessed",
+                    explanation=(
+                        f"No recognizable {label} heading was "
+                        "found, so its section content could "
+                        "not be evaluated separately."
+                    ),
+                )
+            )
+
+        elif not bodies[section]:
+            findings.append(
+                ATSFinding(
+                    code=code,
+                    status="needs_attention",
+                    explanation=(
+                        f"The {label} heading was found, "
+                        "but no non-placeholder content "
+                        "was detected beneath it."
+                    ),
+                    recommendation=(
+                        f"Review the {label} section and "
+                        "include relevant information "
+                        "when applicable."
+                    ),
+                )
+            )
+
+        else:
+            findings.append(
+                ATSFinding(
+                    code=code,
+                    status="satisfied",
+                    explanation=(
+                        f"Non-placeholder text was detected "
+                        f"beneath a recognized {label} heading. "
+                        "Its factual accuracy was not verified."
+                    ),
+                    supporting_text=[bodies[section][0]],
+                )
+            )
+
+    return ATSReport(
+        score=None,
+        findings=findings,
+        limitations=limitations,
+    )
