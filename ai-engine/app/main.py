@@ -8,6 +8,7 @@ from app.schemas.analysis import (
     AnalyzeResponse,
     SkillEvidenceItem,
 )
+from app.schemas.ats import ATSReport
 from app.schemas.career import (
     CareerRecommendationRequest,
     CareerRecommendationResponse,
@@ -18,6 +19,7 @@ from app.services import (
     enrich_resume_intelligence,
     summarize_resume_skill_evidence,
 )
+from app.services.ats_report_builder import build_ats_report
 
 app = FastAPI(
     title="CareerIQ AI Engine",
@@ -113,3 +115,19 @@ def recommend_career_endpoint(
     engine = CareerRecommendationEngine()
 
     return engine.recommend(request)
+
+
+@app.post(
+    "/analyze/ats",
+    response_model=ATSReport,
+)
+def analyze_resume_ats_endpoint(
+    request: AnalyzeRequest,
+) -> ATSReport:
+    """Return opt-in text-only ATS findings.
+
+    This endpoint does not invoke the AI orchestrator,
+    calculate a new ATS score, or modify legacy analysis.
+    """
+
+    return build_ats_report(request.resume_text)
