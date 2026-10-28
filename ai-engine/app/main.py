@@ -8,7 +8,7 @@ from app.schemas.analysis import (
     AnalyzeResponse,
     SkillEvidenceItem,
 )
-from app.schemas.ats import ATSReport
+from app.schemas.ats import ATSAnalyzeRequest, ATSReport
 from app.schemas.career import (
     CareerRecommendationRequest,
     CareerRecommendationResponse,
@@ -122,7 +122,7 @@ def recommend_career_endpoint(
     response_model=ATSReport,
 )
 def analyze_resume_ats_endpoint(
-    request: AnalyzeRequest,
+    request: ATSAnalyzeRequest,
 ) -> ATSReport:
     """Return opt-in text-only ATS findings.
 

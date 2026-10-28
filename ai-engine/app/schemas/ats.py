@@ -2,6 +2,24 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+MAX_ATS_RESUME_CHARS = 50_000
+
+
+class ATSAnalyzeRequest(BaseModel):
+    """Bounded input for opt-in text-only ATS assessment."""
+
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
+
+    resume_text: str = Field(
+        ...,
+        min_length=1,
+        max_length=MAX_ATS_RESUME_CHARS,
+        description="Extracted resume text for ATS assessment",
+    )
+
 
 class ATSFinding(BaseModel):
     """One explainable, observable assessment finding."""

@@ -2,6 +2,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import main as main_module
+from app.schemas.analysis import AnalyzeRequest
+from app.schemas.ats import MAX_ATS_RESUME_CHARS
 
 EXPECTED_CODES = [
     "contact_email",
@@ -178,3 +180,49 @@ def test_openapi_documents_separate_ats_response():
     ]
 
     assert "ATSReport" in str(response_schema)
+
+
+def test_ats_endpoint_accepts_maximum_resume_length():
+    prefix = "Experience\n"
+
+    text = prefix + ("X" * (MAX_ATS_RESUME_CHARS - len(prefix)))
+
+    assert len(text) == MAX_ATS_RESUME_CHARS
+
+    response = _post({"resume_text": text})
+
+    assert response.status_code == 200
+    assert response.json()["report_version"] == "ats-v1"
+    assert response.json()["score"] is None
+    assert len(response.json()["findings"]) == 8
+
+
+def test_ats_endpoint_rejects_over_limit():
+    oversized_text = "X" * (MAX_ATS_RESUME_CHARS + 1)
+
+    response = _post({"resume_text": oversized_text})
+
+    assert response.status_code == 422
+
+    detail = response.json()["detail"]
+
+    assert any("resume_text" in item.get("loc", []) for item in detail)
+
+
+def test_ats_endpoint_rejects_unexpected_fields():
+    response = _post(
+        {
+            "resume_text": "Skills\nPython",
+            "unsupported_control": "example",
+        }
+    )
+
+    assert response.status_code == 422
+
+
+def test_legacy_request_schema_remains_unbounded():
+    text = "X" * (MAX_ATS_RESUME_CHARS + 1)
+
+    request = AnalyzeRequest(resume_text=text)
+
+    assert request.resume_text == text
