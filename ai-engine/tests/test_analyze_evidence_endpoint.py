@@ -1,9 +1,10 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from fastapi.testclient import TestClient
+
 from app import main as main_module
 from app.schemas.resume import ResumeIntelligence, Skill
-from fastapi.testclient import TestClient
 
 
 def test_opt_in_evidence_endpoint_reports_skill_statuses(
