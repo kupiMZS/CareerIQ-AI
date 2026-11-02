@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 
+# Match the Laravel 5 MiB resume upload validation.
+COPY infrastructure/docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-careeriq-uploads.ini
+
 # Application directory
 WORKDIR /var/www/html
 

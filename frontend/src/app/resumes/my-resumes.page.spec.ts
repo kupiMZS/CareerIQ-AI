@@ -331,7 +331,7 @@ describe('MyResumesPage', () => {
     fixture.destroy();
   });
 
-  it('rejects a file larger than 2 MiB', () => {
+  it('rejects a file larger than 5 MiB', () => {
     const fixture = TestBed.createComponent(MyResumesPage);
 
     fixture.detectChanges();
@@ -346,7 +346,7 @@ describe('MyResumesPage', () => {
     enterUploadTitle(element, 'Large synthetic résumé');
 
     const largeFile = new File(
-      [new Uint8Array(2 * 1024 * 1024 + 1)],
+      [new Uint8Array(5 * 1024 * 1024 + 1)],
       'large.pdf',
       { type: 'application/pdf' }
     );
@@ -360,7 +360,7 @@ describe('MyResumesPage', () => {
     fixture.detectChanges();
 
     expect(element.textContent)
-      .toContain('no larger than 2 MiB');
+      .toContain('no larger than 5 MiB');
 
     httpMock.expectNone('/api/v1/resumes');
 
@@ -444,6 +444,80 @@ describe('MyResumesPage', () => {
 
     expect(element.textContent)
       .toContain('Your session has expired.');
+
+    fixture.destroy();
+  });
+
+  it('accepts a fictional PDF above 2 MiB but within 5 MiB', () => {
+    const fixture = TestBed.createComponent(MyResumesPage);
+
+    fixture.detectChanges();
+
+    httpMock.expectOne('/api/v1/resumes')
+      .flush({ data: [] });
+
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+
+    enterUploadTitle(
+      element,
+      'Synthetic large résumé'
+    );
+
+    const file = new File(
+      [new Uint8Array(2 * 1024 * 1024 + 1)],
+      'large-synthetic.pdf',
+      { type: 'application/pdf' }
+    );
+
+    chooseFile(element, file);
+
+    (element.querySelector(
+      'button.upload-button'
+    ) as HTMLButtonElement).click();
+
+    const request = httpMock.expectOne('/api/v1/resumes');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeInstanceOf(FormData);
+
+    const payload = request.request.body as FormData;
+
+    expect(payload.get('title'))
+      .toBe('Synthetic large résumé');
+
+    const submittedFile = payload.get('file') as File;
+
+    expect(submittedFile.size)
+      .toBe(2 * 1024 * 1024 + 1);
+
+    request.flush({
+      message: 'Resume uploaded successfully',
+      data: {
+        id: 74,
+        title: 'Synthetic large résumé',
+        file_name: 'large-synthetic.pdf',
+        file_type: 'application/pdf',
+        status: 'uploaded',
+        created_at: null
+      }
+    }, {
+      status: 201,
+      statusText: 'Created'
+    });
+
+    fixture.detectChanges();
+
+    expect(
+      element.querySelector(
+        'a[href="/resumes/74/ats"]'
+      )
+    ).toBeTruthy();
+
+    httpMock.expectNone(
+      '/api/v1/resumes/74/analysis/ats'
+    );
 
     fixture.destroy();
   });

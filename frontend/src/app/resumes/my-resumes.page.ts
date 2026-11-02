@@ -37,7 +37,7 @@ import {
       <section class="panel" aria-labelledby="upload-heading">
         <h2 id="upload-heading">Upload a résumé</h2>
         <p class="meta">
-          PDF, DOC or DOCX · Maximum 2 MiB
+          PDF, DOC or DOCX · Maximum 5 MiB
         </p>
 
         <div class="upload-fields">
@@ -268,9 +268,8 @@ export class MyResumesPage implements OnInit {
   readonly uploadError = signal<string | null>(null);
   readonly uploadSuccess = signal<string | null>(null);
 
-  // Conservative limit until the HTTP PHP runtime is
-  // confirmed to support Laravel's 5 MiB maximum.
-  private readonly maxUploadBytes = 2 * 1024 * 1024;
+  // Match Laravel's 5120 KiB validation and PHP's 5M limit.
+  private readonly maxUploadBytes = 5 * 1024 * 1024;
   readonly errorMessage = signal<string | null>(null);
   readonly resumes = signal<ResumeListItem[] | null>(null);
 
@@ -336,7 +335,7 @@ export class MyResumesPage implements OnInit {
       file.size > this.maxUploadBytes
     ) {
       this.uploadError.set(
-        'The file must be non-empty and no larger than 2 MiB.'
+        'The file must be non-empty and no larger than 5 MiB.'
       );
       return;
     }
