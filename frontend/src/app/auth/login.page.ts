@@ -8,6 +8,7 @@ import {
   Validators
 } from '@angular/forms';
 import { finalize } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 import { AuthApiService } from './auth-api.service';
 import { AuthTokenStore } from './auth-token.store';
@@ -15,7 +16,7 @@ import { AuthUser } from './auth.models';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   template: `
     <section class="auth-card" aria-labelledby="login-heading">
       @if (currentUser(); as user) {
@@ -28,6 +29,9 @@ import { AuthUser } from './auth.models';
         <p class="privacy-note">
           Your session is held in memory and ends when the page reloads.
         </p>
+        <a class="resume-link" routerLink="/resumes">
+          My résumés
+        </a>
         <button
           class="primary logout"
           type="button"
@@ -149,6 +153,23 @@ import { AuthUser } from './auth.models';
     button:focus-visible {
       outline: 3px solid #9bc6ff;
       outline-offset: 2px;
+    }
+
+    .resume-link {
+      display: block;
+      margin: 1rem 0;
+      padding: .8rem 1.2rem;
+      border-radius: 9px;
+      background: #edf4ff;
+      color: #1858a4;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .resume-link:focus-visible {
+      outline: 3px solid #9bc6ff;
+      outline-offset: 3px;
     }
 
     .primary {

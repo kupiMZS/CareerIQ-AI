@@ -7,6 +7,7 @@ import {
   provideHttpClientTesting
 } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { authInterceptor } from './auth.interceptor';
 import { AuthTokenStore } from './auth-token.store';
@@ -36,7 +37,8 @@ describe('LoginPage', () => {
       imports: [LoginPage],
       providers: [
         provideHttpClient(withInterceptors([authInterceptor])),
-        provideHttpClientTesting()
+        provideHttpClientTesting(),
+        provideRouter([])
       ]
     }).compileComponents();
 
@@ -239,5 +241,21 @@ describe('LoginPage', () => {
     expect(element.textContent).toContain(
       'Server token revocation could not be confirmed.'
     );
+  });
+  it('links to the résumé library after sign-in', () => {
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(
+      element.querySelector('a[href="/resumes"]')
+    ).toBeNull();
+
+    signIn();
+
+    const link = element.querySelector(
+      'a[href="/resumes"]'
+    ) as HTMLAnchorElement | null;
+
+    expect(link).toBeTruthy();
+    expect(link?.textContent).toContain('My résumés');
   });
 });
