@@ -67,4 +67,81 @@ describe('ResumeListApiService', () => {
 
     httpMock.expectOne('/api/v1/resumes').flush(response);
   });
+  it('uploads a résumé using multipart FormData', () => {
+    const file = new File(
+      ['%PDF-1.7\\nSynthetic test content.'],
+      'synthetic.pdf',
+      { type: 'application/pdf' }
+    );
+
+    let receivedId: number | undefined;
+
+    service.uploadResume('Synthetic résumé', file)
+      .subscribe((result) => {
+        receivedId = result.data.id;
+      });
+
+    const request = httpMock.expectOne('/api/v1/resumes');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toBeInstanceOf(FormData);
+
+    const form = request.request.body as FormData;
+
+    expect(form.get('title')).toBe('Synthetic résumé');
+    const sentFile = form.get('file') as File;
+
+    expect(sentFile.name).toBe(file.name);
+    expect(sentFile.size).toBe(file.size);
+
+    expect(
+      request.request.headers.has('Content-Type')
+    ).toBe(false);
+
+    request.flush({
+      message: 'Resume uploaded successfully',
+      data: {
+        id: 42,
+        title: 'Synthetic résumé',
+        file_name: 'synthetic.pdf',
+        file_type: 'application/pdf',
+        status: 'uploaded',
+        created_at: null
+      }
+    }, {
+      status: 201,
+      statusText: 'Created'
+    });
+
+    expect(receivedId).toBe(42);
+  });
+
+  it('does not upload before subscription', () => {
+    const file = new File(
+      ['Synthetic PDF'],
+      'synthetic.pdf',
+      { type: 'application/pdf' }
+    );
+
+    const result$ = service.uploadResume(
+      'Synthetic résumé',
+      file
+    );
+
+    httpMock.expectNone('/api/v1/resumes');
+
+    result$.subscribe();
+
+    httpMock.expectOne('/api/v1/resumes').flush({
+      message: 'Resume uploaded successfully',
+      data: {
+        id: 42,
+        title: 'Synthetic résumé',
+        file_name: 'synthetic.pdf',
+        file_type: 'application/pdf',
+        status: 'uploaded',
+        created_at: null
+      }
+    });
+  });
 });

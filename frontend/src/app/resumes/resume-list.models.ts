@@ -10,3 +10,8 @@ export interface ResumeListItem {
 export interface ResumeListResponse {
   data: ResumeListItem[];
 }
+
+export interface ResumeUploadResponse {
+  message: string;
+  data: ResumeListItem;
+}

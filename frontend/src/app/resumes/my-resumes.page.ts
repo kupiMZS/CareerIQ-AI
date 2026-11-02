@@ -2,9 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
   DestroyRef,
+  ElementRef,
   inject,
   OnInit,
-  signal
+  signal,
+  ViewChild
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -14,7 +16,8 @@ import { AuthTokenStore } from '../auth/auth-token.store';
 import { ResumeListApiService } from './resume-list-api.service';
 import {
   ResumeListItem,
-  ResumeListResponse
+  ResumeListResponse,
+  ResumeUploadResponse
 } from './resume-list.models';
 
 @Component({
@@ -30,6 +33,63 @@ import {
           ATS assessment. No assessment runs automatically.
         </p>
       </header>
+
+      <section class="panel" aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Upload a résumé</h2>
+        <p class="meta">
+          PDF, DOC or DOCX · Maximum 2 MiB
+        </p>
+
+        <div class="upload-fields">
+          <label for="resume-upload-title">Résumé title</label>
+          <input
+            id="resume-upload-title"
+            type="text"
+            maxlength="255"
+            [value]="uploadTitle()"
+            [disabled]="uploading() || loading()"
+            (input)="onTitleInput($event)"
+          />
+
+          <label for="resume-upload-file">Choose a file</label>
+          <input
+            #uploadFileInput
+            id="resume-upload-file"
+            type="file"
+            accept=".pdf,.doc,.docx"
+            [disabled]="uploading() || loading()"
+            (change)="onFileSelection($event)"
+          />
+
+          <button
+            type="button"
+            class="upload-button"
+            [disabled]="uploading() || loading() || !isAuthenticated()"
+            (click)="uploadResume()"
+          >
+            {{ uploading() ? 'Uploading…' : 'Upload résumé' }}
+          </button>
+        </div>
+
+        @if (uploading()) {
+          <p role="status">Uploading your résumé…</p>
+        }
+
+        @if (uploadSuccess(); as message) {
+          <p class="upload-success" role="status">{{ message }}</p>
+        }
+
+        @if (uploadError(); as message) {
+          <p class="upload-error" role="alert">{{ message }}</p>
+        }
+
+        @if (!isAuthenticated()) {
+          <p>
+            <a routerLink="/login">Sign in again</a>
+            to upload a résumé.
+          </p>
+        }
+      </section>
 
       @if (loading()) {
         <p class="panel" role="status">Loading your résumés…</p>
@@ -128,6 +188,35 @@ import {
       padding: 0;
     }
 
+    .upload-fields {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .75rem;
+    }
+
+    .upload-fields label {
+      font-weight: 700;
+    }
+
+    .upload-fields input {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 480px;
+      padding: .7rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      font: inherit;
+    }
+
+    .upload-success {
+      color: #166534;
+    }
+
+    .upload-error {
+      color: #9f1239;
+    }
+
     .panel {
       padding: 1.5rem;
       margin: 1rem 0;
@@ -164,17 +253,160 @@ import {
   `]
 })
 export class MyResumesPage implements OnInit {
+  @ViewChild('uploadFileInput')
+  private fileInput?: ElementRef<HTMLInputElement>;
+
   private readonly api = inject(ResumeListApiService);
   private readonly tokens = inject(AuthTokenStore);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly isAuthenticated = this.tokens.isAuthenticated;
   readonly loading = signal(false);
+  readonly uploading = signal(false);
+  readonly uploadTitle = signal('');
+  readonly selectedFile = signal<File | null>(null);
+  readonly uploadError = signal<string | null>(null);
+  readonly uploadSuccess = signal<string | null>(null);
+
+  // Conservative limit until the HTTP PHP runtime is
+  // confirmed to support Laravel's 5 MiB maximum.
+  private readonly maxUploadBytes = 2 * 1024 * 1024;
   readonly errorMessage = signal<string | null>(null);
   readonly resumes = signal<ResumeListItem[] | null>(null);
 
   ngOnInit(): void {
     this.loadResumes();
+  }
+
+  onTitleInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.uploadTitle.set(input.value);
+    this.uploadError.set(null);
+    this.uploadSuccess.set(null);
+  }
+
+  onFileSelection(event: Event): void {
+    const input = event.target as HTMLInputElement;
+
+    this.selectedFile.set(input.files?.item(0) ?? null);
+    this.uploadError.set(null);
+    this.uploadSuccess.set(null);
+  }
+
+  uploadResume(): void {
+    if (this.uploading() || this.loading()) {
+      return;
+    }
+
+    this.uploadError.set(null);
+    this.uploadSuccess.set(null);
+
+    if (!this.isAuthenticated()) {
+      this.uploadError.set(
+        'Your session has expired. Sign in again.'
+      );
+      return;
+    }
+
+    const title = this.uploadTitle().trim();
+    const file = this.selectedFile();
+
+    if (!title || title.length > 255) {
+      this.uploadError.set(
+        'Enter a résumé title between 1 and 255 characters.'
+      );
+      return;
+    }
+
+    if (!file) {
+      this.uploadError.set('Choose a résumé file.');
+      return;
+    }
+
+    if (!/\.(pdf|doc|docx)$/i.test(file.name)) {
+      this.uploadError.set(
+        'Choose a PDF, DOC, or DOCX file.'
+      );
+      return;
+    }
+
+    if (
+      file.size <= 0 ||
+      file.size > this.maxUploadBytes
+    ) {
+      this.uploadError.set(
+        'The file must be non-empty and no larger than 2 MiB.'
+      );
+      return;
+    }
+
+    this.uploading.set(true);
+
+    this.api.uploadResume(title, file).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.uploading.set(false))
+    ).subscribe({
+      next: (response: ResumeUploadResponse) => {
+        if (
+          !response ||
+          !response.data ||
+          !Number.isSafeInteger(response.data.id) ||
+          response.data.id <= 0
+        ) {
+          this.uploadError.set(
+            'The upload response could not be read. ' +
+            'Check your résumé list before trying again.'
+          );
+          return;
+        }
+
+        const uploaded = response.data;
+
+        this.resumes.update((items) => [
+          uploaded,
+          ...(items ?? []).filter(
+            (item) => item.id !== uploaded.id
+          )
+        ]);
+
+        this.errorMessage.set(null);
+        this.uploadTitle.set('');
+        this.selectedFile.set(null);
+
+        if (this.fileInput) {
+          this.fileInput.nativeElement.value = '';
+        }
+
+        this.uploadSuccess.set(
+          'Résumé uploaded successfully. ' +
+          'You can now choose its ATS assessment.'
+        );
+      },
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 401) {
+            this.tokens.clear();
+            this.uploadError.set(
+              'Your session has expired. Sign in again.'
+            );
+            return;
+          }
+
+          if (error.status === 422) {
+            this.uploadError.set(
+              'The server rejected this résumé. ' +
+              'Check its title, format, and size.'
+            );
+            return;
+          }
+        }
+
+        this.uploadError.set(
+          'The résumé upload could not be completed.'
+        );
+      }
+    });
   }
 
   loadResumes(): void {
