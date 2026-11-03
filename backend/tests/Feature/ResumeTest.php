@@ -54,6 +54,67 @@ class ResumeTest extends TestCase
 
     }
 
+    public function test_accepts_pdf_at_exact_five_mib_limit(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $file = UploadedFile::fake()->create(
+            'boundary.pdf',
+            5120,
+            'application/pdf'
+        );
+
+        $response = $this->postJson('/api/v1/resumes', [
+            'title' => 'Synthetic Boundary Resume',
+            'file' => $file,
+        ]);
+
+        $response
+            ->assertStatus(201)
+            ->assertJsonPath(
+                'data.title',
+                'Synthetic Boundary Resume'
+            );
+
+        $this->assertDatabaseHas('resumes', [
+            'user_id' => $user->id,
+            'title' => 'Synthetic Boundary Resume',
+            'file_name' => 'boundary.pdf',
+        ]);
+
+        $this->assertDatabaseCount('resumes', 1);
+    }
+
+    public function test_rejects_pdf_above_five_mib_limit(): void
+    {
+        Storage::fake('local');
+
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $file = UploadedFile::fake()->create(
+            'oversized.pdf',
+            5121,
+            'application/pdf'
+        );
+
+        $response = $this->postJson('/api/v1/resumes', [
+            'title' => 'Synthetic Oversized Resume',
+            'file' => $file,
+        ]);
+
+        $response
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['file']);
+
+        $this->assertDatabaseCount('resumes', 0);
+    }
+
     public function test_invalid_resume_file_fails(): void
     {
 
