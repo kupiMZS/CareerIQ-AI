@@ -28,6 +28,27 @@ The runner resolves the repository root automatically.
 The runner is specific to this Linux development environment.
 It is not yet a portable CI workflow.
 
+## CI checkout mode
+
+Local development mode is the default. It preserves the existing
+branch and protected Angular configuration safeguards.
+
+For a clean CI checkout, run:
+
+    CAREERIQ_E2E_CI=1 bash testing/e2e/run_ats_browser.sh
+
+CI mode accepts detached HEAD and requires a clean working tree.
+It verifies that Git HEAD and the working tree remain unchanged.
+
+CI mode also selects a standalone GeckoDriver executable
+from PATH and creates a temporary Firefox profile under $HOME.
+The local default continues to use Snap Firefox and its bundled
+GeckoDriver, with profiles under $HOME/snap/firefox/common.
+
+CI requires a compatible Firefox and standalone GeckoDriver
+installation, Docker image preparation, and service configuration
+before the complete browser test can run in GitHub Actions.
+
 ## Isolation
 
 The runner uses separate temporary Laravel and FastAPI containers,

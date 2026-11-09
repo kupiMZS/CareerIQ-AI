@@ -7,8 +7,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     libzip-dev \
+    libsqlite3-dev \
     && docker-php-ext-install \
         pdo_mysql \
+        pdo_sqlite \
         zip \
     && pecl install redis \
     && docker-php-ext-enable redis \

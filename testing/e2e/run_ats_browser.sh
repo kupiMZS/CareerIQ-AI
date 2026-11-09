@@ -16,36 +16,106 @@
     done < <(git ls-files --others --exclude-standard -z)
   }
 
+  verify_local_changes() {
+    local file
+    local angular_seen=0
+
+    while IFS= read -r -d '' file; do
+      case "$file" in
+        frontend/angular.json)
+          angular_seen=1
+          ;;
+        testing/e2e/README.md|testing/e2e/run_ats_browser.sh)
+          ;;
+        *)
+          echo "FAIL: Unexpected modified file: $file"
+          return 1
+          ;;
+      esac
+    done < <(git diff --name-only -z)
+
+    if [ "$angular_seen" != 1 ]; then
+      echo 'FAIL: Expected protected Angular modification missing.'
+      return 1
+    fi
+  }
+
   echo '=== PHASE 3F: REUSABLE AUTHENTICATED BROWSER E2E ==='
 
-  test "$(git branch --show-current)" = phase3-ats-analysis
-  initial_head="$(git rev-parse HEAD)"
-  test "$(git diff --name-only)" = frontend/angular.json
-  test -z "$(git diff --cached --name-only)"
-  verify_untracked
-  angular_sha="$(sha256sum frontend/angular.json | awk '{print $1}')"
-  test -x frontend/node_modules/.bin/ng
-  driver_bin="$(readlink -f /snap/firefox/current/usr/lib/firefox/geckodriver 2>/dev/null || true)"
+  ci_mode="${CAREERIQ_E2E_CI:-0}"
 
-  case "$driver_bin" in
-    /snap/firefox/*/usr/lib/firefox/geckodriver)
-      test -x "$driver_bin"
-      ;;
+  case "$ci_mode" in
+    0|1) ;;
     *)
-      echo 'FAIL: Verified Snap GeckoDriver executable unavailable.'
+      echo 'FAIL: CAREERIQ_E2E_CI must be 0 or 1.'
       exit 1
       ;;
   esac
 
-  echo "PASS: Direct GeckoDriver verified: $driver_bin"
+  initial_head="$(git rev-parse HEAD)"
+
+  if [ "$ci_mode" = 1 ]; then
+    test -z "$(git status --porcelain --untracked-files=all)"
+    echo 'PASS: Clean CI checkout verified.'
+  else
+    test "$(git branch --show-current)" = phase3-ats-analysis
+    verify_local_changes
+    test -z "$(git diff --cached --name-only)"
+    verify_untracked
+    echo 'PASS: Local development checkpoint verified.'
+  fi
+
+  angular_sha="$(sha256sum frontend/angular.json | awk '{print $1}')"
+  runner_sha="$(sha256sum testing/e2e/run_ats_browser.sh | awk '{print $1}')"
+  readme_sha="$(sha256sum testing/e2e/README.md | awk '{print $1}')"
+  test -x frontend/node_modules/.bin/ng
+  if [ "$ci_mode" = 1 ]; then
+    driver_command="$(command -v geckodriver || true)"
+    test -n "$driver_command"
+    driver_bin="$(readlink -f "$driver_command")"
+
+    case "$driver_bin" in
+      /snap/*|/usr/bin/snap)
+        echo 'FAIL: CI requires a standalone GeckoDriver executable.'
+        exit 1
+        ;;
+      /*)
+        test -f "$driver_bin"
+        test -x "$driver_bin"
+        ;;
+      *)
+        echo 'FAIL: CI GeckoDriver must resolve to an absolute executable.'
+        exit 1
+        ;;
+    esac
+
+    profile_parent="$HOME"
+    echo "PASS: Standalone CI GeckoDriver verified: $driver_bin"
+  else
+    driver_bin="$(readlink -f /snap/firefox/current/usr/lib/firefox/geckodriver 2>/dev/null || true)"
+
+    case "$driver_bin" in
+      /snap/firefox/*/usr/lib/firefox/geckodriver)
+        test -x "$driver_bin"
+        ;;
+      *)
+        echo 'FAIL: Verified Snap GeckoDriver executable unavailable.'
+        exit 1
+        ;;
+    esac
+
+    profile_parent="$HOME/snap/firefox/common"
+    echo "PASS: Direct GeckoDriver verified: $driver_bin"
+  fi
+
   command -v setsid >/dev/null
   command -v ss >/dev/null
-  test -d "$HOME/snap/firefox/common"
-  test -w "$HOME/snap/firefox/common"
+  test -d "$profile_parent"
+  test -w "$profile_parent"
 
   umask 077
   scratch="$(mktemp -d "$HOME/careeriq-browser-ats.XXXXXX")"
-  profile_root="$(mktemp -d "$HOME/snap/firefox/common/careeriq-profile.XXXXXX")"
+  profile_root="$(mktemp -d "$profile_parent/careeriq-profile.XXXXXX")"
   ai_name="careeriq-browser-ai-${BASHPID}"
   be_name="careeriq-browser-be-${BASHPID}"
   ui_pid=''
@@ -202,7 +272,7 @@
       fi
     done
     case "$profile_root" in
-      "$HOME"/snap/firefox/common/careeriq-profile.??????)
+      "$HOME"/snap/firefox/common/careeriq-profile.??????|"$HOME"/careeriq-profile.??????)
         if [ "$rc" -eq 0 ]; then
           rm -rf -- "$profile_root" || rc=1
           echo 'PASS: Temporary Firefox profile root removed.'
@@ -223,13 +293,32 @@
         ;;
       *) echo 'FAIL: Unsafe cleanup path.'; rc=1 ;;
     esac
-    if test "$(git branch --show-current)" = phase3-ats-analysis \
-      && test "$(git rev-parse HEAD)" = "$initial_head" \
-      && test "$(git diff --name-only)" = frontend/angular.json \
-      && test -z "$(git diff --cached --name-only)" \
-      && verify_untracked \
-      && test "$(sha256sum frontend/angular.json | awk '{print $1}')" = "$angular_sha" \
-      && git diff --check; then
+    git_state_ok=0
+
+    if [ "$ci_mode" = 1 ]; then
+      if test "$(git rev-parse HEAD)" = "$initial_head" &&
+         test -z "$(git status --porcelain --untracked-files=all)" &&
+         test "$(sha256sum frontend/angular.json | awk '{print $1}')" = "$angular_sha" &&
+         test "$(sha256sum testing/e2e/run_ats_browser.sh | awk '{print $1}')" = "$runner_sha" &&
+         test "$(sha256sum testing/e2e/README.md | awk '{print $1}')" = "$readme_sha" &&
+         git diff --check; then
+        git_state_ok=1
+      fi
+    else
+      if test "$(git branch --show-current)" = phase3-ats-analysis &&
+         test "$(git rev-parse HEAD)" = "$initial_head" &&
+         verify_local_changes &&
+         test -z "$(git diff --cached --name-only)" &&
+         verify_untracked &&
+         test "$(sha256sum frontend/angular.json | awk '{print $1}')" = "$angular_sha" &&
+         test "$(sha256sum testing/e2e/run_ats_browser.sh | awk '{print $1}')" = "$runner_sha" &&
+         test "$(sha256sum testing/e2e/README.md | awk '{print $1}')" = "$readme_sha" &&
+         git diff --check; then
+        git_state_ok=1
+      fi
+    fi
+
+    if [ "$git_state_ok" = 1 ]; then
       echo 'PASS: Protected repository state unchanged.'
     else
       echo 'FAIL: Git state needs inspection.'
