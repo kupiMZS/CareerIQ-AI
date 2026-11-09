@@ -2,8 +2,12 @@ name: ATS Browser CI
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
+      - main
       - phase3-ats-analysis
 
 permissions:
