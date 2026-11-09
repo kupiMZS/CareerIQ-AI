@@ -2,6 +2,9 @@ name: ATS Browser CI
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - phase3-ats-analysis
 
 permissions:
   contents: read
