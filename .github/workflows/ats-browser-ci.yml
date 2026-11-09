@@ -44,7 +44,7 @@ jobs:
         uses: browser-actions/setup-firefox@v1
 
       - name: Set up GeckoDriver
-        uses: browser-actions/setup-geckodriver@master
+        uses: browser-actions/setup-geckodriver@78df1e66d20b8af6da82099a570868d171e5ad18
         with:
           token: ${{ github.token }}
 
