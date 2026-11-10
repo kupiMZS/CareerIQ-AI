@@ -1,26 +1,44 @@
 import pytest
 
 from app.schemas.resume import (
+    Achievement,
     Candidate,
+    CareerProfile,
     Certification,
     Education,
     Experience,
+    Language,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
 from evals.schemas import (
+    ExpectedAchievement,
+    ExpectedCareerProfile,
     ExpectedCertification,
     ExpectedEducation,
     ExpectedExperience,
     ExpectedExtendedEducation,
     ExpectedExtendedExperience,
     ExpectedExtendedResumeExtraction,
+    ExpectedLanguage,
+    ExpectedPhase2ResumeExtraction,
     ExpectedProject,
+    ExpectedPublication,
     ExpectedResumeExtraction,
 )
 from evals.scorer import (
+    EXTENDED_SCORER_VERSION,
+    PHASE2_SCORER_VERSION,
+    PHASE2_V2_SCORER_VERSION,
+    PHASE2_V3_SCORER_VERSION,
+    PHASE2_V4_SCORER_VERSION,
     score_extended_resume_extraction,
+    score_phase2_resume_extraction,
+    score_phase2_v2_resume_extraction,
+    score_phase2_v3_resume_extraction,
+    score_phase2_v4_resume_extraction,
     score_resume_extraction,
 )
 
@@ -591,3 +609,761 @@ def test_extended_scorer_does_not_change_core_overall_semantics():
     assert score.experience.f1 == 1.0
 
     assert score.overall == pytest.approx(0.6)
+
+
+def test_phase2_scorer_versions_are_independent():
+    assert EXTENDED_SCORER_VERSION == "extended-v2"
+    assert PHASE2_SCORER_VERSION == "phase2-v1"
+    assert PHASE2_V2_SCORER_VERSION == "phase2-v2"
+    assert PHASE2_V3_SCORER_VERSION == "phase2-v3"
+    assert PHASE2_V4_SCORER_VERSION == "phase2-v4"
+
+
+def test_phase2_publication_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Reliable Career Recommendation Systems",
+                authors=[
+                    "John Doe",
+                    "Jane Smith",
+                ],
+                venue="Example Computing Journal",
+                date="2025",
+                url="https://example.com/publication",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title=" reliable career recommendation systems ",
+                authors=[
+                    "JOHN DOE",
+                    "Jane Smith",
+                ],
+                venue="EXAMPLE COMPUTING JOURNAL",
+                date="2025",
+                url="https://example.com/publication",
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.precision == 1.0
+    assert score.publications.recall == 1.0
+    assert score.publications.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_publication_scorer_penalizes_wrong_metadata():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Reliable Career Recommendation Systems",
+                authors=["John Doe"],
+                venue="Example Computing Journal",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Reliable Career Recommendation Systems",
+                authors=["John Doe"],
+                venue="Wrong Journal",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.matched_count == 0
+    assert score.publications.precision == 0.0
+    assert score.publications.recall == 0.0
+    assert score.publications.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_publication_scorer_preserves_author_order():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Example Publication",
+                authors=[
+                    "First Author",
+                    "Second Author",
+                ],
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Example Publication",
+                authors=[
+                    "Second Author",
+                    "First Author",
+                ],
+            )
+        ]
+    )
+
+    score = score_phase2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications.f1 == 0.0
+
+
+def test_phase2_publication_scorer_treats_empty_collections_as_perfect():
+    score = score_phase2_resume_extraction(
+        ExpectedPhase2ResumeExtraction(),
+        ResumeIntelligence(),
+    )
+
+    assert score.publications.precision == 1.0
+    assert score.publications.recall == 1.0
+    assert score.publications.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v2_language_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Professional working proficiency",
+            ),
+            ExpectedLanguage(
+                name="German",
+                proficiency="B2",
+            ),
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name=" english ",
+                proficiency="PROFESSIONAL WORKING PROFICIENCY",
+            ),
+            Language(
+                name="GERMAN",
+                proficiency="b2",
+            ),
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.precision == 1.0
+    assert score.languages.recall == 1.0
+    assert score.languages.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v2_language_scorer_penalizes_wrong_proficiency():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Intermediate",
+            )
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.languages is not None
+    assert score.languages.matched_count == 0
+    assert score.languages.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_v2_language_scorer_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.precision == 1.0
+    assert score.languages.recall == 1.0
+    assert score.languages.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v2_publication_only_coverage_is_not_diluted():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ]
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.publications.f1 == 0.0
+    assert score.languages is None
+    assert score.overall == 0.0
+
+
+def test_phase2_v2_combined_score_means_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+
+    assert score.overall == pytest.approx(0.5)
+
+
+def test_phase2_v2_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v2_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )
+
+
+def test_phase2_v3_achievement_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Winner, AI Hackathon",
+                description=("Won first place among 30 participating teams."),
+                organization="Example Tech",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title=" winner, ai hackathon ",
+                description=("WON FIRST PLACE AMONG 30 PARTICIPATING TEAMS."),
+                organization="EXAMPLE TECH",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is not None
+    assert score.achievements.precision == 1.0
+    assert score.achievements.recall == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v3_achievement_scorer_penalizes_wrong_metadata():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+                organization="Example University",
+                date="2025",
+            )
+        ]
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+                organization="Different University",
+                date="2025",
+            )
+        ]
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.achievements is not None
+    assert score.achievements.matched_count == 0
+    assert score.achievements.f1 == 0.0
+    assert score.overall == 0.0
+
+
+def test_phase2_v3_achievement_scorer_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[],
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is not None
+    assert score.achievements.precision == 1.0
+    assert score.achievements.recall == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v3_combined_score_means_all_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+    assert score.achievements is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+    assert score.achievements.f1 == 1.0
+
+    assert score.overall == pytest.approx(2 / 3)
+
+
+def test_phase2_v3_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v3_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )
+
+
+def test_phase2_v2_remains_frozen_when_achievements_are_present():
+    expected = ExpectedPhase2ResumeExtraction(
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Expected Achievement",
+            )
+        ],
+    )
+
+    actual = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Different Achievement",
+            )
+        ],
+    )
+
+    score = score_phase2_v2_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is not None
+    assert score.languages.f1 == 1.0
+    assert score.achievements is None
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_scorer_gives_perfect_score():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Distributed systems",
+                "Platform engineering",
+            ],
+            career_goals=[
+                "Transition into platform engineering",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                " PLATFORM ENGINEERING ",
+                "distributed systems",
+            ],
+            career_goals=[
+                " transition into platform engineering ",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is None
+    assert score.languages is None
+    assert score.achievements is None
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.precision == 1.0
+    assert score.career_interests.recall == 1.0
+    assert score.career_interests.f1 == 1.0
+
+    assert score.career_goals.precision == 1.0
+    assert score.career_goals.recall == 1.0
+    assert score.career_goals.f1 == 1.0
+
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_scores_fields_independently():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Cloud infrastructure",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Cloud infrastructure",
+            ],
+            career_goals=[
+                "Become a data engineer",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 0.0
+    assert score.overall == pytest.approx(0.5)
+
+
+def test_phase2_v4_career_profile_supports_partial_coverage():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_goals=[
+                "Lead a platform engineering team",
+            ],
+        )
+    )
+
+    actual = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Lead a platform engineering team",
+            ],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.career_interests is None
+    assert score.career_goals is not None
+    assert score.career_goals.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_career_profile_treats_explicit_empty_as_perfect():
+    expected = ExpectedPhase2ResumeExtraction(
+        career_profile=ExpectedCareerProfile(
+            career_interests=[],
+            career_goals=[],
+        )
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        ResumeIntelligence(),
+    )
+
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 1.0
+    assert score.overall == 1.0
+
+
+def test_phase2_v4_combined_score_means_all_covered_metrics():
+    expected = ExpectedPhase2ResumeExtraction(
+        publications=[
+            ExpectedPublication(
+                title="Expected Publication",
+            )
+        ],
+        languages=[
+            ExpectedLanguage(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=ExpectedCareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    actual = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Different Publication",
+            )
+        ],
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ],
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    score = score_phase2_v4_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.publications is not None
+    assert score.languages is not None
+    assert score.achievements is not None
+    assert score.career_interests is not None
+    assert score.career_goals is not None
+
+    assert score.publications.f1 == 0.0
+    assert score.languages.f1 == 1.0
+    assert score.achievements.f1 == 1.0
+    assert score.career_interests.f1 == 1.0
+    assert score.career_goals.f1 == 1.0
+
+    assert score.overall == pytest.approx(0.8)
+
+
+def test_phase2_v4_scorer_requires_explicit_coverage():
+    with pytest.raises(
+        ValueError,
+        match="at least one covered field",
+    ):
+        score_phase2_v4_resume_extraction(
+            ExpectedPhase2ResumeExtraction(),
+            ResumeIntelligence(),
+        )
+
+
+def test_phase2_v3_remains_frozen_when_career_profile_is_present():
+    expected = ExpectedPhase2ResumeExtraction(
+        achievements=[
+            ExpectedAchievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=ExpectedCareerProfile(
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        ),
+    )
+
+    actual = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+            )
+        ],
+        career_profile=CareerProfile(
+            career_goals=[
+                "Become a data engineer",
+            ],
+        ),
+    )
+
+    score = score_phase2_v3_resume_extraction(
+        expected,
+        actual,
+    )
+
+    assert score.achievements is not None
+    assert score.achievements.f1 == 1.0
+
+    assert score.career_interests is None
+    assert score.career_goals is None
+
+    assert score.overall == 1.0

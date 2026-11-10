@@ -1,0 +1,119 @@
+name: ATS Browser CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - phase3-ats-analysis
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ats-browser-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  ats-browser:
+    name: Authenticated ATS browser journey
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    env:
+      CAREERIQ_E2E_CI: "1"
+      COMPOSE_PROJECT_NAME: careeriqats-${{ github.run_id }}-${{ github.run_attempt }}
+      COMPOSE_ENV_FILES: /dev/null
+      MYSQL_DATABASE: careeriq_ci_unused
+      MYSQL_USER: careeriq_ci_unused
+      MYSQL_PASSWORD: ci_dummy_not_a_secret
+      MYSQL_ROOT_PASSWORD: ci_dummy_not_a_secret
+      AI_PROVIDER: rule_based
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Firefox
+        uses: browser-actions/setup-firefox@v1
+
+      - name: Set up GeckoDriver
+        uses: browser-actions/setup-geckodriver@78df1e66d20b8af6da82099a570868d171e5ad18
+        with:
+          token: ${{ github.token }}
+
+      - name: Verify browser and system prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v firefox
+          command -v geckodriver
+          command -v ss
+          command -v setsid
+          command -v docker
+          firefox --version
+          geckodriver --version
+          docker compose version
+
+      - name: Install Angular dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate isolated Compose configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose config --quiet
+          test -z "$(git status --porcelain --untracked-files=all)"
+          echo "PASS: Clean checkout after Angular installation."
+
+      - name: Build isolated Laravel and FastAPI images
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose build backend ai-engine
+
+      - name: Install Laravel Composer dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker compose run --rm --no-deps             --entrypoint composer backend             install --no-interaction --prefer-dist             --no-progress --no-scripts
+          docker compose run --rm --no-deps --entrypoint php backend artisan package:discover --ansi
+
+      - name: Verify clean CI checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain --untracked-files=all)"
+          test -x frontend/node_modules/.bin/ng
+          test -f backend/vendor/autoload.php
+          echo "PASS: CI dependencies prepared without tracked changes."
+
+      - name: Run authenticated ATS browser E2E
+        shell: bash
+        run: bash testing/e2e/run_ats_browser.sh
+
+      - name: Check temporary ATS container cleanup
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          unexpected="$(
+            docker ps -a --format '{{.Names}}' |
+              grep -E '^careeriq-browser-(ai|be)-' || true
+          )"
+          if [ -n "$unexpected" ]; then
+            printf 'Unexpected E2E containers:\n%s\n' "$unexpected"
+            exit 1
+          fi
+          echo "PASS: No temporary ATS containers remain."

@@ -1,11 +1,14 @@
 import re
 
-from app.analyzer import analyze_resume, detect_sections
+from app.analyzer import SECTION_ALIASES, analyze_resume, detect_sections
 from app.schemas.resume import (
+    Achievement,
     Certification,
     Education,
     Experience,
+    Language,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -80,6 +83,110 @@ CERTIFICATION_INLINE_PATTERN = re.compile(
 )
 
 CERTIFICATION_DATE_PATTERN = re.compile(r"^(?:19|20)\d{2}$")
+
+PUBLICATION_FIELD_PATTERN = re.compile(
+    r"^(?P<field>"
+    r"publication|title|author|authors|venue|journal|conference|"
+    r"date|year|url|link"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+PUBLICATION_FIELD_ALIASES = {
+    "publication": "title",
+    "title": "title",
+    "author": "authors",
+    "authors": "authors",
+    "venue": "venue",
+    "journal": "venue",
+    "conference": "venue",
+    "date": "date",
+    "year": "date",
+    "url": "url",
+    "link": "url",
+}
+
+LANGUAGE_FIELD_PATTERN = re.compile(
+    r"^(?P<field>language|name|proficiency|level)\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+LANGUAGE_INLINE_PATTERN = re.compile(
+    r"^(?P<name>.+?)(?:\s*:\s*|\s+[-–—]\s+)(?P<proficiency>.+)$"
+)
+
+LANGUAGE_PARENTHETICAL_PATTERN = re.compile(
+    r"^(?P<name>[^()]+?)\s*\((?P<proficiency>[^()]+)\)$"
+)
+
+
+ACHIEVEMENT_FIELD_PATTERN = re.compile(
+    r"^(?P<field>"
+    r"achievement|award|honor|honour|title|name|"
+    r"description|details|organization|organisation|issuer|"
+    r"awarded by|presented by|date|year"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+ACHIEVEMENT_FIELD_ALIASES = {
+    "achievement": "title",
+    "award": "title",
+    "honor": "title",
+    "honour": "title",
+    "title": "title",
+    "name": "title",
+    "description": "description",
+    "details": "description",
+    "organization": "organization",
+    "organisation": "organization",
+    "issuer": "organization",
+    "awarded by": "organization",
+    "presented by": "organization",
+    "date": "date",
+    "year": "date",
+}
+
+CAREER_PROFILE_SECTION_ALIASES = {
+    "career profile": "career_profile",
+    "career interests": "career_interests",
+    "professional interests": "career_interests",
+    "areas of interest": "career_interests",
+    "career goals": "career_goals",
+    "professional goals": "career_goals",
+    "career aspirations": "career_goals",
+    "professional aspirations": "career_goals",
+    "professional objective": "career_goals",
+    # Keep these mapped to summary in SECTION_ALIASES.
+    # Career-profile enrichment recognizes them independently so
+    # existing analyzer behavior remains backward compatible.
+    "career objective": "career_goals",
+    "objective": "career_goals",
+}
+
+CAREER_INTEREST_INLINE_PATTERN = re.compile(
+    r"^(?:"
+    r"career interests?|professional interests?|areas? of interest"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+CAREER_GOAL_INLINE_PATTERN = re.compile(
+    r"^(?:"
+    r"career goals?|professional goals?|"
+    r"career objectives?|professional objectives?|objectives?|"
+    r"career aspirations?|professional aspirations?"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
+
+CAREER_PROFILE_LOCAL_LABEL_PATTERN = re.compile(
+    r"^(?:"
+    r"interest|interests|goal|goals|"
+    r"objective|objectives|aspiration|aspirations"
+    r")\s*:\s*(?P<value>.+)$",
+    re.IGNORECASE,
+)
 
 
 def _normalize(
@@ -340,6 +447,529 @@ def _extract_structured_certifications(
         index += 3
 
     return certifications
+
+
+def _parse_publication_authors(
+    value: str,
+) -> list[str]:
+    authors = re.split(
+        r"\s*(?:;|,|\band\b|&)\s*",
+        value,
+        flags=re.IGNORECASE,
+    )
+
+    return [author.strip() for author in authors if author.strip()]
+
+
+def _extract_structured_publications(
+    publication_lines: list[str],
+) -> list[Publication]:
+    lines = [
+        _strip_list_prefix(line)
+        for line in publication_lines
+        if _strip_list_prefix(line)
+    ]
+
+    publications: list[Publication] = []
+
+    current_title: str | None = None
+    current_authors: list[str] = []
+    current_venue: str | None = None
+    current_date: str | None = None
+    current_url: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_title
+        nonlocal current_authors
+        nonlocal current_venue
+        nonlocal current_date
+        nonlocal current_url
+
+        if current_title:
+            publications.append(
+                Publication(
+                    title=current_title,
+                    authors=current_authors,
+                    venue=current_venue,
+                    date=current_date,
+                    url=current_url,
+                )
+            )
+
+        current_title = None
+        current_authors = []
+        current_venue = None
+        current_date = None
+        current_url = None
+
+    for line in lines:
+        match = PUBLICATION_FIELD_PATTERN.fullmatch(line)
+
+        if match is None:
+            continue
+
+        field = PUBLICATION_FIELD_ALIASES[match.group("field").casefold()]
+
+        value = match.group("value").strip()
+
+        if field == "title":
+            flush_current()
+            current_title = value
+            continue
+
+        if current_title is None:
+            # Metadata without an explicit title is not strong enough
+            # evidence to create a publication record.
+            continue
+
+        if field == "authors":
+            current_authors = _parse_publication_authors(value)
+        elif field == "venue":
+            current_venue = value
+        elif field == "date":
+            current_date = value
+        elif field == "url":
+            current_url = value
+
+    flush_current()
+
+    return publications
+
+
+def _merge_publication_values(
+    existing: Publication,
+    evidence: Publication,
+) -> None:
+    if evidence.authors:
+        existing.authors = list(evidence.authors)
+
+    if evidence.venue is not None:
+        existing.venue = evidence.venue
+
+    if evidence.date is not None:
+        existing.date = evidence.date
+
+    if evidence.url is not None:
+        existing.url = evidence.url
+
+
+def _reconcile_explicit_publications(
+    intelligence: ResumeIntelligence,
+    publication_lines: list[str],
+) -> None:
+    evidence_publications = _extract_structured_publications(publication_lines)
+
+    for evidence in evidence_publications:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.publications
+                if _normalize(item.title) == _normalize(evidence.title)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.publications.append(evidence)
+            continue
+
+        _merge_publication_values(
+            matching_entry,
+            evidence,
+        )
+
+
+def _extract_structured_languages(
+    language_lines: list[str],
+) -> list[Language]:
+    lines = [
+        _strip_list_prefix(line) for line in language_lines if _strip_list_prefix(line)
+    ]
+
+    languages: list[Language] = []
+
+    current_name: str | None = None
+    current_proficiency: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_name
+        nonlocal current_proficiency
+
+        if current_name:
+            languages.append(
+                Language(
+                    name=current_name,
+                    proficiency=current_proficiency,
+                )
+            )
+
+        current_name = None
+        current_proficiency = None
+
+    for line in lines:
+        field_match = LANGUAGE_FIELD_PATTERN.fullmatch(line)
+
+        if field_match is not None:
+            field = field_match.group("field").casefold()
+            value = field_match.group("value").strip()
+
+            if field in {"language", "name"}:
+                flush_current()
+                current_name = value
+                continue
+
+            if field in {"proficiency", "level"}:
+                if current_name is not None:
+                    current_proficiency = value
+
+                continue
+
+        parenthetical_match = LANGUAGE_PARENTHETICAL_PATTERN.fullmatch(line)
+
+        if parenthetical_match is not None:
+            flush_current()
+
+            languages.append(
+                Language(
+                    name=parenthetical_match.group("name").strip(),
+                    proficiency=parenthetical_match.group("proficiency").strip(),
+                )
+            )
+
+            continue
+
+        inline_match = LANGUAGE_INLINE_PATTERN.fullmatch(line)
+
+        if inline_match is not None:
+            flush_current()
+
+            languages.append(
+                Language(
+                    name=inline_match.group("name").strip(),
+                    proficiency=inline_match.group("proficiency").strip(),
+                )
+            )
+
+            continue
+
+        flush_current()
+
+        languages.append(
+            Language(
+                name=line,
+            )
+        )
+
+    flush_current()
+
+    return languages
+
+
+def _merge_language_values(
+    existing: Language,
+    evidence: Language,
+) -> None:
+    if evidence.proficiency is not None:
+        existing.proficiency = evidence.proficiency
+
+
+def _reconcile_explicit_languages(
+    intelligence: ResumeIntelligence,
+    language_lines: list[str],
+) -> None:
+    evidence_languages = _extract_structured_languages(language_lines)
+
+    for evidence in evidence_languages:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.languages
+                if _normalize(item.name) == _normalize(evidence.name)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.languages.append(evidence)
+            continue
+
+        _merge_language_values(
+            matching_entry,
+            evidence,
+        )
+
+
+def _extract_structured_achievements(
+    achievement_lines: list[str],
+) -> list[Achievement]:
+    lines = [
+        _strip_list_prefix(line)
+        for line in achievement_lines
+        if _strip_list_prefix(line)
+    ]
+
+    achievements: list[Achievement] = []
+
+    current_title: str | None = None
+    current_description: str | None = None
+    current_organization: str | None = None
+    current_date: str | None = None
+
+    def flush_current() -> None:
+        nonlocal current_title
+        nonlocal current_description
+        nonlocal current_organization
+        nonlocal current_date
+
+        if current_title:
+            achievements.append(
+                Achievement(
+                    title=current_title,
+                    description=current_description,
+                    organization=current_organization,
+                    date=current_date,
+                )
+            )
+
+        current_title = None
+        current_description = None
+        current_organization = None
+        current_date = None
+
+    for line in lines:
+        match = ACHIEVEMENT_FIELD_PATTERN.fullmatch(line)
+
+        if match is not None:
+            field = ACHIEVEMENT_FIELD_ALIASES[match.group("field").casefold()]
+
+            value = match.group("value").strip()
+
+            if field == "title":
+                flush_current()
+                current_title = value
+                continue
+
+            if current_title is None:
+                # Metadata without an explicit achievement title is
+                # not sufficient evidence to create a record.
+                continue
+
+            if field == "description":
+                current_description = value
+            elif field == "organization":
+                current_organization = value
+            elif field == "date":
+                current_date = value
+
+            continue
+
+        # A non-labeled line inside an explicit achievement section
+        # is treated as a complete achievement title. Optional
+        # metadata remains unset rather than being inferred.
+        flush_current()
+
+        achievements.append(
+            Achievement(
+                title=line,
+            )
+        )
+
+    flush_current()
+
+    return achievements
+
+
+def _merge_achievement_values(
+    existing: Achievement,
+    evidence: Achievement,
+) -> None:
+    if evidence.description is not None:
+        existing.description = evidence.description
+
+    if evidence.organization is not None:
+        existing.organization = evidence.organization
+
+    if evidence.date is not None:
+        existing.date = evidence.date
+
+
+def _reconcile_explicit_achievements(
+    intelligence: ResumeIntelligence,
+    achievement_lines: list[str],
+) -> None:
+    evidence_achievements = _extract_structured_achievements(achievement_lines)
+
+    for evidence in evidence_achievements:
+        matching_entry = next(
+            (
+                item
+                for item in intelligence.achievements
+                if _normalize(item.title) == _normalize(evidence.title)
+            ),
+            None,
+        )
+
+        if matching_entry is None:
+            intelligence.achievements.append(evidence)
+            continue
+
+        _merge_achievement_values(
+            matching_entry,
+            evidence,
+        )
+
+
+def _normalize_section_heading(
+    value: str,
+) -> str:
+    normalized = value.strip()
+
+    normalized = re.sub(
+        r"[:：]\s*$",
+        "",
+        normalized,
+    )
+
+    normalized = re.sub(
+        r"\s+",
+        " ",
+        normalized,
+    )
+
+    return normalized.casefold()
+
+
+def _split_explicit_career_profile_values(
+    value: str,
+) -> list[str]:
+    values: list[str] = []
+
+    for part in re.split(
+        r"\s*(?:;|\|)\s*",
+        value,
+    ):
+        cleaned = " ".join(_strip_list_prefix(part).split())
+
+        if cleaned:
+            values.append(cleaned)
+
+    return values
+
+
+def _append_unique_career_profile_values(
+    target: list[str],
+    evidence: list[str],
+) -> None:
+    seen = {_normalize(value) for value in target}
+
+    for value in evidence:
+        normalized = _normalize(value)
+
+        if normalized in seen:
+            continue
+
+        seen.add(normalized)
+        target.append(value)
+
+
+def _extract_explicit_career_profile(
+    resume_text: str,
+) -> tuple[list[str], list[str]]:
+    interests: list[str] = []
+    goals: list[str] = []
+
+    current_section: str | None = None
+
+    for raw_line in resume_text.splitlines():
+        line = raw_line.strip()
+
+        if not line:
+            continue
+
+        heading = _normalize_section_heading(line)
+
+        profile_section = CAREER_PROFILE_SECTION_ALIASES.get(heading)
+
+        if profile_section is not None:
+            current_section = profile_section
+            continue
+
+        # Any other recognized resume heading ends the current
+        # career-profile section.
+        if heading in SECTION_ALIASES:
+            current_section = None
+            continue
+
+        interest_match = CAREER_INTEREST_INLINE_PATTERN.fullmatch(line)
+
+        if interest_match is not None:
+            _append_unique_career_profile_values(
+                interests,
+                _split_explicit_career_profile_values(interest_match.group("value")),
+            )
+            continue
+
+        goal_match = CAREER_GOAL_INLINE_PATTERN.fullmatch(line)
+
+        if goal_match is not None:
+            _append_unique_career_profile_values(
+                goals,
+                _split_explicit_career_profile_values(goal_match.group("value")),
+            )
+            continue
+
+        if current_section is None:
+            continue
+
+        value = " ".join(_strip_list_prefix(line).split())
+
+        if not value:
+            continue
+
+        local_match = CAREER_PROFILE_LOCAL_LABEL_PATTERN.fullmatch(value)
+
+        if local_match is not None:
+            value = local_match.group("value").strip()
+
+        values = _split_explicit_career_profile_values(value)
+
+        if current_section == "career_interests":
+            _append_unique_career_profile_values(
+                interests,
+                values,
+            )
+
+        elif current_section == "career_goals":
+            _append_unique_career_profile_values(
+                goals,
+                values,
+            )
+
+        # A generic "Career Profile" section is intentionally
+        # not converted from bare prose. Only explicitly labeled
+        # interest/goal lines above are accepted.
+
+    return interests, goals
+
+
+def _reconcile_explicit_career_profile(
+    intelligence: ResumeIntelligence,
+    resume_text: str,
+) -> None:
+    (
+        explicit_interests,
+        explicit_goals,
+    ) = _extract_explicit_career_profile(resume_text)
+
+    _append_unique_career_profile_values(
+        intelligence.career_profile.career_interests,
+        explicit_interests,
+    )
+
+    _append_unique_career_profile_values(
+        intelligence.career_profile.career_goals,
+        explicit_goals,
+    )
 
 
 def _has_date_evidence(
@@ -1348,5 +1978,43 @@ def enrich_resume_intelligence(
 
         if structured_certifications:
             enriched.certifications = structured_certifications
+
+    publication_lines = sections.get(
+        "publications",
+        [],
+    )
+
+    if publication_lines:
+        _reconcile_explicit_publications(
+            enriched,
+            publication_lines,
+        )
+
+    language_lines = sections.get(
+        "languages",
+        [],
+    )
+
+    if language_lines:
+        _reconcile_explicit_languages(
+            enriched,
+            language_lines,
+        )
+
+    achievement_lines = sections.get(
+        "achievements",
+        [],
+    )
+
+    if achievement_lines:
+        _reconcile_explicit_achievements(
+            enriched,
+            achievement_lines,
+        )
+
+    _reconcile_explicit_career_profile(
+        enriched,
+        resume_text,
+    )
 
     return enriched

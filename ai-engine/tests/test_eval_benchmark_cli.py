@@ -5,10 +5,12 @@ from pathlib import Path
 import pytest
 
 from app.core.config import Settings
+from evals.providers import EnrichedResumeProvider
 from evals.reporting import (
     build_resume_benchmark_report,
 )
 from evals.run_benchmark import (
+    build_benchmark_provider,
     get_benchmark_model,
     get_benchmark_prompt_version,
     parse_args,
@@ -92,7 +94,7 @@ def test_local_benchmark_metadata_uses_model_and_prompt():
         == "qwen3:4b-instruct"
     )
 
-    assert get_benchmark_prompt_version("local_enriched") == "resume-analysis-v2"
+    assert get_benchmark_prompt_version("local_enriched") == "resume-analysis-v6"
 
 
 def test_rule_based_benchmark_has_no_llm_metadata():
@@ -148,3 +150,55 @@ def test_write_benchmark_report_creates_json_file(
     assert '"provider": "rule_based"' in content
     assert '"run_count": 1' in content
     assert content.endswith("\n")
+
+
+def test_parse_args_accepts_rule_based_enriched(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "run_benchmark",
+            "--provider",
+            "rule_based_enriched",
+        ],
+    )
+
+    args = parse_args()
+
+    assert args.provider == "rule_based_enriched"
+
+
+def test_rule_based_enriched_wraps_rule_based_provider():
+    settings = Settings(
+        ai_model="qwen3:4b-instruct",
+    )
+
+    provider = build_benchmark_provider(
+        "rule_based_enriched",
+        settings,
+    )
+
+    assert isinstance(
+        provider,
+        EnrichedResumeProvider,
+    )
+
+    assert provider.provider.__class__.__name__ == "RuleBasedProvider"
+
+
+def test_rule_based_enriched_has_no_llm_metadata():
+    settings = Settings(
+        ai_model="qwen3:4b-instruct",
+    )
+
+    assert (
+        get_benchmark_model(
+            "rule_based_enriched",
+            settings,
+        )
+        is None
+    )
+
+    assert get_benchmark_prompt_version("rule_based_enriched") is None

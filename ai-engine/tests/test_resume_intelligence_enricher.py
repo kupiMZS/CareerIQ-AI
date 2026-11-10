@@ -1,9 +1,13 @@
 from app.schemas.resume import (
+    Achievement,
     Candidate,
+    CareerProfile,
     Certification,
     Education,
     Experience,
+    Language,
     Project,
+    Publication,
     ResumeIntelligence,
     Skill,
 )
@@ -941,3 +945,696 @@ BSc Computer Science at Eastern University
 
     assert education.start_date == "2017"
     assert education.end_date == "2021"
+
+
+def test_enricher_extracts_labeled_publication_from_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Aisha Rahman
+aisha@example.com
+
+Publications
+Title: Reliable Career Recommendation Systems
+Authors: Aisha Rahman; Omar Hassan
+Journal: Journal of Career Intelligence
+Year: 2025
+URL: https://example.com/career-intelligence
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.title == "Reliable Career Recommendation Systems"
+    assert publication.authors == [
+        "Aisha Rahman",
+        "Omar Hassan",
+    ]
+    assert publication.venue == "Journal of Career Intelligence"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/career-intelligence"
+
+
+def test_enricher_recognizes_research_publications_section_alias():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Research Publications
+Title: Explainable Resume Intelligence
+Authors: John Doe
+Conference: Career AI Conference
+Year: 2024
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 1
+    assert result.publications[0].title == "Explainable Resume Intelligence"
+    assert result.publications[0].venue == "Career AI Conference"
+    assert result.publications[0].date == "2024"
+
+
+def test_enricher_extracts_multiple_labeled_publications():
+    result = enrich_resume_intelligence(
+        """
+Jane Smith
+jane@example.com
+
+Selected Publications
+Title: Resume Parsing with Structured Language Models
+Authors: Jane Smith; Alex Chen
+Venue: Example AI Journal
+Year: 2024
+
+Title: Evidence-Based Career Recommendations
+Authors: Jane Smith
+Venue: Career Systems Conference
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.publications) == 2
+
+    assert (
+        result.publications[0].title == "Resume Parsing with Structured Language Models"
+    )
+    assert result.publications[1].title == "Evidence-Based Career Recommendations"
+
+
+def test_enricher_reconciles_explicit_publication_metadata():
+    intelligence = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Reliable Career Recommendation Systems",
+                authors=["Incorrect Author"],
+                venue=None,
+                date=None,
+                url=None,
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Publications
+Title: Reliable Career Recommendation Systems
+Authors: John Doe; Jane Smith
+Journal: Example Computing Journal
+Year: 2025
+URL: https://example.com/publication
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.authors == [
+        "John Doe",
+        "Jane Smith",
+    ]
+    assert publication.venue == "Example Computing Journal"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/publication"
+
+
+def test_enricher_preserves_provider_publication_when_section_is_unstructured():
+    intelligence = ResumeIntelligence(
+        publications=[
+            Publication(
+                title="Existing Provider Publication",
+                authors=["John Doe"],
+                date="2025",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Publications
+Doe, John. Existing Provider Publication. Example Journal, 2025.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.publications) == 1
+    assert result.publications[0].title == "Existing Provider Publication"
+    assert result.publications[0].authors == ["John Doe"]
+    assert result.publications[0].date == "2025"
+
+
+def test_enricher_extracts_explicit_languages_and_proficiencies():
+    result = enrich_resume_intelligence(
+        """
+Nadia Rahman
+nadia@example.com
+
+Languages
+English: Professional working proficiency
+German - B2
+Bangla
+French (Conversational)
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 4
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Professional working proficiency"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
+
+    assert result.languages[2].name == "Bangla"
+    assert result.languages[2].proficiency is None
+
+    assert result.languages[3].name == "French"
+    assert result.languages[3].proficiency == "Conversational"
+
+
+def test_enricher_recognizes_language_skills_section_alias():
+    result = enrich_resume_intelligence(
+        """
+Amina Karim
+amina@example.com
+
+Language Skills
+English: Fluent
+Spanish: B1
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
+
+    assert result.languages[1].name == "Spanish"
+    assert result.languages[1].proficiency == "B1"
+
+
+def test_enricher_extracts_labeled_language_records():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Languages
+Language: English
+Proficiency: Native
+Language: German
+Level: B2
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Native"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
+
+
+def test_enricher_reconciles_explicit_language_with_provider():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Intermediate",
+            ),
+            Language(
+                name="Bangla",
+                proficiency="Native",
+            ),
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Languages
+English: Fluent
+German: B2
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 3
+
+    english = next(
+        language for language in result.languages if language.name == "English"
+    )
+
+    bangla = next(
+        language for language in result.languages if language.name == "Bangla"
+    )
+
+    german = next(
+        language for language in result.languages if language.name == "German"
+    )
+
+    assert english.proficiency == "Fluent"
+    assert bangla.proficiency == "Native"
+    assert german.proficiency == "B2"
+
+
+def test_enricher_bare_language_does_not_erase_provider_proficiency():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Languages
+English
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 1
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
+
+
+def test_enricher_does_not_infer_languages_without_language_section():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Professional Summary
+Based in Germany and experienced with international teams.
+
+Education
+BA English Literature
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.languages == []
+
+
+def test_enricher_preserves_provider_languages_without_explicit_section():
+    intelligence = ResumeIntelligence(
+        languages=[
+            Language(
+                name="English",
+                proficiency="Fluent",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Professional Summary
+International software engineer.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.languages) == 1
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Fluent"
+
+
+def test_enricher_extracts_labeled_achievement_from_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Amina Rahman
+amina@example.com
+
+Achievements
+Achievement: Winner, AI Hackathon
+Description: Won first place among 30 participating teams.
+Organization: Example Tech
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.title == "Winner, AI Hackathon"
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
+
+
+def test_enricher_recognizes_awards_and_honors_section_alias():
+    result = enrich_resume_intelligence(
+        """
+Nadia Karim
+nadia@example.com
+
+Awards & Honors
+Dean's List
+Winner, Inter-University Programming Contest
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 2
+
+    assert result.achievements[0].title == "Dean's List"
+    assert (
+        result.achievements[1].title == "Winner, Inter-University Programming Contest"
+    )
+
+
+def test_enricher_extracts_multiple_labeled_achievements():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Achievements
+Title: Employee of the Year
+Organization: Example Labs
+Date: 2024
+
+Award: Best Capstone Project
+Issuer: Example University
+Year: 2025
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert len(result.achievements) == 2
+
+    assert result.achievements[0].title == "Employee of the Year"
+    assert result.achievements[0].organization == "Example Labs"
+    assert result.achievements[0].date == "2024"
+
+    assert result.achievements[1].title == "Best Capstone Project"
+    assert result.achievements[1].organization == "Example University"
+    assert result.achievements[1].date == "2025"
+
+
+def test_enricher_reconciles_explicit_achievement_metadata():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Winner, AI Hackathon",
+                description="Incorrect description",
+                organization="Incorrect Organization",
+                date="2023",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Achievements
+Achievement: Winner, AI Hackathon
+Description: Won first place among 30 participating teams.
+Organization: Example Tech
+Date: 2025
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
+
+
+def test_enricher_bare_achievement_does_not_erase_provider_metadata():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Employee of the Month",
+                description="Recognized for service reliability.",
+                organization="Example Labs",
+                date="2025",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Achievements
+Employee of the Month
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.description == "Recognized for service reliability."
+    assert achievement.organization == "Example Labs"
+    assert achievement.date == "2025"
+
+
+def test_enricher_does_not_infer_achievements_without_explicit_section():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Professional Summary
+Improved system reliability and increased throughput by 40%.
+
+Experience
+Software Engineer at Example Labs
+Led a successful platform migration.
+
+Education
+BSc Computer Science
+Graduated with GPA 4.0.
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.achievements == []
+
+
+def test_enricher_preserves_provider_achievements_without_explicit_section():
+    intelligence = ResumeIntelligence(
+        achievements=[
+            Achievement(
+                title="Dean's List",
+                organization="Example University",
+                date="2024",
+            )
+        ]
+    )
+
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Professional Summary
+Backend software engineer.
+""".strip(),
+        intelligence,
+    )
+
+    assert len(result.achievements) == 1
+    assert result.achievements[0].title == "Dean's List"
+    assert result.achievements[0].organization == "Example University"
+    assert result.achievements[0].date == "2024"
+
+
+def test_enricher_extracts_explicit_career_interests():
+    result = enrich_resume_intelligence(
+        """
+Nadia Rahman
+nadia@example.com
+
+Career Interests
+- Distributed systems
+- Platform engineering
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == [
+        "Distributed systems",
+        "Platform engineering",
+    ]
+
+    assert result.career_profile.career_goals == []
+
+
+def test_enricher_extracts_explicit_career_goals():
+    result = enrich_resume_intelligence(
+        """
+Amina Karim
+amina@example.com
+
+Career Goals
+Transition into platform engineering
+Lead a cloud infrastructure team
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == []
+
+    assert result.career_profile.career_goals == [
+        "Transition into platform engineering",
+        "Lead a cloud infrastructure team",
+    ]
+
+
+def test_enricher_recognizes_career_objective_as_explicit_goal():
+    result = enrich_resume_intelligence(
+        """
+John Doe
+john@example.com
+
+Career Objective
+Move into a senior backend engineering role
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_goals == [
+        "Move into a senior backend engineering role",
+    ]
+
+
+def test_enricher_extracts_inline_career_profile_evidence():
+    result = enrich_resume_intelligence(
+        """
+Sara Ahmed
+sara@example.com
+
+Career Interests: Cloud infrastructure; Distributed systems
+Career Goal: Transition into platform engineering
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == [
+        "Cloud infrastructure",
+        "Distributed systems",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Transition into platform engineering",
+    ]
+
+
+def test_enricher_merges_explicit_career_profile_without_duplicates():
+    intelligence = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Distributed Systems",
+            ],
+            career_goals=[
+                "Become a platform engineer",
+            ],
+        )
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Career Interests
+distributed systems
+Cloud infrastructure
+
+Career Goals
+Become a platform engineer
+Lead a platform engineering team
+""".strip(),
+        intelligence,
+    )
+
+    assert result.career_profile.career_interests == [
+        "Distributed Systems",
+        "Cloud infrastructure",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Become a platform engineer",
+        "Lead a platform engineering team",
+    ]
+
+
+def test_enricher_preserves_provider_career_profile_without_explicit_evidence():
+    intelligence = ResumeIntelligence(
+        career_profile=CareerProfile(
+            career_interests=[
+                "Machine learning",
+            ],
+            career_goals=[
+                "Become an ML engineer",
+            ],
+        )
+    )
+
+    result = enrich_resume_intelligence(
+        """
+Farah Islam
+farah@example.com
+
+Professional Summary
+Backend engineer with five years of experience.
+""".strip(),
+        intelligence,
+    )
+
+    assert result.career_profile.career_interests == [
+        "Machine learning",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Become an ML engineer",
+    ]
+
+
+def test_enricher_does_not_infer_career_profile_from_other_resume_fields():
+    result = enrich_resume_intelligence(
+        """
+Hasan Karim
+hasan@example.com
+Senior Backend Engineer
+
+Skills
+Python
+Docker
+Kubernetes
+
+Experience
+Senior Backend Engineer at Example Labs
+Led cloud platform modernization.
+
+Projects
+Distributed Systems Platform
+Built a Kubernetes-based internal platform.
+
+Achievements
+Employee of the Year
+""".strip(),
+        ResumeIntelligence(),
+    )
+
+    assert result.career_profile.career_interests == []
+    assert result.career_profile.career_goals == []

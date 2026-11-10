@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -33,3 +35,32 @@ class AnalyzeResponse(BaseModel):
     summary: str
 
     status: str
+
+
+class SkillEvidenceItem(BaseModel):
+    """Literal evidence coverage for one extracted skill."""
+
+    field_path: str
+    skill_name: str
+
+    status: Literal[
+        "no_literal_evidence",
+        "literal_mention_only",
+        "explicit_rejection_only",
+        "mixed_mentions",
+    ]
+
+    review_flags: list[
+        Literal[
+            "aspirational_wording",
+            "requirement_wording",
+            "rejection_with_contrast",
+        ]
+    ] = Field(default_factory=list)
+
+
+class AnalyzeEvidenceResponse(BaseModel):
+    """Existing analysis plus explicitly requested evidence."""
+
+    analysis: AnalyzeResponse
+    skill_evidence: list[SkillEvidenceItem] = Field(default_factory=list)

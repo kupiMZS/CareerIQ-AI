@@ -36,6 +36,45 @@ def build_success_response() -> dict:
         "experience": [],
         "projects": [],
         "certifications": [],
+        "publications": [
+            {
+                "title": "Reliable Career Recommendation Systems",
+                "authors": [
+                    "John Doe",
+                    "Jane Smith",
+                ],
+                "venue": "Example Computing Journal",
+                "date": "2025",
+                "url": "https://example.com/publication",
+            }
+        ],
+        "languages": [
+            {
+                "name": "English",
+                "proficiency": "Professional working proficiency",
+            },
+            {
+                "name": "German",
+                "proficiency": "B2",
+            },
+        ],
+        "achievements": [
+            {
+                "title": "Winner, AI Hackathon",
+                "description": ("Won first place among 30 participating teams."),
+                "organization": "Example Tech",
+                "date": "2025",
+            }
+        ],
+        "career_profile": {
+            "career_interests": [
+                "Distributed systems",
+                "Platform engineering",
+            ],
+            "career_goals": [
+                "Transition into a senior platform engineering role",
+            ],
+        },
     }
 
 
@@ -45,6 +84,38 @@ async def test_ollama_provider_returns_resume_intelligence():
         request: httpx.Request,
     ) -> httpx.Response:
         assert request.url.path == "/api/chat"
+
+        payload = json.loads(request.content)
+
+        assert "publications" in payload["format"]["properties"]
+        assert "languages" in payload["format"]["properties"]
+        assert "achievements" in payload["format"]["properties"]
+        assert "career_profile" in payload["format"]["properties"]
+
+        assert any(
+            "publications" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "languages" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "achievement" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "career interests" in message["content"].casefold()
+            for message in payload["messages"]
+        )
+
+        assert any(
+            "career goals" in message["content"].casefold()
+            for message in payload["messages"]
+        )
 
         return httpx.Response(
             status_code=200,
@@ -70,6 +141,45 @@ async def test_ollama_provider_returns_resume_intelligence():
     assert result.candidate.name == "John Doe"
 
     assert result.skills[0].name == "Python"
+
+    assert len(result.publications) == 1
+
+    publication = result.publications[0]
+
+    assert publication.title == "Reliable Career Recommendation Systems"
+    assert publication.authors == [
+        "John Doe",
+        "Jane Smith",
+    ]
+    assert publication.venue == "Example Computing Journal"
+    assert publication.date == "2025"
+    assert publication.url == "https://example.com/publication"
+
+    assert len(result.languages) == 2
+
+    assert result.languages[0].name == "English"
+    assert result.languages[0].proficiency == "Professional working proficiency"
+
+    assert result.languages[1].name == "German"
+    assert result.languages[1].proficiency == "B2"
+
+    assert len(result.achievements) == 1
+
+    achievement = result.achievements[0]
+
+    assert achievement.title == "Winner, AI Hackathon"
+    assert achievement.description == "Won first place among 30 participating teams."
+    assert achievement.organization == "Example Tech"
+    assert achievement.date == "2025"
+
+    assert result.career_profile.career_interests == [
+        "Distributed systems",
+        "Platform engineering",
+    ]
+
+    assert result.career_profile.career_goals == [
+        "Transition into a senior platform engineering role",
+    ]
 
 
 @pytest.mark.anyio

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from evals.runner import (
     CareerBenchmarkSummary,
     ExtendedBenchmarkSummary,
+    Phase2BenchmarkSummary,
     ResumeBenchmarkSummary,
 )
 from evals.scorer import (
@@ -95,6 +96,25 @@ class ExtendedBenchmarkReport(BaseModel):
     metrics: ExtendedBenchmarkMetrics
 
 
+class Phase2BenchmarkMetrics(BaseModel):
+    publications_f1: MetricStatistics | None = None
+    languages_f1: MetricStatistics | None = None
+    achievements_f1: MetricStatistics | None = None
+    career_interests_f1: MetricStatistics | None = None
+    career_goals_f1: MetricStatistics | None = None
+    overall_mean: MetricStatistics
+
+
+class Phase2BenchmarkReport(BaseModel):
+    scorer_version: str
+
+    case_count: int = Field(
+        ge=1,
+    )
+
+    metrics: Phase2BenchmarkMetrics
+
+
 class ResumeBenchmarkReport(BaseModel):
     provider: str
     model: str | None = None
@@ -112,6 +132,8 @@ class ResumeBenchmarkReport(BaseModel):
     metrics: BenchmarkMetrics
 
     extended: ExtendedBenchmarkReport | None = None
+
+    phase2: Phase2BenchmarkReport | None = None
 
     runs: list[ResumeBenchmarkSummary]
 
@@ -165,6 +187,115 @@ def _build_extended_report(
     )
 
 
+def _build_phase2_report(
+    runs: list[Phase2BenchmarkSummary],
+) -> Phase2BenchmarkReport:
+    case_count = runs[0].case_count
+    scorer_version = runs[0].scorer_version
+
+    if any(run.case_count != case_count for run in runs):
+        raise ValueError("All benchmark runs must use the same Phase 2 case count.")
+
+    if any(run.scorer_version != scorer_version for run in runs):
+        raise ValueError("All benchmark runs must use the same Phase 2 scorer version.")
+
+    publication_values = [run.publications_f1 for run in runs]
+
+    has_publications = [value is not None for value in publication_values]
+
+    if any(has_publications) and not all(has_publications):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 publication metric coverage."
+        )
+
+    language_values = [run.languages_f1 for run in runs]
+
+    has_languages = [value is not None for value in language_values]
+
+    if any(has_languages) and not all(has_languages):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 language metric coverage."
+        )
+
+    achievement_values = [run.achievements_f1 for run in runs]
+
+    has_achievements = [value is not None for value in achievement_values]
+
+    if any(has_achievements) and not all(has_achievements):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 achievement metric coverage."
+        )
+
+    career_interest_values = [run.career_interests_f1 for run in runs]
+
+    has_career_interests = [value is not None for value in career_interest_values]
+
+    if any(has_career_interests) and not all(has_career_interests):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 "
+            "career interest metric coverage."
+        )
+
+    career_goal_values = [run.career_goals_f1 for run in runs]
+
+    has_career_goals = [value is not None for value in career_goal_values]
+
+    if any(has_career_goals) and not all(has_career_goals):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 career goal metric coverage."
+        )
+
+    publications_f1 = None
+
+    if all(has_publications):
+        publications_f1 = _build_metric_statistics(
+            [value for value in publication_values if value is not None]
+        )
+
+    languages_f1 = None
+
+    if all(has_languages):
+        languages_f1 = _build_metric_statistics(
+            [value for value in language_values if value is not None]
+        )
+
+    achievements_f1 = None
+
+    if all(has_achievements):
+        achievements_f1 = _build_metric_statistics(
+            [value for value in achievement_values if value is not None]
+        )
+
+    career_interests_f1 = None
+
+    if all(has_career_interests):
+        career_interests_f1 = _build_metric_statistics(
+            [value for value in career_interest_values if value is not None]
+        )
+
+    career_goals_f1 = None
+
+    if all(has_career_goals):
+        career_goals_f1 = _build_metric_statistics(
+            [value for value in career_goal_values if value is not None]
+        )
+
+    metrics = Phase2BenchmarkMetrics(
+        publications_f1=publications_f1,
+        languages_f1=languages_f1,
+        achievements_f1=achievements_f1,
+        career_interests_f1=career_interests_f1,
+        career_goals_f1=career_goals_f1,
+        overall_mean=_build_metric_statistics([run.overall_mean for run in runs]),
+    )
+
+    return Phase2BenchmarkReport(
+        scorer_version=scorer_version,
+        case_count=case_count,
+        metrics=metrics,
+    )
+
+
 def build_resume_benchmark_report(
     *,
     provider: str,
@@ -209,6 +340,22 @@ def build_resume_benchmark_report(
 
         extended_report = _build_extended_report(extended_runs)
 
+    phase2_values = [run.phase2 for run in runs]
+
+    has_phase2 = [value is not None for value in phase2_values]
+
+    if any(has_phase2) and not all(has_phase2):
+        raise ValueError(
+            "All benchmark runs must use the same Phase 2 evaluation coverage."
+        )
+
+    phase2_report = None
+
+    if all(has_phase2):
+        phase2_runs = [value for value in phase2_values if value is not None]
+
+        phase2_report = _build_phase2_report(phase2_runs)
+
     return ResumeBenchmarkReport(
         provider=provider,
         model=model,
@@ -218,6 +365,7 @@ def build_resume_benchmark_report(
         case_count=case_count,
         metrics=metrics,
         extended=extended_report,
+        phase2=phase2_report,
         runs=runs,
     )
 

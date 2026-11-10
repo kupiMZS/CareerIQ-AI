@@ -7,8 +7,10 @@ RUN apt-get update && apt-get install -y \
     unzip \
     curl \
     libzip-dev \
+    libsqlite3-dev \
     && docker-php-ext-install \
         pdo_mysql \
+        pdo_sqlite \
         zip \
     && pecl install redis \
     && docker-php-ext-enable redis \
@@ -19,6 +21,9 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+
+# Match the Laravel 5 MiB resume upload validation.
+COPY infrastructure/docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-careeriq-uploads.ini
 
 # Application directory
 WORKDIR /var/www/html

@@ -12,7 +12,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
 
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
 
     volumes:
       - mysql_data:/var/lib/mysql
@@ -40,7 +40,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
 
     healthcheck:
       test:
@@ -71,7 +71,7 @@ services:
       - ./backend:/var/www/html
 
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
     depends_on:
       mysql:
@@ -106,7 +106,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
 
     environment:
       AI_PROVIDER: "${AI_PROVIDER:-rule_based}"

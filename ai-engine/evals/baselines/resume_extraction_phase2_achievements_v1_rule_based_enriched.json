@@ -1,0 +1,1182 @@
+{
+  "provider": "rule_based_enriched",
+  "model": null,
+  "prompt_version": null,
+  "dataset": "evals/datasets/resume_extraction_phase2_achievements_v1.jsonl",
+  "run_count": 3,
+  "case_count": 7,
+  "metrics": {
+    "name_accuracy": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "email_accuracy": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "skills_f1": {
+      "mean": 1.0,
+      "minimum": 1.0,
+      "maximum": 1.0,
+      "standard_deviation": 0.0
+    },
+    "education_f1": {
+      "mean": 0.8571428571428571,
+      "minimum": 0.8571428571428571,
+      "maximum": 0.8571428571428571,
+      "standard_deviation": 0.0
+    },
+    "experience_f1": {
+      "mean": 0.7142857142857143,
+      "minimum": 0.7142857142857143,
+      "maximum": 0.7142857142857143,
+      "standard_deviation": 0.0
+    },
+    "overall_mean": {
+      "mean": 0.9142857142857143,
+      "minimum": 0.9142857142857144,
+      "maximum": 0.9142857142857144,
+      "standard_deviation": 0.0
+    }
+  },
+  "extended": null,
+  "phase2": {
+    "scorer_version": "phase2-v3",
+    "case_count": 7,
+    "metrics": {
+      "publications_f1": null,
+      "languages_f1": null,
+      "achievements_f1": {
+        "mean": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "standard_deviation": 0.0
+      },
+      "overall_mean": {
+        "mean": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "standard_deviation": 0.0
+      }
+    }
+  },
+  "runs": [
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 1.0,
+      "education_f1": 0.8571428571428571,
+      "experience_f1": 0.7142857142857143,
+      "overall_mean": 0.9142857142857144,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v3",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_achievement_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_multiple",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_missing_optional_metadata",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_section_alias",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_field_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 1.0,
+      "education_f1": 0.8571428571428571,
+      "experience_f1": 0.7142857142857143,
+      "overall_mean": 0.9142857142857144,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v3",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_achievement_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_multiple",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_missing_optional_metadata",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_section_alias",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_field_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    },
+    {
+      "provider": "rule_based_enriched",
+      "case_count": 7,
+      "name_accuracy": 1.0,
+      "email_accuracy": 1.0,
+      "skills_f1": 1.0,
+      "education_f1": 0.8571428571428571,
+      "experience_f1": 0.7142857142857143,
+      "overall_mean": 0.9142857142857144,
+      "extended": null,
+      "phase2": {
+        "scorer_version": "phase2-v3",
+        "case_count": 7,
+        "publications_f1": null,
+        "languages_f1": null,
+        "achievements_f1": 1.0,
+        "overall_mean": 1.0
+      },
+      "cases": [
+        {
+          "case_id": "phase2_achievement_complete",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_multiple",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_missing_optional_metadata",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 1,
+              "expected_count": 1,
+              "actual_count": 1
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_section_alias",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_field_aliases",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 2,
+              "expected_count": 2,
+              "actual_count": 2
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_no_inference",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.6
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        },
+        {
+          "case_id": "phase2_achievement_absent",
+          "score": {
+            "name": {
+              "score": 1.0
+            },
+            "email": {
+              "score": 1.0
+            },
+            "skills": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "education": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "experience": {
+              "precision": 0.0,
+              "recall": 1.0,
+              "f1": 0.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 1
+            },
+            "overall": 0.8
+          },
+          "extended_score": null,
+          "phase2_score": {
+            "publications": null,
+            "languages": null,
+            "achievements": {
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "matched_count": 0,
+              "expected_count": 0,
+              "actual_count": 0
+            },
+            "overall": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}

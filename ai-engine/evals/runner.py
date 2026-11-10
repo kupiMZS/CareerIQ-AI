@@ -4,11 +4,20 @@ from app.providers.base import ResumeAnalysisProvider
 from app.services.career_recommendation_engine import CareerRecommendationEngine
 from evals.schemas import CareerEvalCase, ResumeEvalCase
 from evals.scorer import (
+    PHASE2_SCORER_VERSION,
+    PHASE2_V2_SCORER_VERSION,
+    PHASE2_V3_SCORER_VERSION,
+    PHASE2_V4_SCORER_VERSION,
     CareerRecommendationScore,
     ExtendedResumeExtractionScore,
+    Phase2ResumeExtractionScore,
     ResumeExtractionScore,
     score_career_recommendation,
     score_extended_resume_extraction,
+    score_phase2_resume_extraction,
+    score_phase2_v2_resume_extraction,
+    score_phase2_v3_resume_extraction,
+    score_phase2_v4_resume_extraction,
     score_resume_extraction,
 )
 
@@ -18,6 +27,8 @@ class ResumeBenchmarkCaseResult(BaseModel):
     score: ResumeExtractionScore
 
     extended_score: ExtendedResumeExtractionScore | None = None
+
+    phase2_score: Phase2ResumeExtractionScore | None = None
 
 
 class ExtendedBenchmarkSummary(BaseModel):
@@ -56,6 +67,49 @@ class ExtendedBenchmarkSummary(BaseModel):
     )
 
     certifications_f1: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    overall_mean: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+
+class Phase2BenchmarkSummary(BaseModel):
+    scorer_version: str
+
+    case_count: int = Field(
+        ge=1,
+    )
+
+    publications_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    languages_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    achievements_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    career_interests_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+    )
+
+    career_goals_f1: float | None = Field(
+        default=None,
         ge=0.0,
         le=1.0,
     )
@@ -105,7 +159,29 @@ class ResumeBenchmarkSummary(BaseModel):
 
     extended: ExtendedBenchmarkSummary | None = None
 
+    phase2: Phase2BenchmarkSummary | None = None
+
     cases: list[ResumeBenchmarkCaseResult]
+
+
+def _phase2_scorer_version_for_case(
+    case: ResumeEvalCase,
+) -> str | None:
+    if case.phase2_expected is None:
+        return None
+
+    if case.phase2_expected.career_profile is not None:
+        return PHASE2_V4_SCORER_VERSION
+
+    if case.phase2_expected.achievements is not None:
+        return PHASE2_V3_SCORER_VERSION
+
+    if case.phase2_expected.languages is not None:
+        return PHASE2_V2_SCORER_VERSION
+
+    # Publication-only expectations, including the historical
+    # empty Phase 2 expectation, retain the frozen v1 semantics.
+    return PHASE2_SCORER_VERSION
 
 
 async def run_resume_benchmark(
@@ -117,6 +193,8 @@ async def run_resume_benchmark(
         raise ValueError("Benchmark requires at least one evaluation case.")
 
     results: list[ResumeBenchmarkCaseResult] = []
+
+    phase2_scorer_versions: set[str] = set()
 
     for case in cases:
         actual = await provider.analyze_resume(case.resume_text)
@@ -134,11 +212,46 @@ async def run_resume_benchmark(
                 actual,
             )
 
+        phase2_score = None
+
+        case_phase2_scorer_version = _phase2_scorer_version_for_case(case)
+
+        if case_phase2_scorer_version is not None:
+            phase2_scorer_versions.add(case_phase2_scorer_version)
+
+            if len(phase2_scorer_versions) > 1:
+                raise ValueError(
+                    "All Phase 2 cases in one benchmark run "
+                    "must use the same Phase 2 scorer version."
+                )
+
+            if case_phase2_scorer_version == PHASE2_V4_SCORER_VERSION:
+                phase2_score = score_phase2_v4_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+            elif case_phase2_scorer_version == PHASE2_V3_SCORER_VERSION:
+                phase2_score = score_phase2_v3_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+            elif case_phase2_scorer_version == PHASE2_V2_SCORER_VERSION:
+                phase2_score = score_phase2_v2_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+            else:
+                phase2_score = score_phase2_resume_extraction(
+                    case.phase2_expected,
+                    actual,
+                )
+
         results.append(
             ResumeBenchmarkCaseResult(
                 case_id=case.case_id,
                 score=score,
                 extended_score=extended_score,
+                phase2_score=phase2_score,
             )
         )
 
@@ -200,6 +313,81 @@ async def run_resume_benchmark(
             ),
         )
 
+    phase2_scores = [
+        result.phase2_score for result in results if result.phase2_score is not None
+    ]
+
+    phase2_summary = None
+
+    if phase2_scores:
+        if len(phase2_scorer_versions) != 1:
+            raise ValueError(
+                "Phase 2 benchmark results require exactly one scorer version."
+            )
+
+        phase2_case_count = len(phase2_scores)
+
+        publication_f1_values = [
+            score.publications.f1
+            for score in phase2_scores
+            if score.publications is not None
+        ]
+
+        language_f1_values = [
+            score.languages.f1 for score in phase2_scores if score.languages is not None
+        ]
+
+        achievement_f1_values = [
+            score.achievements.f1
+            for score in phase2_scores
+            if score.achievements is not None
+        ]
+
+        career_interest_f1_values = [
+            score.career_interests.f1
+            for score in phase2_scores
+            if score.career_interests is not None
+        ]
+
+        career_goal_f1_values = [
+            score.career_goals.f1
+            for score in phase2_scores
+            if score.career_goals is not None
+        ]
+
+        phase2_summary = Phase2BenchmarkSummary(
+            scorer_version=next(iter(phase2_scorer_versions)),
+            case_count=phase2_case_count,
+            publications_f1=(
+                sum(publication_f1_values) / len(publication_f1_values)
+                if publication_f1_values
+                else None
+            ),
+            languages_f1=(
+                sum(language_f1_values) / len(language_f1_values)
+                if language_f1_values
+                else None
+            ),
+            achievements_f1=(
+                sum(achievement_f1_values) / len(achievement_f1_values)
+                if achievement_f1_values
+                else None
+            ),
+            career_interests_f1=(
+                sum(career_interest_f1_values) / len(career_interest_f1_values)
+                if career_interest_f1_values
+                else None
+            ),
+            career_goals_f1=(
+                sum(career_goal_f1_values) / len(career_goal_f1_values)
+                if career_goal_f1_values
+                else None
+            ),
+            overall_mean=(
+                sum(score.overall for score in phase2_scores) / phase2_case_count
+            ),
+        )
+
     return ResumeBenchmarkSummary(
         provider=provider_name,
         case_count=case_count,
@@ -210,6 +398,7 @@ async def run_resume_benchmark(
         experience_f1=experience_f1,
         overall_mean=overall_mean,
         extended=extended_summary,
+        phase2=phase2_summary,
         cases=results,
     )
 

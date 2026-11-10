@@ -1,0 +1,35 @@
+<main class="careeriq-shell">
+  <header class="careeriq-header">
+    <h1>CareerIQ AI</h1>
+    <p>Explainable résumé intelligence</p>
+  </header>
+
+  <router-outlet />
+</main>
+
+<style>
+  .careeriq-shell {
+    min-height: 100vh;
+    background: #f5f8fc;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .careeriq-header {
+    padding: 1.5rem 2rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    color: #183153;
+  }
+
+  .careeriq-header h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    letter-spacing: -.035em;
+  }
+
+  .careeriq-header p {
+    margin: .3rem 0 0;
+    color: #64748b;
+    font-size: .85rem;
+  }
+</style>
