@@ -245,7 +245,7 @@
       echo "PASS: $role port $port released."
     }
 
-    if ! stop_verified_group Angular "$ui_pid" "${ui_port:-}" 'npm run start'; then
+    if ! stop_verified_group Angular "$ui_pid" "${ui_port:-}" 'npm run ng'; then
       rc=1
     fi
 
@@ -489,7 +489,7 @@ INNER
   echo '=== START TEMPORARY ANGULAR AND GECKODRIVER ==='
   setsid bash -c '
     cd frontend
-    exec npm run start -- --host 127.0.0.1 --port "$1" --proxy-config "$2"
+    exec npm run ng -- serve --host 127.0.0.1 --port "$1" --proxy-config "$2"
   ' _ "$ui_port" "$scratch/proxy.json" > "$scratch/angular.log" 2>&1 &
   ui_pid=$!
   ui_ready=0

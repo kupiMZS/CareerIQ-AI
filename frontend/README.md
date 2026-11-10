@@ -4,11 +4,13 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 
 ## Development server
 
-To start a local development server, run:
+To start the development server with the Laravel API proxy, run from the frontend directory:
 
 ```bash
-ng serve
+npm start
 ```
+
+The npm start script loads proxy.conf.json and forwards /api/** requests to http://127.0.0.1:8000. Start the Laravel backend first. The authenticated browser E2E runner uses its own temporary proxy configuration.
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
