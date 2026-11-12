@@ -8,6 +8,7 @@ use App\Http\Requests\Profile\UpdateProfileRequest;
 use App\Http\Resources\UserProfileResource;
 use App\Http\Responses\ApiResponse;
 use App\Services\ProfileService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -24,7 +25,7 @@ class ProfileController extends Controller
 
         return ApiResponse::success(
             'Profile retrieved successfully',
-            new UserProfileResource($profile)
+            $profile === null ? null : new UserProfileResource($profile)
         );
 
     }
@@ -33,11 +34,29 @@ class ProfileController extends Controller
         StoreProfileRequest $request
     ) {
 
-        $profile = $this->profileService
-            ->createProfile(
-                $request->user(),
-                $request->validated()
+        if ($request->user()->profile()->exists()) {
+            return ApiResponse::error(
+                'Profile already exists',
+                409
             );
+        }
+
+        try {
+            $profile = $this->profileService
+                ->createProfile(
+                    $request->user(),
+                    $request->validated()
+                );
+        } catch (UniqueConstraintViolationException $exception) {
+            if ($request->user()->profile()->exists()) {
+                return ApiResponse::error(
+                    'Profile already exists',
+                    409
+                );
+            }
+
+            throw $exception;
+        }
 
         return ApiResponse::success(
             'Profile created successfully',
@@ -51,9 +70,15 @@ class ProfileController extends Controller
         UpdateProfileRequest $request
     ) {
 
+        $existingProfile = $request->user()->profile;
+
+        if ($existingProfile === null) {
+            return ApiResponse::error('Profile not found', 404);
+        }
+
         $profile = $this->profileService
             ->updateProfile(
-                $request->user()->profile,
+                $existingProfile,
                 $request->validated()
             );
 
@@ -67,9 +92,15 @@ class ProfileController extends Controller
     public function destroy(Request $request)
     {
 
+        $profile = $request->user()->profile;
+
+        if ($profile === null) {
+            return ApiResponse::error('Profile not found', 404);
+        }
+
         $this->profileService
             ->deleteProfile(
-                $request->user()->profile
+                $profile
             );
 
         return ApiResponse::success(

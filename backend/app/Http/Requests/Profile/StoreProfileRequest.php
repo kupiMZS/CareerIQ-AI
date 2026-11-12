@@ -76,7 +76,6 @@ class StoreProfileRequest extends FormRequest
             ],
 
             'years_experience' => [
-                'nullable',
                 'integer',
                 'min:0',
                 'max:80',

@@ -34,6 +34,10 @@ import {
         </p>
       </header>
 
+      <nav aria-label="Account navigation">
+        <a routerLink="/profile">My profile</a>
+      </nav>
+
       <section class="panel" aria-labelledby="upload-heading">
         <h2 id="upload-heading">Upload a résumé</h2>
         <p class="meta">
