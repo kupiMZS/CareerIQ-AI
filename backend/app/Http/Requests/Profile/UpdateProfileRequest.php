@@ -87,7 +87,6 @@ class UpdateProfileRequest extends FormRequest
 
             'years_experience' => [
                 'sometimes',
-                'nullable',
                 'integer',
                 'min:0',
                 'max:80',
