@@ -100,7 +100,8 @@ class ProfileEdgeCasesTest extends TestCase
         // the controller's initial existence check.
         $this->app->instance(
             ProfileService::class,
-            new class extends ProfileService {
+            new class extends ProfileService
+            {
                 public function createProfile(
                     User $user,
                     array $data
@@ -117,8 +118,8 @@ class ProfileEdgeCasesTest extends TestCase
         $this->postJson('/api/v1/profile', [
             'first_name' => 'Second request',
         ])->assertStatus(409)
-          ->assertJsonPath('success', false)
-          ->assertJsonPath('message', 'Profile already exists');
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Profile already exists');
 
         $this->assertDatabaseCount('user_profiles', 1);
 
@@ -138,7 +139,7 @@ class ProfileEdgeCasesTest extends TestCase
             'first_name' => 'Example',
             'years_experience' => null,
         ])->assertUnprocessable()
-          ->assertJsonValidationErrors('years_experience');
+            ->assertJsonValidationErrors('years_experience');
 
         $this->assertDatabaseCount('user_profiles', 0);
     }
@@ -157,7 +158,7 @@ class ProfileEdgeCasesTest extends TestCase
         $this->putJson('/api/v1/profile', [
             'years_experience' => null,
         ])->assertUnprocessable()
-          ->assertJsonValidationErrors('years_experience');
+            ->assertJsonValidationErrors('years_experience');
 
         $this->assertDatabaseHas('user_profiles', [
             'user_id' => $user->id,
